@@ -1,0 +1,59 @@
+{%load static%}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>chiwe|{%block title %}Home {%endblock%}</title>
+    <link rel="stylesheet" href="{% static 'core/styles.css' %}">
+</head>
+<body>
+    <header>
+        <nav>
+            <ul>
+                <li class="nav-left">
+                    <h2>CHIWE</h2>
+                </li>
+                <li class="nav-right">
+                    <a href="{%url 'index'%}">Home</a>
+                </li>
+                <li class="nav-right">
+                    <a href="{%url 'signup'%}">Signup</a>
+                </li>
+                <li class="nav-right">
+                    <a href="{%url 'signin'%}">log in</a>
+                </li>
+            </ul>
+        </nav>
+    </header>
+
+  <div class="area" >
+            <ul class="circles">
+                    <li></li>
+                    <li></li>
+                    <li></li>
+                    <li></li>
+                    <li></li>
+                    <li></li>
+                    <li></li>
+                    <li></li>
+                    <li></li>
+                    <li></li>
+            </ul>
+    </div >
+    {%block body%}
+    <div class="context">
+        <p>CHIWE is <span class="auto-type"></span></p>
+    </div>
+    <script src="https://unpkg.com/typed.js@2.1.0/dist/typed.umd.js"></script>
+    <script >var typed = new Typed(".auto-type",{
+        strings : ["FUN", "FAIR", "FAST",'FIRST'],
+        typeSpeed : 150,
+        backSpeed : 150,
+        loop : true
+    });     
+                        </script>
+                        
+    {%endblock%}
+</body>
+</html>

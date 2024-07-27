@@ -1,0 +1,321 @@
+@import url('https://fonts.googleapis.com/css?family=Exo:400,700');
+
+* {
+    margin: 0px;
+    padding: 0px;
+}
+
+body {
+    font-family: 'Exo', sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background-color: black;
+}
+
+/* Background Gradient and Circles */
+.area {
+    background: #4e54c8;
+    background: -webkit-linear-gradient(to left, #8f94fb, #4e54c8);
+    width: 100%;
+    height: 100vh;
+    position: relative; /* To position the circles correctly */
+}
+
+.circles {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+}
+
+.circles li {
+    position: absolute;
+    display: block;
+    list-style: none;
+    width: 20px;
+    height: 20px;
+    background: rgba(255, 255, 255, 0.2);
+    animation: animate 25s linear infinite;
+    bottom: -150px;
+}
+
+/* Circle Variations - Adjust as needed */
+.circles li:nth-child(1) {
+    left: 25%;
+    width: 80px;
+    height: 80px;
+    animation-delay: 0s;
+}
+
+.circles li:nth-child(2) {
+    left: 10%;
+    width: 20px;
+    height: 20px;
+    animation-delay: 2s;
+    animation-duration: 12s;
+}
+
+.circles li:nth-child(3) {
+    left: 70%;
+    width: 20px;
+    height: 20px;
+    animation-delay: 4s;
+}
+
+.circles li:nth-child(4) {
+    left: 40%;
+    width: 60px;
+    height: 60px;
+    animation-delay: 0s;
+    animation-duration: 18s;
+}
+
+.circles li:nth-child(5) {
+    left: 65%;
+    width: 20px;
+    height: 20px;
+    animation-delay: 0s;
+}
+
+.circles li:nth-child(6) {
+    left: 75%;
+    width: 110px;
+    height: 110px;
+    animation-delay: 3s;
+}
+
+.circles li:nth-child(7) {
+    left: 35%;
+    width: 150px;
+    height: 150px;
+    animation-delay: 7s;
+}
+
+.circles li:nth-child(8) {
+    left: 50%;
+    width: 25px;
+    height: 25px;
+    animation-delay: 15s;
+    animation-duration: 45s;
+}
+
+.circles li:nth-child(9) {
+    left: 20%;
+    width: 15px;
+    height: 15px;
+    animation-delay: 2s;
+    animation-duration: 35s;
+}
+
+.circles li:nth-child(10) {
+    left: 85%;
+    width: 150px;
+    height: 150px;
+    animation-delay: 0s;
+    animation-duration: 11s;
+}
+
+@keyframes animate {
+    0% {
+        transform: translateY(0) rotate(0deg);
+        opacity: 1;
+        border-radius: 0;
+    }
+
+    100% {
+        transform: translateY(-1000px) rotate(720deg);
+        opacity: 0;
+        border-radius: 50%;
+    }
+}
+
+/* Text Styling */
+p {
+    font-size: 50px;
+    color: white;
+    text-shadow: 0 0 10px yellow;
+    font-family: sans-serif;
+    font-weight: bold;
+}
+
+span {
+    color: yellow;
+    position: relative;
+    top: 0;
+    animation: colorful 6s infinite;
+}
+
+@keyframes colorful {
+    100% {
+        filter: hue-rotate(360deg);
+    }
+}
+
+/* Header Styling */
+header {
+    background-color: #f0f0f0; /* Example background color */
+    padding: 20px;
+    text-align: center; /* Center align the content */
+    position: fixed; /* Make the header fixed to the top */
+    top: 0; /* Position it at the top */
+    width: 100%; /* Make it full width */
+    z-index: 10; /* Ensure it stays on top of other content */
+    display: flex;
+    justify-content: space-between; /* Align items to the right */
+    align-items: center; /* Vertically center the items */
+}
+
+/* Header h1 and h2 */
+header h1 {
+    font-size: 2.5em;
+    margin: 0; /* Remove default margin */
+}
+
+header h2 { 
+    font-size: 2rem; /* Adjust font size as needed */
+    margin: 0; /* Remove default margin */
+    /* Responsive adjustments */
+    @media (max-width: 768px) { /* Adjust breakpoint as needed */
+        font-size: 1.5rem;
+    }
+    @media (max-width: 480px) {
+        font-size: 1.2rem;
+    }
+}
+
+/* Navigation Styling */
+nav ul {
+    list-style: none; /* Remove bullet points */
+    margin: 0;
+    padding: 0;
+    display: flex; /* Use flexbox for spreading */
+    justify-content: flex-end; /* Align items to the right */
+    align-items: center; /* Vertically center the items */
+}
+
+nav li {
+    margin: 0 10px; /* Add some space between items */
+}
+
+.context {
+    width: 100%;
+    position: absolute;
+    top: 50vh;
+    transform: translateY(-50%); /* Center vertically */
+    text-align: center;
+    color: #fff;
+    font-size: 50px;
+}
+
+.context p { /* Style the p element within the context */
+    font-size: 50px;
+    color: white;
+    text-shadow: 0 0 10px yellow;
+    font-family: sans-serif;
+    font-weight: bold;
+}
+
+.context span { /* Style the span element within the context */
+    color: yellow;
+    position: relative;
+    top: 0;
+    animation: colorful 6s infinite;
+}
+/* ... your existing styles ... */
+
+/* ... your existing styles ... */
+
+header {
+    background-color: #f0f0f0; /* Example background color */
+    padding: 20px;
+    text-align: center; /* Center align the content */
+    position: fixed; /* Make the header fixed to the top */
+    top: 0; /* Position it at the top */
+    width: 100%; /* Make it full width */
+    z-index: 10; /* Ensure it stays on top of other content */
+    display: flex; 
+    justify-content: space-between; /* Evenly distribute elements */
+    align-items: center; /* Vertically center the items */
+    
+}
+
+nav {
+  display: flex;
+  justify-content: right; /* Align navigation items to the right */
+  align-items: flex-end; /* Vertically center the items */
+  
+}
+
+nav ul {
+    list-style: none; /* Remove bullet points */
+    margin: 0;
+    padding: 0;
+    display: flex; /* Use flexbox for spreading */
+    align-items: right; /* Vertically center the items */
+}
+
+nav ul h2 {
+  margin-right: 20px; /* Add space between the heading and the buttons */
+}
+
+/* Button Styles */
+nav li a { 
+    text-decoration: none; /* Remove underline from links */
+    color: white; /* Example link color */
+    font-weight: bold;
+    padding: 10px 20px; /* Add padding for button effect */
+    border-radius: 20px; /* Rounded corners */
+    background-color: #4e54c8; /* Example button background */
+    transition: background-color 0.3s ease; /* Add a smooth transition */
+    display: flex;
+    justify-content: flex-end;
+}
+
+nav li a:hover { /* Style for hover effect */
+    background-color: #8f94fb; /* Change background color on hover */
+    cursor: pointer; /* Show pointer cursor */
+}
+
+/* Media Query for Smaller Devices */
+
+
+
+
+nav ul {
+    list-style: none; /* Remove bullet points */
+    margin: 0;
+    padding: 0;
+    display: flex; /* Use flexbox for spreading */
+    justify-content: flex-end; /* Align items to the right */
+    align-items: right; /* Vertically center the items */
+}
+
+nav li {
+    margin: 0 10px; /* Add some space between items */
+    justify-content: flex-end;
+
+}
+
+nav a {
+    text-decoration: none; /* Remove underline from links */
+    color: #333; /* Example link color */
+    font-weight: bold;
+    padding: 10px 20px; /* Add padding for button effect */
+    border-radius: 20px; /* Rounded corners */
+    background-color: #eee; /* Example button background */
+    transition: background-color 0.3s ease; /* Add a smooth transition */
+    justify-content: flex-end;
+}
+
+nav a:hover { /* Style for hover effect */
+    background-color: #ddd; /* Change background color on hover */
+    cursor: pointer; /* Show pointer cursor */
+}
+
+
+
+
