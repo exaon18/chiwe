@@ -8,7 +8,7 @@
 </head>
 <body>
     <h2>Welcome to chiwe </h2>
-    <form action="/signin" id="sigin" method="post">
+    <form action="/signin" id="login" method="post">
         {%csrf_token%}
         {{form|crispy}}
         <button type="submit">signin</button>
