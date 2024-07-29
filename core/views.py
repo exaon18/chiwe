@@ -15,32 +15,20 @@ def signup(request):
         email=request.POST['email']
         pass1=request.POST['pass1']
         pass2=request.POST['pass2']
-        player=User.objects.create_user(username=username,email=email,password=pass1)
+        player=User.objects.create_user(username,email,pass1)
+        
+        
+        player.first_name=firstname
+        player.last_name=lastname
         player.save()
         return redirect(request,'signin')
-    else:
-        return render(request,'core/signup.html')
-def signin(request):
-      
-      if request.method=="POST":
-
-        username=request.POST['username']
-        password=request.POST['pass2']
-        user=authenticate(username=username,password=password)
-        if User is not None:
-            login(request, User)
-            fname=user.first_name
-            messages.success(request,"you are logged in successfully ")
-            return render(request,"core/dashboard.html",{
-                "name":fname
-            })
-        else:
-            messages.error(request,'Bad credentials')
-            return render(request,"core/signin.html")
-      else:
-        return render(request,"core/signin.html")
+    
+    return render(request,'core/signup.html')
+def login(request):
+    return render(request,'registration/login.html')
 def dashboard(request):
-    name=User.first_name
+    name=request.POST['first_name']
+    
     return render(request,"core/dashboard.html",{
         "name":name
     })
