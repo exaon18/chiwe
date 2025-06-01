@@ -21,10 +21,10 @@ urlpatterns = [
     path('recovery/resend-otp-fp/', views.resend_otp_token_fp, name='resend_otp_fp'),
     
 ]
-from django.conf.urls import handler404
+
 from django.shortcuts import render
 
 def custom_404(request, exception):
     return render(request, '404.html', status=404)
 
-handler404 = 'autapp.urls.custom_404'
+
