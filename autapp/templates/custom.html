@@ -1,0 +1,924 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>404 - Page Not Found | Chiwe</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&family=Orbitron:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            /* Chiwe Brand Colors */
+            --primary: #2eD573;
+            --primary-dark: #25a85c;
+            --primary-light: #4aea8b;
+            --primary-glow: rgba(46, 213, 115, 0.4);
+            
+            --secondary: #00c9b7;
+            --secondary-dark: #00a896;
+            --secondary-light: #2fded0;
+            --secondary-glow: rgba(0, 201, 183, 0.4);
+            
+            --background: #0a0a10;
+            --background-alt: #0d0d14;
+            --surface: #14141c;
+            --surface-hover: #1a1a24;
+            --surface-active: #1e1e2a;
+            
+            --text: #ffffff;
+            --text-secondary: #a0aec0;
+            --text-tertiary: #6b7280;
+            
+            --danger: #ff5252;
+            --warning: #ffb74d;
+            --success: #2eD573;
+            
+            --border-radius: 0.75rem;
+            --border-radius-lg: 1.5rem;
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            --transition-bounce: all 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: var(--background);
+            color: var(--text);
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+            background-image: 
+                radial-gradient(circle at 20% 20%, rgba(46, 213, 115, 0.05) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(0, 201, 183, 0.05) 0%, transparent 50%),
+                radial-gradient(circle at 40% 60%, rgba(255, 82, 82, 0.03) 0%, transparent 50%);
+        }
+
+        /* Animated Background */
+        .bg-animation {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            overflow: hidden;
+        }
+
+        .floating-shape {
+            position: absolute;
+            opacity: 0.1;
+            animation: float-random 15s infinite ease-in-out;
+        }
+
+        .floating-shape:nth-child(1) {
+            top: 10%;
+            left: 10%;
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(45deg, var(--primary), var(--secondary));
+            border-radius: 50%;
+            animation-delay: 0s;
+        }
+
+        .floating-shape:nth-child(2) {
+            top: 20%;
+            right: 15%;
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(45deg, var(--secondary), var(--primary));
+            border-radius: 30%;
+            animation-delay: 2s;
+        }
+
+        .floating-shape:nth-child(3) {
+            bottom: 20%;
+            left: 20%;
+            width: 100px;
+            height: 100px;
+            background: linear-gradient(45deg, var(--primary), var(--danger));
+            border-radius: 20%;
+            animation-delay: 4s;
+        }
+
+        .floating-shape:nth-child(4) {
+            bottom: 30%;
+            right: 10%;
+            width: 70px;
+            height: 70px;
+            background: linear-gradient(45deg, var(--secondary), var(--warning));
+            border-radius: 50%;
+            animation-delay: 6s;
+        }
+
+        .floating-shape:nth-child(5) {
+            top: 50%;
+            left: 5%;
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(45deg, var(--warning), var(--primary));
+            border-radius: 40%;
+            animation-delay: 8s;
+        }
+
+        /* Glitch particles */
+        .glitch-particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .glitch-particle {
+            position: absolute;
+            width: 2px;
+            height: 2px;
+            background: var(--primary);
+            border-radius: 50%;
+            opacity: 0.6;
+            animation: glitch-float 8s infinite linear;
+        }
+
+        .glitch-particle:nth-child(even) {
+            background: var(--secondary);
+            animation-duration: 12s;
+        }
+
+        .glitch-particle:nth-child(3n) {
+            background: var(--danger);
+            animation-duration: 10s;
+        }
+
+        /* Main Container */
+        .container {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem;
+            position: relative;
+            z-index: 10;
+        }
+
+        /* 404 Number with Epic Glitch Effect */
+        .error-number {
+            font-family: 'Orbitron', sans-serif;
+            font-size: clamp(8rem, 20vw, 16rem);
+            font-weight: 800;
+            line-height: 0.8;
+            margin-bottom: 2rem;
+            position: relative;
+            background: linear-gradient(45deg, var(--primary), var(--secondary), var(--primary));
+            background-size: 200% 200%;
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            animation: gradient-shift 3s ease-in-out infinite, glitch-text 4s infinite;
+            text-shadow: 0 0 30px rgba(46, 213, 115, 0.5);
+            user-select: none;
+        }
+
+        .error-number::before,
+        .error-number::after {
+            content: '404';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(45deg, var(--danger), var(--warning));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            z-index: -1;
+        }
+
+        .error-number::before {
+            animation: glitch-1 2s infinite;
+        }
+
+        .error-number::after {
+            animation: glitch-2 2s infinite;
+        }
+
+        /* Game Controller Icon */
+        .game-controller {
+            font-size: 4rem;
+            color: var(--primary);
+            margin-bottom: 2rem;
+            animation: bounce-controller 2s infinite, glow-pulse 3s infinite;
+            filter: drop-shadow(0 0 20px rgba(46, 213, 115, 0.6));
+            position: relative;
+        }
+
+        .game-controller::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 120%;
+            height: 120%;
+            background: radial-gradient(circle, rgba(46, 213, 115, 0.3) 0%, transparent 70%);
+            border-radius: 50%;
+            z-index: -1;
+            animation: pulse-ring 2s infinite;
+        }
+
+        /* Content Section */
+        .content {
+            text-align: center;
+            max-width: 600px;
+            margin-bottom: 3rem;
+        }
+
+        .error-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: clamp(2rem, 5vw, 3rem);
+            font-weight: 700;
+            margin-bottom: 1rem;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            animation: text-glow 2s ease-in-out infinite alternate;
+        }
+
+        .error-subtitle {
+            font-size: clamp(1.2rem, 3vw, 1.5rem);
+            color: var(--text-secondary);
+            margin-bottom: 1.5rem;
+            line-height: 1.6;
+            animation: fade-in-up 1s ease-out 0.5s both;
+        }
+
+        .error-description {
+            font-size: 1.1rem;
+            color: var(--text-tertiary);
+            margin-bottom: 2rem;
+            line-height: 1.7;
+            animation: fade-in-up 1s ease-out 0.7s both;
+        }
+
+        /* Action Buttons */
+        .action-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            justify-content: center;
+            margin-bottom: 3rem;
+            animation: fade-in-up 1s ease-out 0.9s both;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 1rem 2rem;
+            border: none;
+            border-radius: var(--border-radius);
+            font-weight: 600;
+            font-size: 1rem;
+            text-decoration: none;
+            cursor: pointer;
+            transition: var(--transition-bounce);
+            position: relative;
+            overflow: hidden;
+            z-index: 1;
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.6s ease;
+            z-index: -1;
+        }
+
+        .btn:hover::before {
+            left: 100%;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: var(--background);
+            box-shadow: 0 8px 25px rgba(46, 213, 115, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 15px 35px rgba(46, 213, 115, 0.5);
+        }
+
+        .btn-secondary {
+            background: rgba(20, 20, 28, 0.8);
+            color: var(--text);
+            border: 2px solid var(--primary);
+            backdrop-filter: blur(10px);
+        }
+
+        .btn-secondary:hover {
+            background: var(--primary);
+            color: var(--background);
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 15px 35px rgba(46, 213, 115, 0.4);
+        }
+
+        .btn i {
+            transition: transform 0.3s ease;
+        }
+
+        .btn:hover i {
+            transform: translateX(3px);
+        }
+
+        /* Fun Facts Section */
+        .fun-facts {
+            background: rgba(20, 20, 28, 0.6);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(46, 213, 115, 0.2);
+            border-radius: var(--border-radius-lg);
+            padding: 2rem;
+            max-width: 500px;
+            text-align: center;
+            animation: fade-in-up 1s ease-out 1.1s both;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .fun-facts::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, transparent, rgba(46, 213, 115, 0.05), transparent);
+            animation: rotate-gradient 8s linear infinite;
+            z-index: -1;
+        }
+
+        .fun-facts h3 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.5rem;
+            color: var(--primary);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .fun-facts p {
+            color: var(--text-secondary);
+            font-size: 1rem;
+            line-height: 1.6;
+            margin-bottom: 1rem;
+        }
+
+        .fun-facts .highlight {
+            color: var(--primary);
+            font-weight: 600;
+        }
+
+        /* Easter Egg Game */
+        .easter-egg {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: var(--background);
+            border: none;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: var(--transition-bounce);
+            box-shadow: 0 8px 25px rgba(46, 213, 115, 0.4);
+            z-index: 100;
+            animation: pulse-button 3s infinite;
+        }
+
+        .easter-egg:hover {
+            transform: scale(1.1) rotate(15deg);
+            box-shadow: 0 15px 35px rgba(46, 213, 115, 0.6);
+        }
+
+        /* Mini Game Modal */
+        .mini-game-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            animation: fade-in 0.3s ease;
+        }
+
+        .mini-game-content {
+            background: var(--surface);
+            border: 2px solid var(--primary);
+            border-radius: var(--border-radius-lg);
+            padding: 2rem;
+            max-width: 400px;
+            text-align: center;
+            position: relative;
+            animation: scale-in 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+
+        .close-game {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .close-game:hover {
+            color: var(--danger);
+            transform: rotate(90deg);
+        }
+
+        .game-score {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2rem;
+            color: var(--primary);
+            margin: 1rem 0;
+        }
+
+        .click-target {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border: none;
+            border-radius: 50%;
+            margin: 1rem auto;
+            cursor: pointer;
+            transition: var(--transition);
+            animation: target-pulse 1s infinite;
+        }
+
+        .click-target:hover {
+            transform: scale(1.1);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+
+            .action-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .btn {
+                width: 100%;
+                max-width: 280px;
+                justify-content: center;
+            }
+
+            .fun-facts {
+                margin: 0 1rem;
+            }
+
+            .easter-egg {
+                bottom: 1rem;
+                right: 1rem;
+                width: 50px;
+                height: 50px;
+                font-size: 1.2rem;
+            }
+        }
+
+        /* Animations */
+        @keyframes gradient-shift {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        @keyframes glitch-text {
+            0%, 90%, 100% { transform: translate(0); }
+            10% { transform: translate(-2px, 1px); }
+            20% { transform: translate(2px, -1px); }
+            30% { transform: translate(-1px, 2px); }
+            40% { transform: translate(1px, -2px); }
+            50% { transform: translate(-2px, 1px); }
+            60% { transform: translate(2px, -1px); }
+            70% { transform: translate(-1px, 2px); }
+            80% { transform: translate(1px, -2px); }
+        }
+
+        @keyframes glitch-1 {
+            0%, 90%, 100% { transform: translate(0); opacity: 0; }
+            10% { transform: translate(-2px, 1px); opacity: 0.3; }
+            20% { transform: translate(2px, -1px); opacity: 0.3; }
+        }
+
+        @keyframes glitch-2 {
+            0%, 90%, 100% { transform: translate(0); opacity: 0; }
+            30% { transform: translate(1px, -2px); opacity: 0.3; }
+            40% { transform: translate(-1px, 2px); opacity: 0.3; }
+        }
+
+        @keyframes bounce-controller {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-10px); }
+            60% { transform: translateY(-5px); }
+        }
+
+        @keyframes glow-pulse {
+            0%, 100% { filter: drop-shadow(0 0 20px rgba(46, 213, 115, 0.6)); }
+            50% { filter: drop-shadow(0 0 30px rgba(46, 213, 115, 0.9)); }
+        }
+
+        @keyframes pulse-ring {
+            0% { transform: translate(-50%, -50%) scale(0.8); opacity: 1; }
+            100% { transform: translate(-50%, -50%) scale(1.5); opacity: 0; }
+        }
+
+        @keyframes text-glow {
+            0% { text-shadow: 0 0 20px rgba(46, 213, 115, 0.5); }
+            100% { text-shadow: 0 0 30px rgba(46, 213, 115, 0.8); }
+        }
+
+        @keyframes fade-in-up {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes float-random {
+            0%, 100% { transform: translate(0, 0) rotate(0deg); }
+            25% { transform: translate(20px, -20px) rotate(90deg); }
+            50% { transform: translate(-15px, 15px) rotate(180deg); }
+            75% { transform: translate(-20px, -10px) rotate(270deg); }
+        }
+
+        @keyframes glitch-float {
+            0% {
+                transform: translateY(100vh) translateX(0);
+                opacity: 0;
+            }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% {
+                transform: translateY(-100px) translateX(100px);
+                opacity: 0;
+            }
+        }
+
+        @keyframes rotate-gradient {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @keyframes pulse-button {
+            0%, 100% { box-shadow: 0 8px 25px rgba(46, 213, 115, 0.4); }
+            50% { box-shadow: 0 8px 35px rgba(46, 213, 115, 0.7); }
+        }
+
+        @keyframes fade-in {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes scale-in {
+            from {
+                opacity: 0;
+                transform: scale(0.8);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        @keyframes target-pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        /* Loading animation for buttons */
+        .btn.loading {
+            pointer-events: none;
+            position: relative;
+            color: transparent;
+        }
+
+        .btn.loading::after {
+            content: "";
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            top: 50%;
+            left: 50%;
+            margin: -10px 0 0 -10px;
+            border-radius: 50%;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top-color: #fff;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <!-- Animated Background -->
+    <div class="bg-animation">
+        <div class="floating-shape"></div>
+        <div class="floating-shape"></div>
+        <div class="floating-shape"></div>
+        <div class="floating-shape"></div>
+        <div class="floating-shape"></div>
+    </div>
+
+    <!-- Glitch Particles -->
+    <div class="glitch-particles" id="glitchParticles"></div>
+
+    <!-- Main Container -->
+    <div class="container">
+        <!-- Epic 404 Number -->
+        <div class="error-number">404</div>
+
+        <!-- Game Controller Icon -->
+        <div class="game-controller">
+            <i class="fas fa-gamepad"></i>
+        </div>
+
+        <!-- Content Section -->
+        <div class="content">
+            <h1 class="error-title">Game Over!</h1>
+            <p class="error-subtitle">Looks like you've wandered into uncharted territory</p>
+            <p class="error-description">
+                The page you're looking for doesn't exist, but don't worry - every great gamer knows that 
+                getting lost is just part of the adventure. Let's get you back to the action!
+            </p>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="action-buttons">
+            <a href="/" class="btn btn-primary" id="homeBtn">
+                <i class="fas fa-home"></i>
+                Back to Home
+            </a>
+            <a href="/games" class="btn btn-secondary" id="gamesBtn">
+                <i class="fas fa-gamepad"></i>
+                Browse Games
+            </a>
+        </div>
+
+        <!-- Fun Facts -->
+        <div class="fun-facts">
+            <h3>
+                <i class="fas fa-lightbulb"></i>
+                Did You Know?
+            </h3>
+            <p>
+                The first <span class="highlight">404 error</span> was discovered at CERN in 1992. 
+                Just like in gaming, sometimes the best discoveries happen when you're exploring the unknown!
+            </p>
+            <p>
+                <span class="highlight">Fun fact:</span> You're now part of the exclusive club of digital explorers 
+                who've found this secret corner of Chiwe! 🎮
+            </p>
+        </div>
+    </div>
+
+    <!-- Easter Egg Game Button -->
+    <button class="easter-egg" id="easterEggBtn" title="Click for a surprise!">
+        <i class="fas fa-star"></i>
+    </button>
+
+    <!-- Mini Game Modal -->
+    <div class="mini-game-modal" id="miniGameModal">
+        <div class="mini-game-content">
+            <button class="close-game" id="closeGame">
+                <i class="fas fa-times"></i>
+            </button>
+            <h3>Quick Reflex Game!</h3>
+            <p>Click the target as fast as you can!</p>
+            <div class="game-score">Score: <span id="gameScore">0</span></div>
+            <button class="click-target" id="clickTarget"></button>
+            <p><small>Click 10 times to complete the challenge!</small></p>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Create glitch particles
+            function createGlitchParticles() {
+                const container = document.getElementById('glitchParticles');
+                const particleCount = 30;
+                
+                for (let i = 0; i < particleCount; i++) {
+                    const particle = document.createElement('div');
+                    particle.classList.add('glitch-particle');
+                    
+                    // Random position
+                    particle.style.left = `${Math.random() * 100}%`;
+                    particle.style.top = `${Math.random() * 100}%`;
+                    
+                    // Random animation delay
+                    particle.style.animationDelay = `${Math.random() * 8}s`;
+                    
+                    container.appendChild(particle);
+                }
+            }
+            
+            createGlitchParticles();
+
+            // Button loading states
+            const homeBtn = document.getElementById('homeBtn');
+            const gamesBtn = document.getElementById('gamesBtn');
+
+            function handleButtonClick(button) {
+                button.classList.add('loading');
+                setTimeout(() => {
+                    window.location.href = button.getAttribute('href');
+                }, 500);
+            }
+
+            homeBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                handleButtonClick(this);
+            });
+
+            gamesBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                handleButtonClick(this);
+            });
+
+            // Easter Egg Mini Game
+            const easterEggBtn = document.getElementById('easterEggBtn');
+            const miniGameModal = document.getElementById('miniGameModal');
+            const closeGame = document.getElementById('closeGame');
+            const clickTarget = document.getElementById('clickTarget');
+            const gameScore = document.getElementById('gameScore');
+            
+            let score = 0;
+            let gameActive = false;
+
+            easterEggBtn.addEventListener('click', () => {
+                miniGameModal.style.display = 'flex';
+                score = 0;
+                gameScore.textContent = score;
+                gameActive = true;
+            });
+
+            closeGame.addEventListener('click', () => {
+                miniGameModal.style.display = 'none';
+                gameActive = false;
+            });
+
+            clickTarget.addEventListener('click', () => {
+                if (gameActive) {
+                    score++;
+                    gameScore.textContent = score;
+                    
+                    // Add click effect
+                    clickTarget.style.transform = 'scale(0.9)';
+                    setTimeout(() => {
+                        clickTarget.style.transform = 'scale(1)';
+                    }, 100);
+                    
+                    if (score >= 10) {
+                        gameActive = false;
+                        clickTarget.innerHTML = '🎉';
+                        clickTarget.style.background = 'linear-gradient(135deg, #FFD700, #FFA500)';
+                        setTimeout(() => {
+                            alert('🎉 Congratulations! You completed the challenge! Welcome back to Chiwe! 🎮');
+                            miniGameModal.style.display = 'none';
+                            clickTarget.innerHTML = '';
+                            clickTarget.style.background = 'linear-gradient(135deg, var(--primary), var(--secondary))';
+                        }, 1000);
+                    }
+                }
+            });
+
+            // Close modal when clicking outside
+            miniGameModal.addEventListener('click', (e) => {
+                if (e.target === miniGameModal) {
+                    miniGameModal.style.display = 'none';
+                    gameActive = false;
+                }
+            });
+
+            // Keyboard shortcuts
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') {
+                    miniGameModal.style.display = 'none';
+                    gameActive = false;
+                } else if (e.key === 'h' || e.key === 'H') {
+                    homeBtn.click();
+                } else if (e.key === 'g' || e.key === 'G') {
+                    gamesBtn.click();
+                }
+            });
+
+            // Add some interactive hover effects
+            const errorNumber = document.querySelector('.error-number');
+            errorNumber.addEventListener('mouseenter', () => {
+                errorNumber.style.animation = 'glitch-text 0.5s ease-in-out, gradient-shift 3s ease-in-out infinite';
+            });
+
+            // Random fun messages
+            const funMessages = [
+                "Every pro gamer has been here before! 🎮",
+                "Plot twist: This IS the game! 🎯",
+                "Achievement Unlocked: Page Explorer! 🏆",
+                "Error 404: Skill not found... just kidding! 😄",
+                "Welcome to the secret level! 🗝️"
+            ];
+
+            // Change fun message every 5 seconds
+            const funFactsP = document.querySelector('.fun-facts p:last-child');
+            let messageIndex = 0;
+            
+            setInterval(() => {
+                messageIndex = (messageIndex + 1) % funMessages.length;
+                funFactsP.innerHTML = `<span class="highlight">Fun fact:</span> ${funMessages[messageIndex]}`;
+            }, 5000);
+
+            // Add some sparkle effects on mouse move
+            document.addEventListener('mousemove', (e) => {
+                if (Math.random() > 0.95) {
+                    createSparkle(e.clientX, e.clientY);
+                }
+            });
+
+            function createSparkle(x, y) {
+                const sparkle = document.createElement('div');
+                sparkle.style.position = 'fixed';
+                sparkle.style.left = x + 'px';
+                sparkle.style.top = y + 'px';
+                sparkle.style.width = '4px';
+                sparkle.style.height = '4px';
+                sparkle.style.background = 'var(--primary)';
+                sparkle.style.borderRadius = '50%';
+                sparkle.style.pointerEvents = 'none';
+                sparkle.style.zIndex = '1000';
+                sparkle.style.animation = 'sparkle-fade 1s ease-out forwards';
+                
+                document.body.appendChild(sparkle);
+                
+                setTimeout(() => {
+                    sparkle.remove();
+                }, 1000);
+            }
+
+            // Add sparkle animation
+            const style = document.createElement('style');
+            style.textContent = `
+                @keyframes sparkle-fade {
+                    0% {
+                        opacity: 1;
+                        transform: scale(0);
+                    }
+                    50% {
+                        opacity: 1;
+                        transform: scale(1);
+                    }
+                    100% {
+                        opacity: 0;
+                        transform: scale(0);
+                    }
+                }
+            `;
+            document.head.appendChild(style);
+        });
+    </script>
+</body>
+</html>
