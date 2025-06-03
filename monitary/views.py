@@ -103,7 +103,7 @@ def withdraw(request, invalidOtp=invalidOtp):
         except ValueError:
             messages.error(request, "Please enter a valid number for the amount.")
             print("Redirecting to 'withdraw' after invalid amount input.")
-            return redirect("withdraw")
+            return JsonResponse(request,{"success":False,"message":"Please enter a valid number for the amount."})
         
         
         phone_number = request.POST["phone_number"].strip()
@@ -118,7 +118,7 @@ def withdraw(request, invalidOtp=invalidOtp):
             if amount < 25:
                 print("❌ Withdrawal amount too low. Rendering 'withdraw.html'.")
                 
-                messages.error(request, "Withdrawal amount must be at least 25 birr.")
+                
                 return JsonResponse(request,{"success":False,"message":"Withdrawal amount must be at least 25 birr."})
             
             WithdrawalRequest.objects.create(

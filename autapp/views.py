@@ -71,12 +71,16 @@ def signup(request):
         password = request.POST['password1']
         password2 = request.POST['password2']
         try:
-            validate_email('example@example.com')
+            validate_email(email)
             print("Valid email")
         except ValidationError:
             return JsonResponse({"success": False, "message":"Invalid email address."})
+        if not username or not firstname or not email or not password or not password2:
+            return JsonResponse({"success": False, "message":"All fields are required."})
+        if len(username) < 4:
+            return JsonResponse({"success": False, "message":"Username must be at least 4 characters."})
 
-        
+         
         if password != password2:
             return JsonResponse({"success": False, "message":"Passwords do not match."})
             
@@ -84,8 +88,8 @@ def signup(request):
             return JsonResponse({"success": False, "message":"Password must be at least 6 characters."})
         
         # Check for active user conflicts
-        if " " and "@" and "#" and "$" and "&" and "*"  and ">" and "<" in username:
-            return JsonResponse({"success": False, "message":"Username must not contain spaces."})
+        if " " or "@" or "#" or "$" or "&" or "*"  or ">" or "<" or"-" or "_" or "." or "!" or "#" or "$" or "%" or "^" or "&" or "*" or "(" or ")" or "_" or "+" or "=" or "[" or "]" or "{" or "}" or "|" or "~" or "`" or "," or ";" or ":" or '"' or "'" or ""in username:
+            return JsonResponse({"success": False, "message":"Username must not contain spaces. or special characters other than _"})
         if MyUser.objects.filter(username=username, is_active=True).exists():
             return JsonResponse({"success": False, "message":"Username already exists, try another one."})
         if MyUser.objects.filter(email=email, is_active=True).exists():
@@ -118,7 +122,7 @@ def signup(request):
                                  "username":username})
         except Exception as e:
             print(e)
-            messages.error(request, f'Error sending email: please sign up again')
+            
             user.delete()
             return JsonResponse({"success": False, "message":"system is busy , please sign up again."})
     return render(request, 'signup.html')
@@ -151,10 +155,10 @@ def verify(request, username):
             GameHistory.objects.get_or_create(user=user,TotalPlayed=0,TotalWin=0,Totaloss=0,TotalEarning=0.00,)
             user.save()
             login(request, user)
-            messages.success(request, 'Account activated successfully.')
+            
             return JsonResponse({"success": True, "message":"Account Verified successfully, redirecting you to the login page "})  # Redirect to the home page or any other page
         else:
-            messages.error(request, 'Invalid token')
+            
             return JsonResponse({"success": False, "message":"Invalid token"})
     
     return render(request, 'activate.html', {'user': user})
@@ -247,7 +251,7 @@ def logout_view(request):
     user=MyUser.objects.get(username=request.user.username)
     user.is_logged_in=False
     logout(request) 
-    messages.success(request, 'you have been logged out!')
+    
     return redirect('login')
 def forgot_password(request):
     if request.method == "POST":
