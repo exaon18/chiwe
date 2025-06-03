@@ -94,10 +94,11 @@ def withdraw(request, invalidOtp=invalidOtp):
         return render(request, 'maintenance.html')
     
     user = request.user
-    user_balance = Ballance.objects.get(user=user).ballance
+    user_balance = Ballance.objects.get(user=user)
 
 
     if request.method == 'POST':
+        
         try:
             amount = float(request.POST["amount"])
         except ValueError:
@@ -111,16 +112,15 @@ def withdraw(request, invalidOtp=invalidOtp):
         if user.pendingWithdrwal:
             print("⏳ User already has a pending withdrawal. Rendering 'withdraw.html'.")
             
-            return JsonResponse(request,{"success":False,"message":"You already have a pending withdrawal."})
+            return JsonResponse(request,{"success":False,"message":"You already have a pending withdrawal. Please wait for it to be processed."})
         
         # Compare after converting token from the form to int
-        if  user_balance >= amount:
+        if  user_balance.ballance >= amount:
             if amount < 25:
                 print("❌ Withdrawal amount too low. Rendering 'withdraw.html'.")
-                
-                
                 return JsonResponse(request,{"success":False,"message":"Withdrawal amount must be at least 25 birr."})
-            
+            user_balance.ballance -= Decimal(amount)
+            user_balance.save()
             WithdrawalRequest.objects.create(
                 user=user,
                 amount=amount,
