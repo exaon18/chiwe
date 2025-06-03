@@ -191,11 +191,10 @@ def Monitering(request, admin):
                     PlayerB = Ballance.objects.get(user=Player)
                     WR = WithdrawalRequest.objects.filter(user=Player, status="Pending")
 
-                    if int(PlayerB.ballance) >= int(amount) and WR.exists() and AdminRES == "Approved":
-                        PlayerB.ballance -= int(amount)
-                        PlayerB.save()
+                    if  WR.exists() and AdminRES == "Approved":
+                        
                         Player.pendingWithdrwal = False
-                        Player.withdrawalToken = None
+                        
                         Player.save()
                         WR.update(status="Approved")
                         messages.success(request, f"✅ approved {amount} ETB to {user}.")
