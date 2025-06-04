@@ -225,8 +225,8 @@ class Crack_the_CodeConsumer(WebsocketConsumer):
 
         self.win = True
         self.game_ended = True  
-        self.jackpot = Decimal(amount) * Decimal(97.5) / Decimal(100)
-        self.fee = Decimal(amount) * Decimal(2.5) / Decimal(100)
+        self.jackpot = Decimal(amount) * Decimal(95) / Decimal(100)
+        self.fee = Decimal(amount) * Decimal(5) / Decimal(100)
         winnerid=0
         loserid=0
         if winner == Crack_the_CodeConsumer.game_states[self.room]["player1"]:
@@ -695,8 +695,8 @@ class BingoConsumer(WebsocketConsumer):
         BingoConsumer.games_finished[self.room] = True  
         self.win = True
         self.game_ended = True  
-        self.jackpot = Decimal(amount) * Decimal(97.5) / Decimal(100)
-        self.fee = Decimal(amount) * Decimal(2.5) / Decimal(100)
+        self.jackpot = Decimal(amount) * Decimal(95) / Decimal(100)
+        self.fee = Decimal(amount) * Decimal(5) / Decimal(100)
         winnerid=0
         loserid=0
         chiweProfit.objects.create(gameType="bingo", profit=self.fee)
