@@ -204,10 +204,12 @@ def Monitering(request, admin):
                         WR.update(status="Rejected")
                         Player.pendingWithdrwal = False
                         Player.withdrawalToken = None
+                        PlayerB.ballance += Decimal(amount)
+                        PlayerB.save()
                         Player.save()
                         messages.error(request, f"❌ rejected {amount} ETB to {user}.")
                         print(f"❌ Rejected transaction: {user} - {amount} ETB. Rendering 'admin.html'.")
-                        return JsonResponse({"success":False, "message":"withdrawal request has been rejected"})
+                        return JsonResponse({"success":True, "message":"withdrawal request has been rejected"})
                     
                     else:
                         return JsonResponse({"success":False, "message":"the request is already on pending "})
