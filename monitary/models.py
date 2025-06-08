@@ -16,6 +16,7 @@ class WithdrawalRequest(models.Model):
     ResponseTime = models.DateTimeField(auto_now_add=True, null=False)
     status = models.CharField(choices=STATUS_CHOICES, max_length=20, default='pending')
     requestedAt=models.DateTimeField(auto_now_add=True)
+    way=models.CharField(max_length=20,null=False,default='tb')
 
     def __str__(self):
         return f"{self.user.username} - {self.status}"
@@ -38,7 +39,12 @@ class TelebirrReq(models.Model):
     Name=models.CharField(null=True,max_length=20)
     tx_id=models.CharField(null=False,max_length=10)
     amount=models.DecimalField(max_digits=10,decimal_places=2)
-    
     completed=models.BooleanField(default=False)
     def __str__(self):
         return f"{self.Name} - {self.tx_id}"
+class Ebirreq(models.Model):
+    tx_id=models.CharField(null=False,max_length=20)
+    amount=models.DecimalField(max_digits=10,decimal_places=2)
+    completed=models.BooleanField(default=False)
+    def __str__(self):
+        return f"{self.tx_id} - {self.amount}"

@@ -9,6 +9,7 @@
             --primary: #2eD573;
             --primary-dark: #25a65b;
             --primary-light: rgba(46, 213, 115, 0.1);
+            --secondary: #00c9b7;
             --background: #0a0a0a;
             --card-bg: #1a1a1a;
             --card-border: #2b2b36;
@@ -18,6 +19,8 @@
             --warning: #ffa502;
             --info: #55a6ff;
             --success: #2eD573;
+            --telebirr-color: #ff6b35;
+            --ebirr-color: #1e40af;
         }
 
         * {
@@ -76,8 +79,28 @@
         }
 
         @keyframes fadeIn {
-            0% { opacity: 0; }
-            100% { opacity: 1; }
+            0% { opacity: 0; transform: translateY(20px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes slideUp {
+            0% { transform: translateY(100%); opacity: 0; }
+            100% { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes slideDown {
+            0% { transform: translateY(0); opacity: 1; }
+            100% { transform: translateY(100%); opacity: 0; }
+        }
+
+        @keyframes cardHover {
+            0% { transform: translateY(0) scale(1); }
+            100% { transform: translateY(-8px) scale(1.02); }
+        }
+
+        @keyframes glow {
+            0%, 100% { box-shadow: 0 0 20px rgba(46, 213, 115, 0.3); }
+            50% { box-shadow: 0 0 30px rgba(46, 213, 115, 0.6); }
         }
 
         /* Backdrop effect */
@@ -158,7 +181,7 @@
         /* Main container */
         .container {
             width: 100%;
-            max-width: 450px;
+            max-width: 500px;
             margin: 100px auto 40px;
             padding: 2.5rem;
             background-color: var(--card-bg);
@@ -190,6 +213,215 @@
             font-size: 0.95rem;
             text-align: center;
             margin-bottom: 2rem;
+        }
+
+        /* Step indicator */
+        .step-indicator {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 2rem;
+            gap: 1rem;
+        }
+
+        .step {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .step.active {
+            color: var(--primary);
+        }
+
+        .step-number {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: var(--card-border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .step.active .step-number {
+            background: var(--primary);
+            color: var(--background);
+        }
+
+        .step-divider {
+            width: 40px;
+            height: 2px;
+            background: var(--card-border);
+            transition: all 0.3s ease;
+        }
+
+        .step.active + .step-divider {
+            background: var(--primary);
+        }
+
+        /* Payment method selection */
+        .payment-methods {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            animation: fadeIn 0.6s ease-out;
+        }
+
+        .payment-method-card {
+            background: var(--card-bg);
+            border: 2px solid var(--card-border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            text-align: center;
+            min-height: 140px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .payment-method-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(45deg, transparent, rgba(46, 213, 115, 0.05), transparent);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .payment-method-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            border-color: var(--primary);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2), 0 0 20px rgba(46, 213, 115, 0.3);
+        }
+
+        .payment-method-card:hover::before {
+            opacity: 1;
+        }
+
+        .payment-method-card.selected {
+            border-color: var(--primary);
+            background: rgba(46, 213, 115, 0.05);
+            animation: glow 2s infinite;
+        }
+
+        .payment-method-card.selected::before {
+            opacity: 1;
+        }
+
+        .payment-logo {
+            width: 60px;
+            height: 60px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            font-weight: bold;
+            margin-bottom: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .telebirr-logo {
+            background: linear-gradient(135deg, var(--telebirr-color), #ff8c42);
+            color: white;
+        }
+
+        .ebirr-logo {
+            background: linear-gradient(135deg, var(--ebirr-color), #3b82f6);
+            color: white;
+        }
+
+        .payment-method-card:hover .payment-logo {
+            transform: scale(1.1) rotate(5deg);
+        }
+
+        .payment-name {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: 0.5rem;
+        }
+
+        .payment-description {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            line-height: 1.4;
+        }
+
+        /* Payment details section */
+        .payment-details {
+            display: none;
+            animation: slideUp 0.5s ease-out;
+        }
+
+        .payment-details.active {
+            display: block;
+        }
+
+        .back-button {
+            background: none;
+            border: none;
+            color: var(--primary);
+            font-size: 0.9rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .back-button:hover {
+            color: var(--primary-light);
+            transform: translateX(-3px);
+        }
+
+        .selected-method {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            background: rgba(46, 213, 115, 0.08);
+            border: 1px solid rgba(46, 213, 115, 0.2);
+            border-radius: 12px;
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .selected-method-logo {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+
+        .selected-method-info h4 {
+            color: var(--text);
+            font-size: 1rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .selected-method-info p {
+            color: var(--text-secondary);
+            font-size: 0.85rem;
         }
 
         /* Form styles */
@@ -225,49 +457,6 @@
         .form-control::placeholder {
             color: var(--text-secondary);
             opacity: 0.7;
-        }
-
-        .file-input-container {
-            position: relative;
-            overflow: hidden;
-            display: inline-block;
-            width: 100%;
-        }
-
-        .file-input-label {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 0.75rem 1rem;
-            background-color: rgba(46, 213, 115, 0.1);
-            color: var(--primary);
-            border: 1px dashed var(--primary);
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            text-align: center;
-        }
-
-        .file-input-label:hover {
-            background-color: rgba(46, 213, 115, 0.15);
-        }
-
-        .file-input {
-            position: absolute;
-            left: 0;
-            top: 0;
-            opacity: 0;
-            width: 100%;
-            height: 100%;
-            cursor: pointer;
-        }
-
-        .file-name {
-            margin-top: 0.5rem;
-            font-size: 0.85rem;
-            color: var(--text-secondary);
-            text-align: center;
-            word-break: break-all;
         }
 
         /* Button styles */
@@ -448,40 +637,6 @@
             animation: slideOut 0.3s cubic-bezier(0.68, -0.55, 0.27, 1.55) forwards;
         }
 
-        /* Django messages */
-        .django-messages-container {
-            margin-bottom: 1.5rem;
-        }
-
-        .django-message {
-            padding: 1rem;
-            border-radius: 8px;
-            margin-bottom: 0.5rem;
-            display: flex;
-            align-items: flex-start;
-            gap: 0.75rem;
-        }
-
-        .django-message.success {
-            background-color: rgba(46, 213, 115, 0.1);
-            border-left: 3px solid var(--success);
-        }
-
-        .django-message.error {
-            background-color: rgba(255, 87, 87, 0.1);
-            border-left: 3px solid var(--error);
-        }
-
-        .django-message.warning {
-            background-color: rgba(255, 165, 2, 0.1);
-            border-left: 3px solid var(--warning);
-        }
-
-        .django-message.info {
-            background-color: rgba(85, 166, 255, 0.1);
-            border-left: 3px solid var(--info);
-        }
-
         /* Payment info card */
         .payment-info-card {
             background-color: rgba(46, 213, 115, 0.08);
@@ -598,6 +753,21 @@
             .title {
                 font-size: 1.5rem;
             }
+
+            .payment-methods {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+
+            .step-indicator {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+
+            .step-divider {
+                width: 2px;
+                height: 20px;
+            }
         }
 
         @media (max-width: 480px) {
@@ -617,20 +787,21 @@
             .logo-text {
                 font-size: 1rem;
             }
+
+            .payment-method-card {
+                padding: 1rem;
+                min-height: 120px;
+            }
+
+            .payment-logo {
+                width: 50px;
+                height: 50px;
+                font-size: 1.5rem;
+            }
         }
     </style>
-      <link
-    rel="icon"
-    href="https://i.postimg.cc/FzgPtp2v/photo-2025-05-31-05-36-51.jpg"
-    type="image/jpeg"
-  />
-
-  <!-- 2) For older browsers, you can also include “shortcut icon” -->
-  <link
-    rel="shortcut icon"
-    href="https://i.postimg.cc/FzgPtp2v/photo-2025-05-31-05-36-51.jpg"
-    type="image/jpeg"
-  />
+    <link rel="icon" href="https://i.postimg.cc/FzgPtp2v/photo-2025-05-31-05-36-51.jpg" type="image/jpeg" />
+    <link rel="shortcut icon" href="https://i.postimg.cc/FzgPtp2v/photo-2025-05-31-05-36-51.jpg" type="image/jpeg" />
 </head>
 <body>
     <!-- Backdrop effect -->
@@ -653,62 +824,113 @@
     <!-- Main container -->
     <div class="container">
         <h1 class="title">Deposit Funds</h1>
-        <p class="subtitle">Complete the form below to deposit funds to your account</p>
+        <p class="subtitle">Choose your preferred payment method and complete the deposit</p>
 
-        <!-- Django messages -->
-       
-
-        <!-- Payment Information Card -->
-        <div class="payment-info-card">
-            <h3 class="payment-info-title">
-                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <rect x="2" y="5" width="20" height="14" rx="2" />
-                    <line x1="2" y1="10" x2="22" y2="10" />
-                </svg>
-                Payment Information
-            </h3>
-            <div class="payment-info-item">
-                <div class="payment-info-label">Receiver Name</div>
-                <div class="payment-info-value">YISAK</div>
+        <!-- Step indicator -->
+        <div class="step-indicator">
+            <div class="step active" id="step1">
+                <div class="step-number">1</div>
+                <span>Choose Method</span>
             </div>
-            <div class="payment-info-item">
-                <div class="payment-info-label">Phone Number</div>
-                <div class="payment-info-value">
-                    <span id="phone-number">0967456366</span>
-                    <button class="copy-btn" id="copy-phone" aria-label="Copy phone number">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-                            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
-                        </svg>
-                    </button>
-                    <span class="copy-tooltip" id="copy-tooltip">Copied!</span>
+            <div class="step-divider"></div>
+            <div class="step" id="step2">
+                <div class="step-number">2</div>
+                <span>Complete Payment</span>
+            </div>
+        </div>
+
+        <!-- Payment method selection -->
+        <div class="payment-selection" id="payment-selection">
+            <div class="payment-methods">
+                <div class="payment-method-card" data-method="tb" id="telebirr-card">
+                    <div class="payment-logo telebirr-logo">TB</div>
+                    <div class="payment-name">Telebirr</div>
+                    <div class="payment-description">Fast and secure mobile payment</div>
+                </div>
+                
+                <div class="payment-method-card" data-method="eb" id="ebirr-card">
+                    <div class="payment-logo ebirr-logo">EC</div>
+                    <div class="payment-name">eBirr Coop</div>
+                    <div class="payment-description">Cooperative bank mobile payment</div>
                 </div>
             </div>
         </div>
 
-        <!-- Transaction Note -->
-        <div class="transaction-note">
-            <strong>Important:</strong> Please complete your payment to the phone number above before submitting the transaction ID. Only enter the transaction ID you received from Telebirr after your payment is complete.
-        </div>
-
-        <!-- Deposit form -->
-        <form id="deposit-form" method="POST" enctype="multipart/form-data">
-            {% csrf_token %}
-            
-            <div class="form-group">
-                <label for="transaction-id" class="form-label">Transaction ID</label>
-                <input type="text" id="transaction-id" name="tx_id" class="form-control" placeholder="Enter the transaction ID from Telebirr" required>
-            </div>
-            
-            <button type="submit" class="btn" id="submit-btn">
-                <span class="btn-text">Complete Deposit</span>
+        <!-- Payment details section -->
+        <div class="payment-details" id="payment-details">
+            <button class="back-button" id="back-button">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="m12 19-7-7 7-7"/>
+                    <path d="M19 12H5"/>
+                </svg>
+                Back to payment methods
             </button>
-        </form>
+
+            <!-- Selected method display -->
+            <div class="selected-method" id="selected-method">
+                <div class="selected-method-logo" id="selected-logo"></div>
+                <div class="selected-method-info">
+                    <h4 id="selected-name"></h4>
+                    <p id="selected-desc"></p>
+                </div>
+            </div>
+
+            <!-- Payment Information Card -->
+            <div class="payment-info-card">
+                <h3 class="payment-info-title">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="2" y="5" width="20" height="14" rx="2" />
+                        <line x1="2" y1="10" x2="22" y2="10" />
+                    </svg>
+                    Payment Information
+                </h3>
+                <div class="payment-info-item">
+                    <div class="payment-info-label">Receiver Name</div>
+                    <div class="payment-info-value" id="receiver-name">YISAK</div>
+                </div>
+                <div class="payment-info-item">
+                    <div class="payment-info-label">Phone Number</div>
+                    <div class="payment-info-value">
+                        <span id="phone-number">0967456366</span>
+                        <button class="copy-btn" id="copy-phone" aria-label="Copy phone number">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                            </svg>
+                        </button>
+                        <span class="copy-tooltip" id="copy-tooltip">Copied!</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Transaction Note -->
+            <div class="transaction-note" id="transaction-note">
+                <strong>Important:</strong> Please complete your payment to the phone number above before submitting the transaction ID. Only enter the transaction ID you received from <span id="payment-provider">Telebirr</span> after your payment is complete.
+            </div>
+
+            <!-- Deposit form -->
+            <form id="deposit-form" method="POST" enctype="multipart/form-data">
+                {% csrf_token %}
+                
+                <div class="form-group">
+                    <label for="transaction-id" class="form-label">Transaction ID</label>
+                    <input type="text" id="transaction-id" name="tx_id" class="form-control" placeholder="Enter the transaction ID" required>
+                </div>
+                
+                <button type="submit" class="btn" id="submit-btn">
+                    <span class="btn-text">Complete Deposit</span>
+                </button>
+            </form>
+        </div>
     </div>
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             // DOM elements
+            const paymentSelection = document.getElementById('payment-selection');
+            const paymentDetails = document.getElementById('payment-details');
+            const paymentCards = document.querySelectorAll('.payment-method-card');
+            const backButton = document.getElementById('back-button');
             const form = document.getElementById('deposit-form');
             const submitBtn = document.getElementById('submit-btn');
             const starsContainer = document.getElementById('stars-container');
@@ -716,9 +938,46 @@
             const copyPhoneBtn = document.getElementById('copy-phone');
             const phoneNumber = document.getElementById('phone-number');
             const copyTooltip = document.getElementById('copy-tooltip');
+            const step1 = document.getElementById('step1');
+            const step2 = document.getElementById('step2');
             
-            // Track form submission state
+            // Selected method elements
+            const selectedMethod = document.getElementById('selected-method');
+            const selectedLogo = document.getElementById('selected-logo');
+            const selectedName = document.getElementById('selected-name');
+            const selectedDesc = document.getElementById('selected-desc');
+            const receiverName = document.getElementById('receiver-name');
+            const paymentProvider = document.getElementById('payment-provider');
+            const transactionNote = document.getElementById('transaction-note');
+            const transactionIdInput = document.getElementById('transaction-id');
+            
+            // Track form submission state and selected payment method
             let isSubmitting = false;
+            let selectedPaymentMethod = null;
+
+            // Payment method data
+            const paymentMethods = {
+                tb: {
+                    name: 'Telebirr',
+                    description: 'Fast and secure mobile payment',
+                    logo: 'TB',
+                    logoClass: 'telebirr-logo',
+                    receiverName: 'YISAK',
+                    phoneNumber: '0967456366',
+                    provider: 'Telebirr',
+                    placeholder: 'Enter the transaction ID from Telebirr'
+                },
+                eb: {
+                    name: 'E-Birr Coop',
+                    description: 'Cooperative bank mobile payment',
+                    logo: 'EC',
+                    logoClass: 'ebirr-logo',
+                    receiverName: 'CHIWEGAMES',
+                    phoneNumber: '0967456366',
+                    provider: 'eBirr Coop',
+                    placeholder: 'Enter the transaction ID from eBirr Coop'
+                }
+            };
 
             // Create shooting stars effect
             function createShootingStar() {
@@ -742,6 +1001,60 @@
             
             // Create shooting stars periodically
             setInterval(createShootingStar, 2000);
+
+            // Payment method selection
+            paymentCards.forEach(card => {
+                card.addEventListener('click', () => {
+                    const method = card.dataset.method;
+                    selectPaymentMethod(method);
+                });
+            });
+
+            // Select payment method function
+            function selectPaymentMethod(method) {
+                selectedPaymentMethod = method;
+                const methodData = paymentMethods[method];
+                
+                // Update selected method display
+                selectedLogo.textContent = methodData.logo;
+                selectedLogo.className = `selected-method-logo ${methodData.logoClass}`;
+                selectedName.textContent = methodData.name;
+                selectedDesc.textContent = methodData.description;
+                
+                // Update payment information
+                receiverName.textContent = methodData.receiverName;
+                phoneNumber.textContent = methodData.phoneNumber;
+                paymentProvider.textContent = methodData.provider;
+                transactionIdInput.placeholder = methodData.placeholder;
+                
+                // Show payment details and hide selection
+                paymentSelection.style.display = 'none';
+                paymentDetails.classList.add('active');
+                
+                // Update step indicator
+                step1.classList.remove('active');
+                step2.classList.add('active');
+                
+                // Create success message
+                createMessage(`${methodData.name} selected! Complete your payment and enter the transaction ID.`, 'success');
+            }
+
+            // Back button functionality
+            backButton.addEventListener('click', () => {
+                // Hide payment details and show selection
+                paymentDetails.classList.remove('active');
+                paymentSelection.style.display = 'block';
+                
+                // Update step indicator
+                step2.classList.remove('active');
+                step1.classList.add('active');
+                
+                // Clear selected method
+                selectedPaymentMethod = null;
+                
+                // Reset form
+                form.reset();
+            });
 
             // Copy phone number functionality
             copyPhoneBtn.addEventListener('click', () => {
@@ -769,6 +1082,9 @@
                 setTimeout(() => {
                     copyTooltip.classList.remove('show');
                 }, 2000);
+                
+                // Create success message
+                createMessage('Phone number copied to clipboard!', 'success');
             });
 
             // Create message function
@@ -821,11 +1137,17 @@
                 // Prevent multiple submissions
                 if (isSubmitting) return;
                 
+                // Check if payment method is selected
+                if (!selectedPaymentMethod) {
+                    createMessage("Please select a payment method first", 'error');
+                    return;
+                }
+                
                 // Basic validation
                 const transactionId = document.getElementById('transaction-id').value.trim();
                 
                 if (!transactionId) {
-                    createMessage("Please enter the transaction ID from Telebirr", 'error');
+                    createMessage(`Please enter the transaction ID from ${paymentMethods[selectedPaymentMethod].provider}`, 'error');
                     return;
                 }
                 
@@ -836,6 +1158,9 @@
                 try {
                     // Create form data for submission
                     const formData = new FormData(form);
+                    
+                    // Add the payment method way
+                    formData.append('way', selectedPaymentMethod);
                     
                     // Send AJAX request
                     const response = await fetch(form.action, {
@@ -854,8 +1179,11 @@
                         // Success case
                         createMessage(data.message || 'Deposit request submitted successfully!', 'success');
                         
-                        // Reset form
+                        // Reset form and go back to selection
                         form.reset();
+                        setTimeout(() => {
+                            backButton.click();
+                        }, 2000);
                     } else {
                         // Error case
                         createMessage(data.message || 'An error occurred while processing your deposit', 'error');
@@ -870,29 +1198,41 @@
                 }
             });
 
-            // Process Django messages on page load
-            function processDjangoMessages() {
-                const djangoMessages = document.querySelectorAll('.django-message');
-                
-                djangoMessages.forEach(message => {
-                    // Get message text and type
-                    const text = message.textContent.trim();
-                    let type = 'info';
-                    
-                    if (message.classList.contains('success')) type = 'success';
-                    else if (message.classList.contains('error')) type = 'error';
-                    else if (message.classList.contains('warning')) type = 'warning';
-                    
-                    // Create animated message
-                    createMessage(text, type);
-                    
-                    // Remove original message
-                    message.remove();
+            // Add hover effects to payment cards
+            paymentCards.forEach(card => {
+                card.addEventListener('mouseenter', () => {
+                    card.style.animation = 'cardHover 0.3s ease-out forwards';
                 });
-            }
+                
+                card.addEventListener('mouseleave', () => {
+                    card.style.animation = '';
+                });
+            });
+
+            // Keyboard shortcuts
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') {
+                    if (paymentDetails.classList.contains('active')) {
+                        backButton.click();
+                    }
+                } else if (e.key === '1' && paymentSelection.style.display !== 'none') {
+                    selectPaymentMethod('tb');
+                } else if (e.key === '2' && paymentSelection.style.display !== 'none') {
+                    selectPaymentMethod('eb');
+                }
+            });
+
+            // Add some interactive effects
+            const container = document.querySelector('.container');
+            container.addEventListener('mouseenter', () => {
+                container.style.transform = 'translateY(-4px)';
+                container.style.boxShadow = '0 20px 50px rgba(0, 0, 0, 0.2)';
+            });
             
-            // Process Django messages
-            processDjangoMessages();
+            container.addEventListener('mouseleave', () => {
+                container.style.transform = 'translateY(-2px)';
+                container.style.boxShadow = '0 15px 40px rgba(0, 0, 0, 0.15)';
+            });
         });
     </script>
 </body>

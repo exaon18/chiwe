@@ -10,7 +10,7 @@ from django.template.loader import render_to_string
 from django.core.mail import EmailMessage
 from django.urls import reverse
 from autapp.models import MyUser, Ballance
-from .models import WithdrawalRequest,DepositRequest,TelebirrReq
+from .models import WithdrawalRequest,DepositRequest,TelebirrReq,Ebirreq
 from autapp.models import chiweProfit,Maintainance
 from django.db.models import Sum
 import random
@@ -24,6 +24,16 @@ import re
 from django.http import JsonResponse
 import threading
 from autapp.views import generate_unique_number
+import re
+
+def extract_ebirr_info(message: str):
+    pattern = r"Ref:(\d+)\s+Confirmed\.\s+(ETB\d+)"
+    match = re.search(pattern, message, re.DOTALL)
+    if match:
+        trx_id = match.group(1)
+        amount = match.group(2)
+        return trx_id, amount
+    return None, None
 
 def extract_sms_info(message):
     pattern = (
@@ -41,29 +51,56 @@ def extract_sms_info(message):
 # In your view
 @csrf_exempt
 @require_POST
-def receive_sms(request,key):
+def receive_sms(request,key,way):
     if key=="Plgp2y8yu":
-        body = json.loads(request.body)
-        sms = body.get('content', '')
-        print(sms)
-        data = extract_sms_info(message=sms)
-        tx_id=data['tx_id']
-        amount=float(data['amount'])
-        date=data["date"]
-        if TelebirrReq.objects.filter(tx_id=tx_id).exists()==False and len(tx_id)==10:
-            TelebirrReq.objects.create(tx_id=tx_id,amount=amount,completed=False)
-        elif TelebirrReq.objects.filter(tx_id=tx_id).exists():
-            if TelebirrReq.objects.get(tx_id=tx_id).completed==False:
-                print("trx already exisit waiting to be reedemd")
+        if way=="tb":
+            print("in tb")
+            print(request.POST)
+            body = request.POST["Plgp2y8yu"]
+            print(body)
+            
+            data = extract_sms_info(message=body)
+            tx_id=data["tx_id"]
+            amount=float(data["amount"])
+            date=data["date"]
+            if TelebirrReq.objects.filter(tx_id=tx_id).exists()==False and len(tx_id)==10:
+                TelebirrReq.objects.create(tx_id=tx_id,amount=amount,completed=False)
+            elif TelebirrReq.objects.filter(tx_id=tx_id).exists():
+                if TelebirrReq.objects.get(tx_id=tx_id).completed==False:
+                    print("trx already exisit waiting to be reedemd")
+                else:
+                    print("trx already reedemd")
             else:
-                print("trx already reedemd")
-        else:
-            print("smtn went wrong")
+                print("smtn went wrong")
+        elif way=="eb":
+            print(request.POST)
+            print("in eb")
+            body = json.loads(request.body)
+            print(f"body {body}")
+            sms = body.get('content', '')
+            print(sms)
+            data = extract_ebirr_info(sms)
+            print(f"extracted {data}")
+            tx_id=data[0]
+            amount=data[1]
+            amount=amount[3:]
+            print(f"extracted {data}")
+            print(f"tx_id {tx_id}")
+            print(f"amount {amount}")
+            
+            if Ebirreq.objects.filter(tx_id=tx_id).exists()==False and len(tx_id)==10:
+                Ebirreq.objects.create(tx_id=tx_id,amount=amount,completed=False)
+            elif Ebirreq.objects.filter(tx_id=tx_id).exists():
+                if Ebirreq.objects.get(tx_id=tx_id).completed==False:
+                    print("trx already exisit waiting to be reedemd")
+                else:
+                    print("trx already reedemd")
+            else:
+                print("smtn went wrong")
 
+            print(data)
 
-        print(data)
-
-    return JsonResponse({'status': 'received', 'parsed': data})
+        return JsonResponse({'status': 'received', 'parsed': data})
 
 invalidOtp = False
 # ✅ Generate a proper 6-digit OTP
@@ -101,6 +138,7 @@ def withdraw(request, invalidOtp=invalidOtp):
         
         try:
             amount = float(request.POST["amount"])
+            way=request.POST["way"]
         except ValueError:
             messages.error(request, "Please enter a valid number for the amount.")
             print("Redirecting to 'withdraw' after invalid amount input.")
@@ -119,18 +157,40 @@ def withdraw(request, invalidOtp=invalidOtp):
             if amount < 25:
                 print("❌ Withdrawal amount too low. Rendering 'withdraw.html'.")
                 return JsonResponse(request,{"success":False,"message":"Withdrawal amount must be at least 25 birr."})
-            user_balance.ballance -= Decimal(amount)
-            user_balance.save()
-            WithdrawalRequest.objects.create(
-                user=user,
-                amount=amount,
-                phone_number=phone_number,
-                status="Pending"
-            )
-            user.pendingWithdrwal = True
-             # Reset OTP after use
-            user.save()
-            return JsonResponse({"success":True,"message":f"Your withdrawal request for {amount} ETB has been submitted successfully."})
+            if way=="tb":
+                user_balance.ballance -= Decimal(amount)
+                user_balance.save()
+                WithdrawalRequest.objects.create(
+                    user=user,
+                    amount=amount,
+                    phone_number=phone_number,
+                    status="Pending",
+                    way="tb"
+
+                )
+                user.pendingWithdrwal = True
+                # Reset OTP after use
+                user.save()
+                return JsonResponse({"success":True,"message":f"Your withdrawal request for {amount}  ETB using Telebirr has been submitted successfully."})
+                    
+                
+            elif way=="eb":
+                user_balance.ballance -= Decimal(amount)
+                user_balance.save()
+                WithdrawalRequest.objects.create(
+                    user=user,
+                    amount=amount,
+                    phone_number=phone_number,
+                    status="Pending",
+                    way="eb"
+
+                )
+                user.pendingWithdrwal = True
+                # Reset OTP after use
+                user.save()
+                return JsonResponse({"success":True,"message":f"Your withdrawal request for {amount}  ETB using E-birr has been submitted successfully."})
+            else:
+                return JsonResponse({"success":False,"message":"Please select a waallet to withdraw."})
         else:
             
             print("❌insufficient balance. Redirecting to 'withdraw'.")
@@ -268,49 +328,92 @@ from django.db import transaction
 from django.db.models import F
 from django.http import JsonResponse
 
-def check_transaction(username: str, tx_id: str):
+def check_transaction(username: str, tx_id: str,way):
     tx_id = tx_id.upper()
+    if way=="tb":
+
     # Wrap the whole thing in an atomic block
-    with transaction.atomic():
-        try:
-            # Lock the TelebirrReq row so concurrent threads queue up here
-            req = (TelebirrReq.objects
-                   .select_for_update()
-                   .get(tx_id=tx_id))
-        except TelebirrReq.DoesNotExist:
+        with transaction.atomic():
+            try:
+                # Lock the TelebirrReq row so concurrent threads queue up here
+                req = (TelebirrReq.objects
+                    .select_for_update()
+                    .get(tx_id=tx_id))
+            except TelebirrReq.DoesNotExist:
+                return JsonResponse({
+                    "status": False,
+                    "message": "Your transaction id is not valid, please try again in a few minutes or use a new one"
+                })
+
+            if req.completed:
+                return JsonResponse({
+                    "status": False,
+                    "message": "Your deposit has already been approved, please use a new one"
+                })
+
+            # Lock the user balance row too
+            user = MyUser.objects.get(username=username)
+            bal = (Ballance.objects
+                .select_for_update()
+                .get(user=user))
+
+            # Credit using an F-expression so it’s done in the database
+            bal.ballance = F("ballance") + req.amount
+            bal.save()
+
+            # Mark request completed
+            req.completed = True
+            req.save()
+
+            # Clear the pending-deposit flag
+            user.pendingDeposit = False
+            user.save()
+
             return JsonResponse({
-                "status": False,
-                "message": "Your transaction id is not valid, please try again in a few minutes or use a new one"
+                "status": True,
+                "message": f"Your deposit for {req.amount} ETB has been approved"
             })
+    else:
+        with transaction.atomic():
+            try:
+                # Lock the TelebirrReq row so concurrent threads queue up here
+                req = (Ebirreq.objects
+                    .select_for_update()
+                    .get(tx_id=tx_id))
+            except Ebirreq.DoesNotExist:
+                return JsonResponse({
+                    "status": False,
+                    "message": "Your transaction id is not valid, please try again in a few minutes or use a new one"
+                })
 
-        if req.completed:
+            if req.completed:
+                return JsonResponse({
+                    "status": False,
+                    "message": "Your deposit has already been approved, please use a new one"
+                })
+
+            # Lock the user balance row too
+            user = MyUser.objects.get(username=username)
+            bal = (Ballance.objects
+                .select_for_update()
+                .get(user=user))
+
+            # Credit using an F-expression so it’s done in the database
+            bal.ballance = F("ballance") + req.amount
+            bal.save()
+
+            # Mark request completed
+            req.completed = True
+            req.save()
+
+            # Clear the pending-deposit flag
+            user.pendingDeposit = False
+            user.save()
+
             return JsonResponse({
-                "status": False,
-                "message": "Your deposit has already been approved, please use a new one"
+                "status": True,
+                "message": f"Your deposit for {req.amount} ETB has been approved"
             })
-
-        # Lock the user balance row too
-        user = MyUser.objects.get(username=username)
-        bal = (Ballance.objects
-               .select_for_update()
-               .get(user=user))
-
-        # Credit using an F-expression so it’s done in the database
-        bal.ballance = F("ballance") + req.amount
-        bal.save()
-
-        # Mark request completed
-        req.completed = True
-        req.save()
-
-        # Clear the pending-deposit flag
-        user.pendingDeposit = False
-        user.save()
-
-        return JsonResponse({
-            "status": True,
-            "message": f"Your deposit for {req.amount} ETB has been approved"
-        })
 @login_required
 def deposit(request):
     maintenance = Maintainance.objects.first()
@@ -324,7 +427,17 @@ def deposit(request):
                 "message": "You already have a pending deposit request. Please wait for it to be completed."
             })
         tx_id = request.POST["tx_id"]
-        return check_transaction(user.username, tx_id)
+        way=request.POST["way"]
+        if way=="tb":
+            print("tb")
+            return check_transaction(user.username, tx_id,way="tb")
+        elif way=="eb":
+            print("eb")
+            return check_transaction(user.username,tx_id=tx_id,way="eb")
+        else:
+            return JsonResponse(request,{
+                "sucess":False,"message":"please select the way you deposited the money"
+            })
 
     return render(request, "deposit.html")
 
