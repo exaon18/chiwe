@@ -17,7 +17,7 @@ class WithdrawalRequest(models.Model):
     status = models.CharField(choices=STATUS_CHOICES, max_length=20, default='pending')
     requestedAt=models.DateTimeField(auto_now_add=True)
     way=models.CharField(max_length=20,null=False,default='tb')
-
+    
     def __str__(self):
         return f"{self.user.username} - {self.status}"
 class DepositRequest(models.Model):

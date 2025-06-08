@@ -356,23 +356,46 @@ def check_transaction(username: str, tx_id: str,way):
             bal = (Ballance.objects
                 .select_for_update()
                 .get(user=user))
+            if req.amount<10:
+                return JsonResponse({
+                    "success":False,"message":"amount shouldnt be less than 10 birr"
+                })
 
             # Credit using an F-expression so it’s done in the database
-            bal.ballance = F("ballance") + req.amount
-            bal.save()
+            if user.firstdepo==False:
+                amount=req.amount+(req.amount/2)
+                bal.ballance = F("ballance") + amount
+                bal.save()
 
-            # Mark request completed
-            req.completed = True
-            req.save()
+                # Mark request completed
+                req.completed = True
+                req.save()
 
-            # Clear the pending-deposit flag
-            user.pendingDeposit = False
-            user.save()
+                # Clear the pending-deposit flag
+                user.pendingDeposit = False
+                user.firstdepo=True
+                user.save()
 
-            return JsonResponse({
-                "status": True,
-                "message": f"Your deposit for {req.amount} ETB has been approved"
-            })
+                return JsonResponse({
+                    "status": True,
+                    "message": f"Your deposit for {req.amount} ETB has been approved plus {req.amount/2} ETB as bonus"
+                })
+            else:
+                bal.ballance = F("ballance") + amount
+                bal.save()
+
+                # Mark request completed
+                req.completed = True
+                req.save()
+
+                # Clear the pending-deposit flag
+                user.pendingDeposit = False
+                user.save()
+
+                return JsonResponse({
+                    "status": True,
+                    "message": f"Your deposit for {req.amount} ETB has been approved"
+                })
     else:
         with transaction.atomic():
             try:
@@ -391,29 +414,50 @@ def check_transaction(username: str, tx_id: str,way):
                     "status": False,
                     "message": "Your deposit has already been approved, please use a new one"
                 })
-
+            if req.amount<10:
+                return JsonResponse({
+                    "sucess":False,"message":"amount shouldnt be less than 10 birr"
+                })
             # Lock the user balance row too
             user = MyUser.objects.get(username=username)
             bal = (Ballance.objects
                 .select_for_update()
                 .get(user=user))
-
+            if user.firstdepo==False:
+                amount=req.amount+(req.amount/2)
             # Credit using an F-expression so it’s done in the database
-            bal.ballance = F("ballance") + req.amount
-            bal.save()
+                bal.ballance = F("ballance") + req.amount
+                bal.save()
 
-            # Mark request completed
-            req.completed = True
-            req.save()
+                # Mark request completed
+                req.completed = True
+                req.save()
 
-            # Clear the pending-deposit flag
-            user.pendingDeposit = False
-            user.save()
+                # Clear the pending-deposit flag
+                user.pendingDeposit = False
+                user.firstdepo=True
+                user.save()
 
-            return JsonResponse({
-                "status": True,
-                "message": f"Your deposit for {req.amount} ETB has been approved"
-            })
+                return JsonResponse({
+                    "status": True,
+                    "message": f"Your deposit for {req.amount} ETB has been approved plus {req.amount/2} ETB as bonus"
+                })
+            else:
+                bal.ballance = F("ballance") + req.amount
+                bal.save()
+
+                # Mark request completed
+                req.completed = True
+                req.save()
+
+                # Clear the pending-deposit flag
+                user.pendingDeposit = False
+                user.save()
+
+                return JsonResponse({
+                    "status": True,
+                    "message": f"Your deposit for {req.amount} ETB has been approved"
+                })
 @login_required
 def deposit(request):
     maintenance = Maintainance.objects.first()

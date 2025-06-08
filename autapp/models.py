@@ -20,6 +20,7 @@ class MyUser(AbstractUser):
     last_otp_sent = models.DateTimeField(null=True, blank=True)
     last_otp_fp=models.DateField(null=True,blank=True)
     Active_Game=models.BooleanField(default=False)
+    firstdepo=models.BooleanField(default=False)
     def __str__(self):
         return self.username
 class Ballance(models.Model):

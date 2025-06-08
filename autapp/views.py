@@ -153,9 +153,7 @@ def verify(request, username):
         print(user.token)
         if user.token == token:
             user.is_active = True
-            userb=Ballance.objects.get(user=user)
-            userb.ballance=25
-            userb.save()
+            
             GameHistory.objects.get_or_create(user=user,TotalPlayed=0,TotalWin=0,Totaloss=0,TotalEarning=0.00,)
             user.save()
             login(request, user)
