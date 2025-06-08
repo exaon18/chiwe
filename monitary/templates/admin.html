@@ -979,17 +979,17 @@
                         <th>Username</th>
                         <th>Phone Number</th>
                         <th>Amount</th>
-                        <th>Requested Date</th>
+                        <th>way</th>
                         <th>Status</th>
                     </tr>
                 </thead>
                 <tbody id="pendingWithdrawalsTable">
                     {% for data in Pdata %}
-                    <tr data-username="{{ data.user.username }}" data-phone="{{ data.phone_number }}" data-amount="{{ data.amount }}" data-date="{{ data.requestedAt|date:'Y-m-d H:i' }}" data-id="{{ data.id }}" data-type="withdrawal">
+                    <tr data-username="{{ data.user.username }}" data-phone="{{ data.phone_number }}" data-amount="{{ data.amount }}" data-way="{{ data.way}}" data-id="{{ data.id }}" data-type="withdrawal">
                         <td>{{ data.user.username }}</td>
                         <td>{{ data.phone_number }}</td>
                         <td>${{ data.amount }}</td>
-                        <td>{{ data.requestedAt|date:'Y-m-d H:i' }}</td>
+                        <td>{{ data.way }}</td>
                         <td><span class="status status-pending">{{ data.status }}</span></td>
                     </tr>
                     {% empty %}
@@ -1281,7 +1281,7 @@
                 const username = row.getAttribute('data-username');
                 const phone = row.getAttribute('data-phone');
                 const amount = row.getAttribute('data-amount');
-                const id = row.getAttribute('data-id');
+                const id = row.getAttribute('data-way');
                 const type = row.getAttribute('data-type');
                 
                 // Fill form fields

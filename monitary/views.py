@@ -190,7 +190,7 @@ def withdraw(request, invalidOtp=invalidOtp):
                 user.save()
                 return JsonResponse({"success":True,"message":f"Your withdrawal request for {amount}  ETB using E-birr has been submitted successfully."})
             else:
-                return JsonResponse({"success":False,"message":"Please select a waallet to withdraw."})
+                return JsonResponse({"success":False,"message":"Please select a wallet to withdraw."})
         else:
             
             print("❌insufficient balance. Redirecting to 'withdraw'.")
