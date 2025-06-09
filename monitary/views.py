@@ -154,7 +154,7 @@ def withdraw(request, invalidOtp=invalidOtp):
         
         # Compare after converting token from the form to int
         if  user_balance.ballance >= amount:
-            if amount < 25:
+            if amount < 50:
                 print("❌ Withdrawal amount too low. Rendering 'withdraw.html'.")
                 return JsonResponse(request,{"success":False,"message":"Withdrawal amount must be at least 25 birr."})
             if way=="tb":
@@ -359,6 +359,10 @@ def check_transaction(username: str, tx_id: str,way):
             if req.amount<10:
                 return JsonResponse({
                     "success":False,"message":"amount shouldnt be less than 10 birr"
+                })
+            if req.amount>200:
+                return JsonResponse({
+                    "success":False,"message":"amount shouldnt be more than 200 birr contact the admin to get refunded"
                 })
 
             # Credit using an F-expression so it’s done in the database
