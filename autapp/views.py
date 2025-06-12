@@ -191,8 +191,9 @@ def login_view(request):
 def dashboard(request):
     username=request.user.username
     user=MyUser.objects.get(username=username)
-    
+    print(user)
     ballance=Ballance.objects.get(user=user).ballance
+
     return render(request,'dashboard.html',{'user':user,'ballance':ballance})
 @login_required
 def profile(request):

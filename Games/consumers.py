@@ -415,13 +415,12 @@ class BingoConsumer(WebsocketConsumer):
             self.board_numbers = list(map(int, board.split(',')))  # Convert to list of numbers
             print("Received board:", self.board_numbers)  # Debugging
         user = MyUser.objects.get(username=self.username)
-        ballance = Ballance.objects.get(user=user).ballance
-
+        self.ballance = Ballance.objects.get(user=user)
         self.win = False
         self.game_over = False  
         self.game_ended = False  
 
-        if ballance < self.amount:
+        if self.ballance.ballance < self.amount:
             self.send(json.dumps({"proceed": False, "message": "Insufficient balance"}))
             self.close()
         else:
@@ -489,15 +488,36 @@ class BingoConsumer(WebsocketConsumer):
         p2 = game_state["player2"]
         # figure out who *was* to move
         offender = p1 if game_state[p1] else p2
+        if offender==p1:
+            game_state["player1miss"]+=1
+            chance=5-int(game_state["player1miss"])
+              # notify timeout
+            async_to_sync(self.channel_layer.group_send)(
+                room,
+                {
+                    "type": "move_timeout",
+                    "message": f"⏰ {offender} missed their move – forced turn! warning only {chance} left"
+                }
+            )
+            if game_state["player1miss"]>=5:
+                self.handle_game_win(p2, p1, self.amount)
+        else:
+            game_state["player2miss"]+=1
+            chance=5-int(game_state["player2miss"])
+              # notify timeout
+            async_to_sync(self.channel_layer.group_send)(
+                room,
+                {
+                    "type": "move_timeout",
+                    "message": f"⏰ {offender} missed their move – forced turn! warning only {chance} left "
+                }
+            )
+            if game_state["player2miss"]>=5:
+                self.handle_game_win(p1, p2, self.amount)
 
-        # notify timeout
-        async_to_sync(self.channel_layer.group_send)(
-            room,
-            {
-                "type": "move_timeout",
-                "message": f"⏰ {offender} missed their move – forced turn!"
-            }
-        )
+        
+
+      
 
         # swap the boolean flags
         print(f"[TURN] before swap: {p1}={game_state[p1]}, {p2}={game_state[p2]}")
@@ -560,11 +580,13 @@ class BingoConsumer(WebsocketConsumer):
             f"{self.username}": True,
             "timer": 0,
             "status": "waiting",
-            "bingo":False
+            "bingo":False,
+            "player1miss":0
         }
         # Set the attribute for later use.
         self.player1_board = self.board_numbers
-
+        self.ballance.ballance -= self.amount
+        self.ballance.save()
         room_list.append(self.data)
         self.room = self.room_number
         BingoConsumer.game_states[self.room] = self.data  
@@ -594,11 +616,9 @@ class BingoConsumer(WebsocketConsumer):
             room_list[0]["status"] = "playing"
             room_list[0]["player2_board"]= self.board_numbers
             room_list[0]["player2_id"] = self.id
-
+            room_list[0]["player2miss"] = 0
             BingoConsumer.game_states[self.room] = room_list[0]
-           
             BingoConsumer.active_players[self.room] += 1  
-
             async_to_sync(self.channel_layer.group_add)(self.room, self.channel_name)
             self.accept()
             if room_list[0]["players_amount"] == 2:
@@ -612,6 +632,8 @@ class BingoConsumer(WebsocketConsumer):
                 player1_turn=self.Game_state[self.player_1]
                 player2_turn=self.Game_state[self.player_2]
                 print(f"type {type(self.player1_board)}")
+                self.ballance.ballance -= self.amount
+                self.ballance.save()
                 async_to_sync(self.channel_layer.send)(
                     self.player1_channel,
                     {
@@ -629,7 +651,9 @@ class BingoConsumer(WebsocketConsumer):
                         "start":True
                     }
                 )
+                print(f"before {room_list}")
                 room_list.pop(0)
+                print(f"after {room_list}")
                 print(self.Game_state)
                 async_to_sync(self.channel_layer.send)(
                     self.player1_channel, 
@@ -725,13 +749,13 @@ class BingoConsumer(WebsocketConsumer):
         winner_obj.points += points
         loser_obj.points = max(0, loser_obj.points - points)
 
-        winner_balance.ballance += self.jackpot
-        loser_balance.ballance -= Decimal(amount)
+        winner_balance.ballance += self.jackpot*2
+       
         winner_history.save()
         losser_history.save()
         
         winner_balance.save()
-        loser_balance.save()
+       
         winner_obj.save()
         loser_obj.save()
 
@@ -756,7 +780,7 @@ class BingoConsumer(WebsocketConsumer):
         data = text_data_json
 
         game_state = BingoConsumer.game_states[self.room]
-        print("Received data:", data)
+        
         with BingoConsumer.bingo_lock:
             if data["type"]=="bingo" and game_state["bingo"] == False:
                 if self.username==game_state["player1"]:
@@ -790,8 +814,7 @@ class BingoConsumer(WebsocketConsumer):
                 player2_matrix = np.array(game_state["player2_board"]).reshape(5, 5)
                 
                 # Debug: print boards before processing
-                print("Player1 matrix before:", player1_matrix)
-                print("Player2 matrix before:", player2_matrix)
+                
                 
                 # Use .any() for the NumPy array membership check
                 if game_state[self.username]:
@@ -845,6 +868,12 @@ class BingoConsumer(WebsocketConsumer):
                             )
                             
                             # Switch turns
+                            if self.username==game_state["player1"]:
+                                print(f" @ @ @before miss {game_state['player1miss']} @ @ @")
+                                game_state["player1miss"]=0
+                                print(f"after miss {game_state['player1miss']}")
+                            else:
+                                game_state["player2miss"]=0
                             game_state[game_state["player1"]] = not game_state[game_state["player1"]]
                             game_state[game_state["player2"]] = not game_state[game_state["player2"]]
                             
@@ -865,11 +894,7 @@ class BingoConsumer(WebsocketConsumer):
                                 }
                             )
                             self._reset_room_timer(self.room)
-                        # Debug: print boards after processing
-                        print("Player1 matrix after:", 
-                            player1_matrix)
-                        print("Player2 matrix after:", 
-                            player2_matrix)
+                       
     def disconnect(self, code):
         # 1) Cancel any per-room move‐timer
         timer = BingoConsumer.room_timers.pop(self.room, None)
@@ -900,7 +925,11 @@ class BingoConsumer(WebsocketConsumer):
                     amount=amount,
                 )
                 BingoConsumer.games_finished[self.room] = True
-
+            elif status == "waiting" and state["players_amount"] == 1:
+                print(f"[DISCONNECT] {self.username} left waiting room")
+                self.ballance.ballance += state["amount"]
+                self.ballance.save()
+                BingoConsumer.active_players[self.room] = None
             # 4) Clean up all per-room mappings (only once)
             print(f"[CLEANUP] Removing room state for room {self.room}")
             BingoConsumer.game_states.pop(self.room, None)
