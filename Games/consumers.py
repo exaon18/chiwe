@@ -736,7 +736,6 @@ class BingoConsumer(WebsocketConsumer):
         winner_obj = MyUser.objects.get(id=winnerid)
         loser_obj = MyUser.objects.get(id=loserid)
         winner_balance = Ballance.objects.get(user=winner_obj)
-        loser_balance = Ballance.objects.get(user=loser_obj)
         winner_history = GameHistory.objects.get(user=winner_obj)
         losser_history = GameHistory.objects.get(user=loser_obj)
         winner_history.TotalWin+=1
