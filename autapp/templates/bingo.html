@@ -2879,7 +2879,7 @@ function initWebSocket(amount, boardNumbers = null) {
     }
 
     // Construct the WebSocket URL with the board parameter
-    const socketUrl = `http://127.0.0.1:8000/wss/bingo/${amount}/?${boardQuery}`;
+    const socketUrl = `http://chiwegames.com/wss/bingo/${amount}/?${boardQuery}`;
 
     // Create WebSocket connection
     gameSocket = new WebSocket(socketUrl);
