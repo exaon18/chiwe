@@ -9,7 +9,7 @@ import threading
 from decimal import Decimal
 from urllib.parse import parse_qs
 import numpy as np
-
+room_with_0=[]
 room_with_25 = []
 room_with_50 = []
 room_with_100 = []
@@ -18,6 +18,7 @@ players_in_game_bingo = []
 bingo_room_with_25 = []
 bingo_room_with_50 = []
 bingo_room_with_100 = []
+bingo_room_with_0=[]
 
 def generate_unique_number(username):
     timestamp = str(time.time())
@@ -62,6 +63,9 @@ class Crack_the_CodeConsumer(WebsocketConsumer):
             if amount == 25:
                 self.room_list=25
                 self.handle_room_connection(room_with_25, amount)
+            elif amount == 0:
+                self.room_list=0
+                self.handle_room_connection(room_with_0, amount)
             elif amount == 50:
                 self.room_list=50
                 self.handle_room_connection(room_with_50, amount)
@@ -338,9 +342,7 @@ class Crack_the_CodeConsumer(WebsocketConsumer):
     def disconnect(self, close_code):
         print(f"🔌 Disconnecting: {self.username}")
         user=MyUser.objects.get(username=self.username)
-        
         room_state = Crack_the_CodeConsumer.game_states.get(self.room)
-        
         # Check if room state exists before trying to access it
         if room_state and room_state.get("status") == "waiting":
             print("user waiting")
@@ -352,8 +354,6 @@ class Crack_the_CodeConsumer(WebsocketConsumer):
             elif self.room_list == 100:
                 room_with_100.pop(0)
             self.clean_up_room()
-         
-            
             print(f"the game hasnt finished before updated {user.Active_Game}")
             user.Active_Game=False
             user.save()
@@ -373,7 +373,6 @@ class Crack_the_CodeConsumer(WebsocketConsumer):
             oponent.save()
             print(f"🚨 {self.username} left. Declaring {remaining_player} as winner.")
             self.handle_game_win(winner=remaining_player, loser=self.username, amount=room_state["amount"])
-        
         # Final cleanup (if not already cleaned up)
         self.clean_up_room()
 
@@ -425,19 +424,20 @@ class BingoConsumer(WebsocketConsumer):
             self.close()
         else:
             self.room_number = generate_unique_number(self.username)
+
             if self.amount == 25:
                 self.room_list = 25
                 self.handle_room_connection(bingo_room_with_25, self.amount)
                 print("connected to bingo 25")
+            elif self.amount == 0:
+                self.room_list = 0
+                self.handle_room_connection(bingo_room_with_0, self.amount)
             elif self.amount == 50:
                 self.room_list = 50
                 self.handle_room_connection(bingo_room_with_50, self.amount)
             elif self.amount == 100:
                 self.room_list = 100
                 self.handle_room_connection(bingo_room_with_100, self.amount)
-    
-    
-  
    # Inside your BingoConsumer class
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -514,11 +514,6 @@ class BingoConsumer(WebsocketConsumer):
             )
             if game_state["player2miss"]>=5:
                 self.handle_game_win(p1, p2, self.amount)
-
-        
-
-      
-
         # swap the boolean flags
         print(f"[TURN] before swap: {p1}={game_state[p1]}, {p2}={game_state[p2]}")
         game_state[p1], game_state[p2] = game_state[p2], game_state[p1]
@@ -710,9 +705,7 @@ class BingoConsumer(WebsocketConsumer):
 
         return completed
     def handle_game_win(self, winner, loser, amount):
-
         if BingoConsumer.games_finished.get(self.room, False):
-                
                 print(f"⚠️ Game in room {self.room} already ended. Ignoring duplicate call.")
                 return None
 

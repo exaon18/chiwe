@@ -1760,6 +1760,12 @@
             </div>
             
             <div class="money-selector">
+                <div class="money-option" data-amount="100" onclick="selectAmount(0)">
+                    0 birr
+                    <div class="loading-spinner">
+                        <div class="spinner"></div>
+                    </div>
+                </div>
                 <div class="money-option" data-amount="25" onclick="selectAmount(25)">
                     25 birr
                     <div class="loading-spinner">
@@ -1778,6 +1784,7 @@
                         <div class="spinner"></div>
                     </div>
                 </div>
+                
             </div>
             
             <div style="text-align: center; margin-top: 1.5rem;">
@@ -2753,17 +2760,14 @@ function selectAmount(amount) {
         // Remove highlight after animation
         setTimeout(() => {
             selectedAmountContainer.classList.remove('highlight');
-        }, 500);
-    }, 500);
+        }, 5);
+    }, 5);
 }
 
 document.getElementById('joinForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     
-    if (selectedAmount === 0) {
-        displayMessage('Please select a bet amount first');
-        return;
-    }
+    
     
     const form = e.target;
     const formData = new FormData(form);
