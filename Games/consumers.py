@@ -50,7 +50,6 @@ class Crack_the_CodeConsumer(WebsocketConsumer):
         amount = int(self.scope['url_route']['kwargs']['amount'])
         self.user = MyUser.objects.get(id=self.id)
         ballance = Ballance.objects.get(user=self.user).ballance
-
         self.win = False
         self.game_over = False  
         self.game_ended = False  

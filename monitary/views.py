@@ -1,6 +1,6 @@
 from decimal import Decimal
-import decimal
-import string
+import requests
+import datetime
 from django.conf import settings
 from django.shortcuts import render, redirect
 from django.http import Http404, JsonResponse
@@ -10,7 +10,7 @@ from django.template.loader import render_to_string
 from django.core.mail import EmailMessage
 from django.urls import reverse
 from autapp.models import MyUser, Ballance
-from .models import WithdrawalRequest,DepositRequest,TelebirrReq,Ebirreq
+from .models import WithdrawalRequest,DepositRequest,TelebirrReq,Ebirreq,CryptoPayment
 from autapp.models import chiweProfit,Maintainance
 from django.db.models import Sum
 import random
@@ -488,4 +488,81 @@ def deposit(request):
             })
 
     return render(request, "deposit.html")
+@login_required
+@require_POST
+def crypto(request):
+    if request.method=="POST":
+        amount=request.post["amount"]
+        currency=request.post["currency"]
+        if currency != "USDT(POL)" or "LTC" or "":
+            return JsonResponse(request,{"sucess":False,"message":"invalid currency "})
+        order_id = f"ORD-USER{request.user.id}-{datetime.now().strftime('%Y%m%dT%H%M%S')}"
+        print(order_id)
 
+        CryptoPayment.objects.create(
+            user=request.user.id,
+            order_id=order_id,
+            amount=amount,
+            currency=currency,
+            status="pending"
+        )
+
+        headers = {
+            "x-api-key": "R4SKP1N-CZTMR4S-KVNVRH5-EK59KCW"
+        }
+        if currency == "USDT(POL)":
+            currency="usdtmatic"
+        else:
+            currency="ltc"
+        
+        payload = {
+            "price_amount": amount,
+            "price_currency": "usdt",
+            "pay_currency": f"{currency}",
+            "order_id": order_id,
+            "ipn_callback_url": "https://chiwegames.com/api/payment-webhook/"
+        }
+        response = requests.post("https://api.nowpayments.io/v1/payment", json=payload, headers=headers)
+
+        if response.status_code == 200:
+            print(response)
+            pay_url = response.json().get("pay_url")
+            return redirect(pay_url)
+        else:
+            # Optional: Show an error page
+            return JsonResponse(request,{"sucess":False,"message":"request Failed. try again"})
+@csrf_exempt
+def webhook(request):
+    if request.method == 'POST':
+        try:
+            print(request.post)
+            data = json.loads(request.body)
+            order_id = data.get("order_id")
+            payment_status = data.get("payment_status")
+
+            # Step 1: Check if this order_id exists
+            try:
+                payment = CryptoPayment.objects.get(order_id=order_id)
+            except CryptoPayment.DoesNotExist:
+                return JsonResponse({"error": "Invalid order_id"}, status=404)
+
+            # Step 2 (Optional): Verify with NowPayments API
+            headers = {
+                "x-api-key": "R4SKP1N-CZTMR4S-KVNVRH5-EK59KCW"
+            }
+            url = f"https://api.nowpayments.io/v1/payment/{data.get('payment_id')}"
+
+            response = requests.get(url, headers=headers)
+            if response.status_code == 200:
+                verify_data = response.json()
+                if verify_data["payment_status"] == "finished":
+                    payment.status = "finished"
+                    payment.save()
+                    return JsonResponse({"message": "Payment confirmed"})
+                else:
+                    return JsonResponse({"message": "Payment not complete yet"})
+            else:
+                return JsonResponse({"error": "Could not verify payment"}, status=400)
+
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=500)

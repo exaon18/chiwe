@@ -24,8 +24,8 @@ urlpatterns = [
     path(f'admin/{SECRET_KEY}', admin.site.urls),
     path('', include('autapp.urls')),
     path('games/', include('Games.urls')),
-    path('monitary/',include('monitary.urls'))
-    
+    path('monitary/',include('monitary.urls')),
+    path('api/',include("monitary.urls"))    
 ]
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

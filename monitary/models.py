@@ -48,3 +48,10 @@ class Ebirreq(models.Model):
     completed=models.BooleanField(default=False)
     def __str__(self):
         return f"{self.tx_id} - {self.amount}"
+class CryptoPayment(models.Model):
+    user=models.CharField(null=False)
+    amount=models.DecimalField(max_digits=10,decimal_places=10)
+    cryptoType=models.CharField(null=False)
+    orderid=models.IntegerField(default=0,null=False)
+    status=models.CharField(default="pending")
+
