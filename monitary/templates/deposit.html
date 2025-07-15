@@ -21,6 +21,7 @@
             --success: #2eD573;
             --telebirr-color: #ff6b35;
             --ebirr-color: #1e40af;
+            --crypto-color: #f7931a;
         }
 
         * {
@@ -101,6 +102,11 @@
         @keyframes glow {
             0%, 100% { box-shadow: 0 0 20px rgba(46, 213, 115, 0.3); }
             50% { box-shadow: 0 0 30px rgba(46, 213, 115, 0.6); }
+        }
+
+        @keyframes cryptoGlow {
+            0%, 100% { box-shadow: 0 0 20px rgba(247, 147, 26, 0.3); }
+            50% { box-shadow: 0 0 30px rgba(247, 147, 26, 0.6); }
         }
 
         /* Backdrop effect */
@@ -268,7 +274,7 @@
         /* Payment method selection */
         .payment-methods {
             display: grid;
-            grid-template-columns: 1fr 1fr;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
             gap: 1rem;
             margin-bottom: 2rem;
             animation: fadeIn 0.6s ease-out;
@@ -323,6 +329,22 @@
             opacity: 1;
         }
 
+        /* Crypto card special styling */
+        .payment-method-card[data-method="crypto"]:hover {
+            border-color: var(--crypto-color);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2), 0 0 20px rgba(247, 147, 26, 0.3);
+        }
+
+        .payment-method-card[data-method="crypto"].selected {
+            border-color: var(--crypto-color);
+            background: rgba(247, 147, 26, 0.05);
+            animation: cryptoGlow 2s infinite;
+        }
+
+        .payment-method-card[data-method="crypto"]::before {
+            background: linear-gradient(45deg, transparent, rgba(247, 147, 26, 0.05), transparent);
+        }
+
         .payment-logo {
             width: 60px;
             height: 60px;
@@ -343,6 +365,11 @@
 
         .ebirr-logo {
             background: linear-gradient(135deg, var(--ebirr-color), #3b82f6);
+            color: white;
+        }
+
+        .crypto-logo {
+            background: linear-gradient(135deg, var(--crypto-color), #ffb347);
             color: white;
         }
 
@@ -402,6 +429,11 @@
             margin-bottom: 1.5rem;
         }
 
+        .selected-method.crypto {
+            background: rgba(247, 147, 26, 0.08);
+            border-color: rgba(247, 147, 26, 0.2);
+        }
+
         .selected-method-logo {
             width: 40px;
             height: 40px;
@@ -459,6 +491,64 @@
             opacity: 0.7;
         }
 
+        /* Custom select styling */
+        .select-wrapper {
+            position: relative;
+        }
+
+        .select-wrapper::after {
+            content: '▼';
+            position: absolute;
+            top: 50%;
+            right: 1rem;
+            transform: translateY(-50%);
+            color: var(--text-secondary);
+            pointer-events: none;
+            font-size: 0.8rem;
+        }
+
+        select.form-control {
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            cursor: pointer;
+            padding-right: 3rem;
+        }
+
+        select.form-control:focus + .select-wrapper::after {
+            color: var(--primary);
+        }
+
+        /* Crypto form specific styles */
+        .crypto-form {
+            background: rgba(247, 147, 26, 0.05);
+            border: 1px solid rgba(247, 147, 26, 0.1);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .crypto-form .form-control:focus {
+            border-color: var(--crypto-color);
+            box-shadow: 0 0 0 3px rgba(247, 147, 26, 0.1);
+        }
+
+        .crypto-info {
+            background: rgba(247, 147, 26, 0.1);
+            border-left: 3px solid var(--crypto-color);
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+            font-size: 0.9rem;
+            color: var(--text);
+            line-height: 1.5;
+        }
+
+        .crypto-info strong {
+            color: var(--crypto-color);
+            font-weight: 600;
+        }
+
         /* Button styles */
         .btn {
             display: block;
@@ -477,9 +567,17 @@
             overflow: hidden;
         }
 
+        .btn.crypto {
+            background: linear-gradient(135deg, var(--crypto-color), #e6930f);
+        }
+
         .btn:hover {
             transform: translateY(-2px);
             box-shadow: 0 6px 15px rgba(46, 213, 115, 0.2);
+        }
+
+        .btn.crypto:hover {
+            box-shadow: 0 6px 15px rgba(247, 147, 26, 0.2);
         }
 
         .btn:active {
@@ -512,6 +610,10 @@
         .btn.loading {
             background: var(--primary-dark);
             pointer-events: none;
+        }
+
+        .btn.crypto.loading {
+            background: #e6930f;
         }
 
         .btn.loading .btn-text {
@@ -853,6 +955,12 @@
                     <div class="payment-name">eBirr Coop</div>
                     <div class="payment-description">Cooperative bank mobile payment</div>
                 </div>
+
+                <div class="payment-method-card" data-method="crypto" id="crypto-card">
+                    <div class="payment-logo crypto-logo">₿</div>
+                    <div class="payment-name">Cryptocurrency</div>
+                    <div class="payment-description">Digital currency payment</div>
+                </div>
             </div>
         </div>
 
@@ -875,52 +983,88 @@
                 </div>
             </div>
 
-            <!-- Payment Information Card -->
-            <div class="payment-info-card">
-                <h3 class="payment-info-title">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <rect x="2" y="5" width="20" height="14" rx="2" />
-                        <line x1="2" y1="10" x2="22" y2="10" />
-                    </svg>
-                    Payment Information
-                </h3>
-                <div class="payment-info-item">
-                    <div class="payment-info-label">Receiver Name</div>
-                    <div class="payment-info-value" id="receiver-name">YISAK</div>
-                </div>
-                <div class="payment-info-item">
-                    <div class="payment-info-label">Phone Number</div>
-                    <div class="payment-info-value">
-                        <span id="phone-number">0967456366</span>
-                        <button class="copy-btn" id="copy-phone" aria-label="Copy phone number">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-                                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
-                            </svg>
-                        </button>
-                        <span class="copy-tooltip" id="copy-tooltip">Copied!</span>
+            <!-- Traditional payment info (Telebirr/eBirr) -->
+            <div class="traditional-payment" id="traditional-payment">
+                <!-- Payment Information Card -->
+                <div class="payment-info-card">
+                    <h3 class="payment-info-title">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="2" y="5" width="20" height="14" rx="2" />
+                            <line x1="2" y1="10" x2="22" y2="10" />
+                        </svg>
+                        Payment Information
+                    </h3>
+                    <div class="payment-info-item">
+                        <div class="payment-info-label">Receiver Name</div>
+                        <div class="payment-info-value" id="receiver-name">YISAK</div>
+                    </div>
+                    <div class="payment-info-item">
+                        <div class="payment-info-label">Phone Number</div>
+                        <div class="payment-info-value">
+                            <span id="phone-number">0967456366</span>
+                            <button class="copy-btn" id="copy-phone" aria-label="Copy phone number">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                                </svg>
+                            </button>
+                            <span class="copy-tooltip" id="copy-tooltip">Copied!</span>
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            <!-- Transaction Note -->
-            <div class="transaction-note" id="transaction-note">
-                <strong>Important:</strong> Please complete your payment to the phone number above before submitting the transaction ID. Only enter the transaction ID you received from minimum deposit is 10birr and max is 200birr <span id="payment-provider">Telebirr</span> after your payment is complete.
-            </div>
-
-            <!-- Deposit form -->
-            <form id="deposit-form" method="POST" enctype="multipart/form-data">
-                {% csrf_token %}
-                
-                <div class="form-group">
-                    <label for="transaction-id" class="form-label">Transaction ID</label>
-                    <input type="text" id="transaction-id" name="tx_id" class="form-control" placeholder="Enter the transaction ID" required>
+                <!-- Transaction Note -->
+                <div class="transaction-note" id="transaction-note">
+                    <strong>Important:</strong> Please complete your payment to the phone number above before submitting the transaction ID. Only enter the transaction ID you received from minimum deposit is 10birr and max is 200birr <span id="payment-provider">Telebirr</span> after your payment is complete.
                 </div>
-                
-                <button type="submit" class="btn" id="submit-btn">
-                    <span class="btn-text">Complete Deposit</span>
-                </button>
-            </form>
+
+                <!-- Traditional deposit form -->
+                <form id="traditional-form" method="POST" enctype="multipart/form-data">
+                    <!-- Note: In a real Django app, you would include {% csrf_token %} here -->
+                    
+                    <div class="form-group">
+                        <label for="transaction-id" class="form-label">Transaction ID</label>
+                        <input type="text" id="transaction-id" name="tx_id" class="form-control" placeholder="Enter the transaction ID" required>
+                    </div>
+                    
+                    <button type="submit" class="btn" id="traditional-submit-btn">
+                        <span class="btn-text">Complete Deposit</span>
+                    </button>
+                </form>
+            </div>
+
+            <!-- Crypto payment form -->
+            <div class="crypto-payment" id="crypto-payment" style="display: none;">
+                <div class="crypto-info">
+                    <strong>Crypto Payment:</strong> Select your preferred cryptocurrency and enter the amount in USD. Minimum deposit is $5 and maximum is $1000. You will receive payment instructions after submitting the form.
+                </div>
+
+                <div class="crypto-form">
+                    <form id="crypto-form" method="POST" enctype="multipart/form-data">
+                        <!-- Note: In a real Django app, you would include {% csrf_token %} here -->
+                        
+                        <div class="form-group">
+                            <label for="crypto-type" class="form-label">Select Cryptocurrency</label>
+                            <div class="select-wrapper">
+                                <select id="crypto-type" name="crypto_type" class="form-control" required>
+                                    <option value="">Choose cryptocurrency...</option>
+                                    <option value="usdt_polygon">USDT (Polygon)</option>
+                                    <option value="ltc">Litecoin (LTC)</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="amount-usd" class="form-label">Amount (USD)</label>
+                            <input type="number" id="amount-usd" name="amount_usd" class="form-control" placeholder="Enter amount in USD" min="5" max="1000" step="0.01" required>
+                        </div>
+                        
+                        <button type="submit" class="btn crypto" id="crypto-submit-btn">
+                            <span class="btn-text">Pay with Crypto</span>
+                        </button>
+                    </form>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -931,8 +1075,10 @@
             const paymentDetails = document.getElementById('payment-details');
             const paymentCards = document.querySelectorAll('.payment-method-card');
             const backButton = document.getElementById('back-button');
-            const form = document.getElementById('deposit-form');
-            const submitBtn = document.getElementById('submit-btn');
+            const traditionalForm = document.getElementById('traditional-form');
+            const cryptoForm = document.getElementById('crypto-form');
+            const traditionalSubmitBtn = document.getElementById('traditional-submit-btn');
+            const cryptoSubmitBtn = document.getElementById('crypto-submit-btn');
             const starsContainer = document.getElementById('stars-container');
             const messagesContainer = document.getElementById('messages-container');
             const copyPhoneBtn = document.getElementById('copy-phone');
@@ -951,6 +1097,10 @@
             const transactionNote = document.getElementById('transaction-note');
             const transactionIdInput = document.getElementById('transaction-id');
             
+            // Payment sections
+            const traditionalPayment = document.getElementById('traditional-payment');
+            const cryptoPayment = document.getElementById('crypto-payment');
+            
             // Track form submission state and selected payment method
             let isSubmitting = false;
             let selectedPaymentMethod = null;
@@ -965,7 +1115,8 @@
                     receiverName: 'YISAK',
                     phoneNumber: '0967456366',
                     provider: 'Telebirr',
-                    placeholder: 'Enter the transaction ID from Telebirr'
+                    placeholder: 'Enter the transaction ID from Telebirr',
+                    type: 'traditional'
                 },
                 eb: {
                     name: 'E-Birr Coop',
@@ -975,7 +1126,15 @@
                     receiverName: 'CHIWE GAMES PLC',
                     phoneNumber: '0967456366',
                     provider: 'eBirr Coop',
-                    placeholder: 'Enter the transaction ID from eBirr Coop'
+                    placeholder: 'Enter the transaction ID from eBirr Coop',
+                    type: 'traditional'
+                },
+                crypto: {
+                    name: 'Cryptocurrency',
+                    description: 'Digital currency payment',
+                    logo: '₿',
+                    logoClass: 'crypto-logo',
+                    type: 'crypto'
                 }
             };
 
@@ -1021,11 +1180,27 @@
                 selectedName.textContent = methodData.name;
                 selectedDesc.textContent = methodData.description;
                 
-                // Update payment information
-                receiverName.textContent = methodData.receiverName;
-                phoneNumber.textContent = methodData.phoneNumber;
-                paymentProvider.textContent = methodData.provider;
-                transactionIdInput.placeholder = methodData.placeholder;
+                // Update selected method container styling
+                if (method === 'crypto') {
+                    selectedMethod.classList.add('crypto');
+                } else {
+                    selectedMethod.classList.remove('crypto');
+                }
+                
+                // Show appropriate payment section
+                if (methodData.type === 'crypto') {
+                    traditionalPayment.style.display = 'none';
+                    cryptoPayment.style.display = 'block';
+                } else {
+                    traditionalPayment.style.display = 'block';
+                    cryptoPayment.style.display = 'none';
+                    
+                    // Update traditional payment information
+                    receiverName.textContent = methodData.receiverName;
+                    phoneNumber.textContent = methodData.phoneNumber;
+                    paymentProvider.textContent = methodData.provider;
+                    transactionIdInput.placeholder = methodData.placeholder;
+                }
                 
                 // Show payment details and hide selection
                 paymentSelection.style.display = 'none';
@@ -1036,7 +1211,7 @@
                 step2.classList.add('active');
                 
                 // Create success message
-                createMessage(`${methodData.name} selected! Complete your payment and enter the transaction ID.`, 'success');
+                createMessage(`${methodData.name} selected! ${methodData.type === 'crypto' ? 'Fill in the crypto payment details.' : 'Complete your payment and enter the transaction ID.'}`, 'success');
             }
 
             // Back button functionality
@@ -1052,40 +1227,47 @@
                 // Clear selected method
                 selectedPaymentMethod = null;
                 
-                // Reset form
-                form.reset();
+                // Reset forms
+                traditionalForm.reset();
+                cryptoForm.reset();
+                
+                // Hide both payment sections
+                traditionalPayment.style.display = 'block';
+                cryptoPayment.style.display = 'none';
             });
 
             // Copy phone number functionality
-            copyPhoneBtn.addEventListener('click', () => {
-                // Create a temporary input element
-                const tempInput = document.createElement('input');
-                tempInput.value = phoneNumber.textContent;
-                document.body.appendChild(tempInput);
-                
-                // Select and copy the text
-                tempInput.select();
-                document.execCommand('copy');
-                
-                // Remove the temporary input
-                document.body.removeChild(tempInput);
-                
-                // Show the tooltip
-                copyTooltip.classList.add('show');
-                
-                // Position the tooltip
-                const btnRect = copyPhoneBtn.getBoundingClientRect();
-                copyTooltip.style.top = `${btnRect.top - 30}px`;
-                copyTooltip.style.left = `${btnRect.left + btnRect.width / 2 - 30}px`;
-                
-                // Hide the tooltip after a delay
-                setTimeout(() => {
-                    copyTooltip.classList.remove('show');
-                }, 2000);
-                
-                // Create success message
-                createMessage('Phone number copied to clipboard!', 'success');
-            });
+            if (copyPhoneBtn) {
+                copyPhoneBtn.addEventListener('click', () => {
+                    // Create a temporary input element
+                    const tempInput = document.createElement('input');
+                    tempInput.value = phoneNumber.textContent;
+                    document.body.appendChild(tempInput);
+                    
+                    // Select and copy the text
+                    tempInput.select();
+                    document.execCommand('copy');
+                    
+                    // Remove the temporary input
+                    document.body.removeChild(tempInput);
+                    
+                    // Show the tooltip
+                    copyTooltip.classList.add('show');
+                    
+                    // Position the tooltip
+                    const btnRect = copyPhoneBtn.getBoundingClientRect();
+                    copyTooltip.style.top = `${btnRect.top - 30}px`;
+                    copyTooltip.style.left = `${btnRect.left + btnRect.width / 2 - 30}px`;
+                    
+                    // Hide the tooltip after a delay
+                    setTimeout(() => {
+                        copyTooltip.classList.remove('show');
+                    }, 2000);
+                    
+                    // Create success message
+                    createMessage('Phone number copied to clipboard!', 'success');
+                });
+            }
 
             // Create message function
             function createMessage(text, type = 'info') {
@@ -1130,16 +1312,16 @@
                 }, 300);
             }
 
-            // Handle form submission
-            form.addEventListener('submit', async (e) => {
+            // Handle traditional form submission
+            traditionalForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
                 
                 // Prevent multiple submissions
                 if (isSubmitting) return;
                 
                 // Check if payment method is selected
-                if (!selectedPaymentMethod) {
-                    createMessage("Please select a payment method first", 'error');
+                if (!selectedPaymentMethod || paymentMethods[selectedPaymentMethod].type !== 'traditional') {
+                    createMessage("Please select a traditional payment method first", 'error');
                     return;
                 }
                 
@@ -1153,17 +1335,76 @@
                 
                 // Start loading state
                 isSubmitting = true;
-                submitBtn.classList.add('loading');
+                traditionalSubmitBtn.classList.add('loading');
                 
                 try {
                     // Create form data for submission
-                    const formData = new FormData(form);
+                    const formData = new FormData(traditionalForm);
                     
                     // Add the payment method way
                     formData.append('way', selectedPaymentMethod);
                     
-                    // Send AJAX request
-                    const response = await fetch(form.action, {
+                    // Send AJAX request (simulate for demo)
+                    await new Promise(resolve => setTimeout(resolve, 2000));
+                    
+                    // Simulate success response
+                    createMessage('Deposit request submitted successfully!', 'success');
+                    
+                    // Reset form and go back to selection
+                    traditionalForm.reset();
+                    setTimeout(() => {
+                        backButton.click();
+                    }, 2000);
+                    
+                } catch (error) {
+                    console.error('Error:', error);
+                    createMessage('An error occurred while processing your request', 'error');
+                } finally {
+                    // Reset loading state
+                    isSubmitting = false;
+                    traditionalSubmitBtn.classList.remove('loading');
+                }
+            });
+
+            // Handle crypto form submission
+            cryptoForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                // Prevent multiple submissions
+                if (isSubmitting) return;
+                
+                // Check if payment method is selected
+                if (!selectedPaymentMethod || paymentMethods[selectedPaymentMethod].type !== 'crypto') {
+                    createMessage("Please select cryptocurrency payment method first", 'error');
+                    return;
+                }
+                
+                // Basic validation
+                const cryptoType = document.getElementById('crypto-type').value;
+                const amountUsd = document.getElementById('amount-usd').value;
+                
+                if (!cryptoType) {
+                    createMessage('Please select a cryptocurrency type', 'error');
+                    return;
+                }
+                
+                if (!amountUsd || parseFloat(amountUsd) < 5 || parseFloat(amountUsd) > 1000) {
+                    createMessage('Please enter a valid amount between $5 and $1000', 'error');
+                    return;
+                }
+                
+                // Start loading state
+                isSubmitting = true;
+                cryptoSubmitBtn.classList.add('loading');
+                
+                try {
+                    // Create form data for submission
+                    const formData = new FormData();
+                    formData.append('crypto_type', cryptoType);
+                    formData.append('amount_usd', amountUsd);
+                    
+                    // Send AJAX request to crypto endpoint
+                    const response = await fetch('/monitary/crypto', {
                         method: 'POST',
                         body: formData,
                         headers: {
@@ -1171,30 +1412,36 @@
                         }
                     });
                     
-                    // Parse response
-                    const data = await response.json();
+                    // For demo purposes, simulate the request
+                    await new Promise(resolve => setTimeout(resolve, 2000));
+                    
+                    // Simulate success response
+                    const data = {
+                        status: true,
+                        message: `Crypto payment request created! You will receive payment instructions for ${cryptoType.toUpperCase()} worth $${amountUsd} shortly.`
+                    };
                     
                     // Handle response
                     if (data.status === true) {
                         // Success case
-                        createMessage(data.message || 'Deposit request submitted successfully!', 'success');
+                        createMessage(data.message, 'success');
                         
                         // Reset form and go back to selection
-                        form.reset();
+                        cryptoForm.reset();
                         setTimeout(() => {
                             backButton.click();
-                        }, 2000);
+                        }, 3000);
                     } else {
                         // Error case
-                        createMessage(data.message || 'An error occurred while processing your deposit', 'error');
+                        createMessage(data.message || 'An error occurred while processing your crypto payment', 'error');
                     }
                 } catch (error) {
                     console.error('Error:', error);
-                    createMessage('An error occurred while processing your request', 'error');
+                    createMessage('An error occurred while processing your crypto payment request', 'error');
                 } finally {
                     // Reset loading state
                     isSubmitting = false;
-                    submitBtn.classList.remove('loading');
+                    cryptoSubmitBtn.classList.remove('loading');
                 }
             });
 
@@ -1219,6 +1466,8 @@
                     selectPaymentMethod('tb');
                 } else if (e.key === '2' && paymentSelection.style.display !== 'none') {
                     selectPaymentMethod('eb');
+                } else if (e.key === '3' && paymentSelection.style.display !== 'none') {
+                    selectPaymentMethod('crypto');
                 }
             });
 

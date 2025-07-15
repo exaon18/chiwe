@@ -1,6 +1,6 @@
 from decimal import Decimal
 import requests
-import datetime
+from datetime import datetime
 from django.conf import settings
 from django.shortcuts import render, redirect
 from django.http import Http404, JsonResponse
@@ -490,79 +490,105 @@ def deposit(request):
     return render(request, "deposit.html")
 @login_required
 @require_POST
-def crypto(request):
-    if request.method=="POST":
-        amount=request.post["amount"]
-        currency=request.post["currency"]
-        if currency != "USDT(POL)" or "LTC" or "":
-            return JsonResponse(request,{"sucess":False,"message":"invalid currency "})
-        order_id = f"ORD-USER{request.user.id}-{datetime.now().strftime('%Y%m%dT%H%M%S')}"
-        print(order_id)
-
-        CryptoPayment.objects.create(
-            user=request.user.id,
-            order_id=order_id,
-            amount=amount,
-            currency=currency,
-            status="pending"
-        )
-
-        headers = {
-            "x-api-key": "R4SKP1N-CZTMR4S-KVNVRH5-EK59KCW"
-        }
-        if currency == "USDT(POL)":
-            currency="usdtmatic"
-        else:
-            currency="ltc"
-        
-        payload = {
-            "price_amount": amount,
-            "price_currency": "usdt",
-            "pay_currency": f"{currency}",
-            "order_id": order_id,
-            "ipn_callback_url": "https://chiwegames.com/api/payment-webhook/"
-        }
-        response = requests.post("https://api.nowpayments.io/v1/payment", json=payload, headers=headers)
-
-        if response.status_code == 200:
-            print(response)
-            pay_url = response.json().get("pay_url")
-            return redirect(pay_url)
-        else:
-            # Optional: Show an error page
-            return JsonResponse(request,{"sucess":False,"message":"request Failed. try again"})
 @csrf_exempt
+def crypto(request):
+    amount = float(request.POST.get("amount_usd"))
+    crypto = request.POST.get("crypto_type")
+
+    # 1. Validate
+    if amount < 2:
+        print("min")
+        return JsonResponse({"success": False, "message": "Minimum deposit is $2"})
+
+    if crypto not in ["usdt_polygon", "ltc"]:
+        print("wrong")
+        return JsonResponse({"success": False, "message": "Invalid crypto type"})
+
+    # 2. Translate for NowPayments
+    pay_currency = "usdtmatic" if crypto == "usdt_polygon" else "ltc"
+    order_id = f"ORD-USER{request.user.id}-{datetime.now().strftime('%Y%m%d%H%M%S')}"
+
+    # 3. Store in DB
+    CryptoPayment.objects.create(
+        user=request.user.id,
+        order_id=order_id,
+        amount=amount,
+        currency=pay_currency,
+        status="pending"
+    )
+
+    # 4. Send to NowPayments
+    payload = {
+        "price_amount": amount,
+        "price_currency": "usd",
+        "pay_currency": pay_currency,
+        "order_id": order_id,
+        "ipn_callback_url": "https://chiwegames.com/monitary/payment-weebhook/",
+        "success_url": "https://chiwegames.com/payment-success/",
+        "cancel_url": "https://chiwegames.com/payment-cancelled/"
+    }
+
+    headers = {
+        "x-api-key": "9G09B6H-3F7MWMH-K2BBFAF-PT72QCF"
+    }
+
+    response = requests.post(" https://api-sandbox.nowpayments.io/v1/invoice", json=payload, headers=headers)
+
+    if response.status_code == 200:
+        print(response.text)
+        invoice_url = response.json()["invoice_url"]
+        print(invoice_url)
+        return redirect(invoice_url)
+    else:
+        print("faild")
+        print(response.text)
+        return JsonResponse({"success": False, "message": "Failed to create payment"})
+
+@csrf_exempt
+@require_POST
 def webhook(request):
     if request.method == 'POST':
+        print("in the webhhok")
         try:
-            print(request.post)
+            # 1) Use `request.body`, not `request.post`
             data = json.loads(request.body)
+            print(data)
             order_id = data.get("order_id")
-            payment_status = data.get("payment_status")
+            payment_id = data.get("payment_id")
 
-            # Step 1: Check if this order_id exists
+            # 2) Lookup your payment by order_id
             try:
+                print(f" this is o id {order_id}")
                 payment = CryptoPayment.objects.get(order_id=order_id)
+                print("finished")
             except CryptoPayment.DoesNotExist:
                 return JsonResponse({"error": "Invalid order_id"}, status=404)
 
-            # Step 2 (Optional): Verify with NowPayments API
-            headers = {
-                "x-api-key": "R4SKP1N-CZTMR4S-KVNVRH5-EK59KCW"
-            }
-            url = f"https://api.nowpayments.io/v1/payment/{data.get('payment_id')}"
+            # 3) Verify status via NowPayments API
+            response = requests.get(
+                f"https://api-sandbox.nowpayments.io/v1/payment/{payment_id}",
+                headers={"x-api-key": "R4SKP1N-CZTMR4S-KVNVRH5-EK59KCW"}
+            )
+            if response.status_code != 200:
+                return JsonResponse({"error": "Could not verify payment"}, status=502)
 
-            response = requests.get(url, headers=headers)
-            if response.status_code == 200:
-                verify_data = response.json()
-                if verify_data["payment_status"] == "finished":
-                    payment.status = "finished"
-                    payment.save()
-                    return JsonResponse({"message": "Payment confirmed"})
-                else:
-                    return JsonResponse({"message": "Payment not complete yet"})
+            verify_data = response.json()
+            if verify_data.get("payment_status") == "finished":
+                print("inside finished ")
+                payment.status = "finished"
+                payment.save()
+                user=MyUser.objects.get(id=payment.user)
+                Balance=Ballance.objects.get(user=user)
+                print(f"amount {payment.amount}")
+                Balance.balance += Decimal(payment.amount)
+                Balance.save()
+                return JsonResponse({"message": "Payment confirmed"})
             else:
-                return JsonResponse({"error": "Could not verify payment"}, status=400)
+                return JsonResponse({"message": "Payment not complete yet"})
 
+        except json.JSONDecodeError:
+            return JsonResponse({"error": "Invalid JSON"}, status=400)
         except Exception as e:
             return JsonResponse({"error": str(e)}, status=500)
+    else:
+        print("get")

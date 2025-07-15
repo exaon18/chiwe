@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-zr*n+*b1v%xb2squ$mi%t)pjxkuxgr7j+)#io5pac7=0a)8$--
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
-ALLOWED_HOSTS = ['chiwegames.com','chiwe.onrender.com','exaon.tech','127.0.0.1','https://vhlz5hd3-8000.uks1.devtunnels.ms/',"https://exaon.tech","https://chiwegames.com","http://localhost"]
+ALLOWED_HOSTS = ['*','chiwegames.com','chiwe.onrender.com','exaon.tech','127.0.0.1','https://vhlz5hd3-8000.uks1.devtunnels.ms/',"https://exaon.tech","https://chiwegames.com","http://localhost"]
 
 DATABASE_URL="postgresql://chiwepsg_p08q_user:2vKcyYRjH67HQMICifSzR60sUCpvTAFZ@dpg-d1j6bkumcj7s73a9g77g-a.oregon-postgres.render.com/chiwepsg_p08q"
 # Application definition

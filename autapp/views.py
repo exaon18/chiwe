@@ -63,7 +63,7 @@ def generate_unique_number(username):
 def index(request):
     
     return render(request,'index.html')
-def signup(request,refered):
+def signup(request):
     if request.method == 'POST':
         username = request.POST['username'].upper()
         firstname = request.POST['first_name']
@@ -104,10 +104,7 @@ def signup(request,refered):
         inactive_email = MyUser.objects.filter(email=email, is_active=False).first()
         if inactive_email:
             inactive_email.delete()
-        refered
-        if MyUser.objects.filter(username=refered) == None:
-            return JsonResponse(request, {"success":False,"message":"referal doesnt exist "})
-        # Now create the user once
+       
         token = generate_unique_number(username)
         user = MyUser.objects.create_user(
             username=username,
@@ -115,7 +112,7 @@ def signup(request,refered):
             email=email,
             password=password,
             token=token,
-            refered=refered
+            
         )
         Ballance.objects.create(user=user, ballance=0.00)
         user.is_active = False  # User needs to verify via email
