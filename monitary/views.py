@@ -524,8 +524,8 @@ def crypto(request):
         "pay_currency": pay_currency,
         "order_id": order_id,
         "ipn_callback_url": "https://chiwegames.com/monitary/payment-weebhook/",
-        "success_url": "https://chiwegames.com/payment-success/",
-        "cancel_url": "https://chiwegames.com/payment-cancelled/"
+        "success_url": "https://chiwegames.com/dashboard",
+        "cancel_url": "https://chiwegames.com/dashboard"
     }
 
     headers = {
@@ -538,7 +538,7 @@ def crypto(request):
         print(response.text)
         invoice_url = response.json()["invoice_url"]
         print(invoice_url)
-        return redirect(invoice_url)
+        return JsonResponse({"sucess": True,"url":invoice_url})
     else:
         print("faild")
         print(response.text)

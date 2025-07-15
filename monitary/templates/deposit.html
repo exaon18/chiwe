@@ -1412,29 +1412,25 @@
                         }
                     });
                     
-                    // For demo purposes, simulate the request
-                    await new Promise(resolve => setTimeout(resolve, 2000));
+                    // Parse JSON response
+                    const data = await response.json();
                     
-                    // Simulate success response
-                    const data = {
-                        status: true,
-                        message: `Crypto payment request created! You will receive payment instructions for ${cryptoType.toUpperCase()} worth $${amountUsd} shortly.`
-                    };
-                    
-                    // Handle response
-                    if (data.status === true) {
-                        // Success case
-                        createMessage(data.message, 'success');
+                    // Handle response based on success status
+                    if (data.success === true && data.url) {
+                        // Success case - show message and redirect
+                        createMessage(`Payment invoice generated! Redirecting to payment page...`, 'success');
                         
-                        // Reset form and go back to selection
-                        cryptoForm.reset();
+                        // Redirect to the provided URL after a short delay
                         setTimeout(() => {
-                            backButton.click();
-                        }, 3000);
+                            window.location.href = data.url;
+                        }, 1500);
+                        
                     } else {
-                        // Error case
-                        createMessage(data.message || 'An error occurred while processing your crypto payment', 'error');
+                        // Error case - show error message
+                        const errorMessage = data.message || 'An error occurred while processing your crypto payment';
+                        createMessage(errorMessage, 'error');
                     }
+                    
                 } catch (error) {
                     console.error('Error:', error);
                     createMessage('An error occurred while processing your crypto payment request', 'error');
