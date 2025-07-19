@@ -1,4 +1,6 @@
 from decimal import Decimal
+import hashlib
+import hmac
 import requests
 from datetime import datetime
 from django.conf import settings
@@ -525,7 +527,8 @@ def crypto(request):
         "order_id": order_id,
         "ipn_callback_url": "https://chiwegames.com/monitary/payment-weebhook/",
         "success_url": "https://chiwegames.com/dashboard",
-        "cancel_url": "https://chiwegames.com/dashboard"
+        "cancel_url": "https://chiwegames.com/dashboard",
+        
     }
 
     headers = {
@@ -538,57 +541,54 @@ def crypto(request):
         print(response.text)
         invoice_url = response.json()["invoice_url"]
         print(invoice_url)
-        return JsonResponse({"sucess": True,"url":invoice_url})
+        return JsonResponse({"success": True,"url":f"{invoice_url}"})
     else:
         print("faild")
         print(response.text)
         return JsonResponse({"success": False, "message": "Failed to create payment"})
 
 @csrf_exempt
-@require_POST
 def webhook(request):
-    if request.method == 'POST':
-        print("in the webhhok")
-        try:
-            # 1) Use `request.body`, not `request.post`
-            data = json.loads(request.body)
-            print(data)
-            order_id = data.get("order_id")
-            payment_id = data.get("payment_id")
+    print("trigered")
+    if request.method != "POST":
+        print("here")
+        return JsonResponse({"error": "Invalid method"}, status=405)
 
-            # 2) Lookup your payment by order_id
-            try:
-                print(f" this is o id {order_id}")
-                payment = CryptoPayment.objects.get(order_id=order_id)
-                print("finished")
-            except CryptoPayment.DoesNotExist:
-                return JsonResponse({"error": "Invalid order_id"}, status=404)
+    try:
+        ipn_secret = "scpA8MkH4cWLDEZn9CUHJI8vZoPDqOwx"
+        received_sig = request.headers.get("x-nowpayments-sig")
 
-            # 3) Verify status via NowPayments API
-            response = requests.get(
-                f"https://api-sandbox.nowpayments.io/v1/payment/{payment_id}",
-                headers={"x-api-key": "R4SKP1N-CZTMR4S-KVNVRH5-EK59KCW"}
-            )
-            if response.status_code != 200:
-                return JsonResponse({"error": "Could not verify payment"}, status=502)
+        if not received_sig:
+            print("missing sig")
+            return JsonResponse({"error": "Missing signature"}, status=400)
 
-            verify_data = response.json()
-            if verify_data.get("payment_status") == "finished":
-                print("inside finished ")
-                payment.status = "finished"
-                payment.save()
-                user=MyUser.objects.get(id=payment.user)
-                Balance=Ballance.objects.get(user=user)
-                print(f"amount {payment.amount}")
-                Balance.balance += Decimal(payment.amount)
-                Balance.save()
-                return JsonResponse({"message": "Payment confirmed"})
-            else:
-                return JsonResponse({"message": "Payment not complete yet"})
+        calculated_hmac = hmac.new(ipn_secret.encode(), request.body, hashlib.sha512).hexdigest()
+        print(calculated_hmac)
 
-        except json.JSONDecodeError:
-            return JsonResponse({"error": "Invalid JSON"}, status=400)
-        except Exception as e:
-            return JsonResponse({"error": str(e)}, status=500)
-    else:
-        print("get")
+        if not hmac.compare_digest(received_sig, calculated_hmac):
+            print("invalid sig")
+            return JsonResponse({"error": "Invalid signature"}, status=403)
+
+        data = json.loads(request.body)
+        payment_status = data.get("payment_status")
+        order_id = data.get("order_id")
+        amount_received = data.get("amount_received")
+
+        # ✅ Now handle the payment logic here
+        if payment_status == "finished":
+            paymentObj=CryptoPayment.objects.get(order_id=order_id)
+            user=paymentObj.user
+            userobj=MyUser.objects.get(id=user)
+            userBalance=Ballance.objects.get(user=userobj)
+            userBalance.ballance+=Decimal(paymentObj.amount*130)
+            userBalance.save()
+            # Mark order as paid
+            print(f"✅ Payment received for order {order_id}, amount: {amount_received}")
+        else:
+            print(f"⚠️ Payment status update: {payment_status} for order {order_id}")
+
+        return JsonResponse({"status": "Webhook received"})
+
+    except Exception as e:
+        print(f"❌ Error processing webhook: {e}")
+        return JsonResponse({"error": str(e)}, status=500)
