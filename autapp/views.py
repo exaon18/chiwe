@@ -28,6 +28,9 @@ def get_csrf_token(request):
     """
     csrf_token = get_token(request)
     return JsonResponse({'csrf_token': csrf_token})
+def username_to_id(username):
+    h = hashlib.sha256(username.encode()).hexdigest()
+    return int(h[:16], 16) % 10**8
 
 def send_welcome_email(user, email,token,why):
     subject = 'Welcome to Chiwe'
@@ -63,13 +66,15 @@ def generate_unique_number(username):
 def index(request):
     
     return render(request,'index.html')
-def signup(request):
+def signup(request,ref):
     if request.method == 'POST':
         username = request.POST['username'].upper()
         firstname = request.POST['first_name']
         email = request.POST['email']
         password = request.POST['password1']
         password2 = request.POST['password2']
+        referal=request.POST.get('referal', None)
+        rewarded=''
         try:
             validate_email(email)
             print("Valid email")
@@ -86,6 +91,7 @@ def signup(request):
             
         if len(password) < 6:
             return JsonResponse({"success": False, "message":"Password must be at least 6 characters."})
+       
         
                 # Check for active user conflicts
         invalid_chars = set(' @#$/&*><-_.!%^()+=[]{}|~`,;:\'"')
@@ -104,6 +110,17 @@ def signup(request):
         inactive_email = MyUser.objects.filter(email=email, is_active=False).first()
         if inactive_email:
             inactive_email.delete()
+        if referal:
+            try:
+           
+
+                    
+                rewarded=MyUser.objects.get(referalCode=referal)
+                rewarded.referedCount+=1
+                rewarded.save()
+            except MyUser.DoesNotExist:
+                print("DNE")
+                return JsonResponse({"success": False, "message":"Invalid referal code."})
        
         token = generate_unique_number(username)
         user = MyUser.objects.create_user(
@@ -112,8 +129,11 @@ def signup(request):
             email=email,
             password=password,
             token=token,
+            referedBy=referal,
+            referalCode=username_to_id(username)
             
         )
+        
         Ballance.objects.create(user=user, ballance=0.00)
         user.is_active = False  # User needs to verify via email
         user.save()
@@ -127,7 +147,10 @@ def signup(request):
             
             user.delete()
             return JsonResponse({"success": False, "message":"system is busy , please sign up again."})
-    return render(request, 'signup.html')
+    if ref=="1":
+        return render(request, 'signup.html')
+    else:
+        return render(request, 'signup.html',{'referal':ref})
 
 
 
@@ -153,7 +176,6 @@ def verify(request, username):
         print(user.token)
         if user.token == token:
             user.is_active = True
-            
             GameHistory.objects.get_or_create(user=user,TotalPlayed=0,TotalWin=0,Totaloss=0,TotalEarning=0.00,)
             user.save()
             login(request, user)

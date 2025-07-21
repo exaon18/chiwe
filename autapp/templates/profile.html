@@ -850,8 +850,8 @@
                     <div class="stat-label"><i class="fas fa-money-bill-wave"></i> Total Winnings</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-value" id="rank">Starter</div>
-                    <div class="stat-label"><i class="fas fa-crown"></i> Rank</div>
+                    <div class="stat-value" id="rank"> {{user.referedCount}}</div>
+                    <div class="stat-label"><i class="fas fa-crown"></i>Total Refered</div>
                 </div>
             </div>
         </div>
@@ -877,6 +877,10 @@
             <div class="detail-row">
                 <span class="detail-label"><i class="fas fa-wallet"></i> Current Balance</span>
                 <span class="detail-value" id="balance">${{ballance.ballance}}</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label"><i class="fas fa-wallet"></i> Referal link</span>
+                <span class="detail-value" id="balance">https://chiwegames.com/signup/{{user.referalCode}}</span>
             </div>
         </div>
 

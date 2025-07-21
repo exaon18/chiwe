@@ -22,7 +22,7 @@ def ctc(request):
             return JsonResponse({"proceed":False,"message":"You are already in a game"})
         amount=int(request.POST["amount"])
         print("in the view ")
-        if amount == 25 or amount == 50 or amount ==100:
+        if amount == 25 or amount == 50 or amount ==100 or amount==0:
             print('sucess')
             if Ballance.objects.get(user=user).ballance >=amount:
                 print(Ballance.objects.get(user=user).ballance)

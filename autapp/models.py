@@ -21,12 +21,15 @@ class MyUser(AbstractUser):
     last_otp_fp=models.DateField(null=True,blank=True)
     Active_Game=models.BooleanField(default=False)
     firstdepo=models.BooleanField(default=False)
-    refered=models.CharField(default=False, blank=True)
+    referedBy=models.CharField(default=False, blank=True)
+    referalCode=models.CharField(default=False, blank=True)
+    referedCount=models.IntegerField(default=0)
     def __str__(self):
         return self.username
 class Ballance(models.Model):
     user= models.OneToOneField(MyUser, on_delete=models.CASCADE, null=False)
     ballance=models.DecimalField(max_digits=10,decimal_places=2,default=0.00)
+    deposited=models.BooleanField(default=False)
     def __str__(self):
         return self.user.username
   

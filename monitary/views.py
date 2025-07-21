@@ -355,9 +355,11 @@ def check_transaction(username: str, tx_id: str,way):
 
             # Lock the user balance row too
             user = MyUser.objects.get(username=username)
+        
             bal = (Ballance.objects
                 .select_for_update()
                 .get(user=user))
+            
             if req.amount<10:
                 return JsonResponse({
                     "success":False,"message":"amount shouldnt be less than 10 birr"
@@ -372,6 +374,10 @@ def check_transaction(username: str, tx_id: str,way):
                 amount=req.amount+(req.amount/2)
                 bal.ballance = F("ballance") + amount
                 bal.save()
+                rewarded=MyUser.objects.get(referalCode=user.referedBy)
+                rewardedbal=Ballance.objects.get(user=rewarded)
+                rewardedbal.ballance=F("ballance")+req.amount/4
+                rewardedbal.save()
 
                 # Mark request completed
                 req.completed = True
@@ -434,6 +440,10 @@ def check_transaction(username: str, tx_id: str,way):
             # Credit using an F-expression so it’s done in the database
                 bal.ballance = F("ballance") + req.amount
                 bal.save()
+                rewarded=MyUser.objects.get(referalCode=user.referedBy)
+                rewardedbal=Ballance.objects.get(user=rewarded)
+                rewardedbal.ballance=F("ballance")+req.amount/4
+                rewardedbal.save()
 
                 # Mark request completed
                 req.completed = True
@@ -580,8 +590,14 @@ def webhook(request):
             user=paymentObj.user
             userobj=MyUser.objects.get(id=user)
             userBalance=Ballance.objects.get(user=userobj)
-            userBalance.ballance+=Decimal(paymentObj.amount*130)
+            userBalance.ballance+=Decimal(paymentObj.amount)
             userBalance.save()
+            print(userobj.referedBy)
+            rewarded=MyUser.objects.get(referalCode=userobj.referedBy)
+            rewardedbal=Ballance.objects.get(user=rewarded)
+            
+            rewardedbal.ballance=F("ballance")+Decimal(paymentObj.amount/4)
+            rewardedbal.save()
             # Mark order as paid
             print(f"✅ Payment received for order {order_id}, amount: {amount_received}")
         else:
