@@ -11,13 +11,13 @@ from urllib.parse import parse_qs
 import numpy as np
 room_with_0=[]
 room_with_25 = []
-room_with_50 = []
-room_with_100 = []
+room_with_10 = []
+room_with_2 = []
 players_in_game = []
 players_in_game_bingo = []
 bingo_room_with_25 = []
-bingo_room_with_50 = []
-bingo_room_with_100 = []
+bingo_room_with_10 = []
+bingo_room_with_2 = []
 bingo_room_with_0=[]
 
 def generate_unique_number(username):
@@ -65,12 +65,12 @@ class Crack_the_CodeConsumer(WebsocketConsumer):
             elif amount == 0:
                 self.room_list=0
                 self.handle_room_connection(room_with_0, amount)
-            elif amount == 50:
+            elif amount == 10:
                 self.room_list=50
-                self.handle_room_connection(room_with_50, amount)
-            elif amount == 100:
+                self.handle_room_connection(room_with_10, amount)
+            elif amount == 2:
                 self.room_list=100
-                self.handle_room_connection(room_with_100, amount)
+                self.handle_room_connection(room_with_2, amount)
 
     def handle_room_connection(self, room_list, amount):
         with Crack_the_CodeConsumer.connect_lock:
@@ -408,7 +408,7 @@ class BingoConsumer(WebsocketConsumer):
         query_params = parse_qs(query_string)
         board = query_params.get('board', [''])[0]
         self.Game_state={}  # Get board as string
-        print(f"playrs in b {players_in_game_bingo} room bingo 25 {bingo_room_with_25} room bingo 50 {bingo_room_with_50} room bingo 100 {bingo_room_with_100}")
+        print(f"playrs in b {players_in_game_bingo} room bingo 25 {bingo_room_with_25} room bingo 10 {bingo_room_with_10} room bingo 2 {bingo_room_with_2}")
         if board:
             self.board_numbers = list(map(int, board.split(',')))  # Convert to list of numbers
             print("Received board:", self.board_numbers)  # Debugging
@@ -431,12 +431,12 @@ class BingoConsumer(WebsocketConsumer):
             elif self.amount == 0:
                 self.room_list = 0
                 self.handle_room_connection(bingo_room_with_0, self.amount)
-            elif self.amount == 50:
-                self.room_list = 50
-                self.handle_room_connection(bingo_room_with_50, self.amount)
-            elif self.amount == 100:
-                self.room_list = 100
-                self.handle_room_connection(bingo_room_with_100, self.amount)
+            elif self.amount == 10:
+                self.room_list = 10
+                self.handle_room_connection(bingo_room_with_10, self.amount)
+            elif self.amount == 2:
+                self.room_list = 2
+                self.handle_room_connection(bingo_room_with_2, self.amount)
    # Inside your BingoConsumer class
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

@@ -110,7 +110,7 @@ def signup(request,ref):
         inactive_email = MyUser.objects.filter(email=email, is_active=False).first()
         if inactive_email:
             inactive_email.delete()
-        if referal!= None:
+        if referal!= None and referal!="":
             try:
            
 
@@ -119,6 +119,7 @@ def signup(request,ref):
                 rewarded.referedCount+=1
                 rewarded.save()
             except MyUser.DoesNotExist:
+                print(referal=="")
                 print("DNE")
                 return JsonResponse({"success": False, "message":"Invalid referal code."})
        
@@ -168,11 +169,11 @@ def verify(request, username):
                return resend_otp_signup(request, user)
             else:
                 return JsonResponse({"success":False,"message":"Something went wrong , please refresh the page"})
-        if not request.POST.get('token'):
+        if not request.POST.get('otp_code'):
             return JsonResponse({"success": False, "message":"OTP is required."})
         
             
-        token = request.POST['token']
+        token = request.POST['otp_code']
         print(user.token)
         if user.token == token:
             user.is_active = True

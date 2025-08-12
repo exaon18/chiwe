@@ -139,7 +139,8 @@ def withdraw(request, invalidOtp=invalidOtp):
     if request.method == 'POST':
         
         try:
-            amount = float(request.POST["amount"])
+            print(request.POST)
+            amount = float(request.POST["crypto_amount"])
             way=request.POST["way"]
         except ValueError:
             messages.error(request, "Please enter a valid number for the amount.")

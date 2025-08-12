@@ -15,6 +15,8 @@
         --text-secondary: #a0aec0;
         --error: #ff5757;
         --input-bg: #16161e;
+        --crypto-color: #f7931a;
+        --crypto-dark: #e6930f;
     }
 
     * {
@@ -160,6 +162,11 @@
         overflow: hidden;
     }
 
+    .method-option.crypto {
+        background-color: rgba(247, 147, 26, 0.02);
+        border-color: rgba(247, 147, 26, 0.1);
+    }
+
     .method-option::before {
         content: '';
         position: absolute;
@@ -171,11 +178,21 @@
         transition: left 0.5s ease;
     }
 
+    .method-option.crypto::before {
+        background: linear-gradient(90deg, transparent, rgba(247, 147, 26, 0.05), transparent);
+    }
+
     .method-option:hover {
         border-color: rgba(46, 213, 115, 0.3);
         background-color: rgba(46, 213, 115, 0.05);
         transform: translateY(-2px);
         box-shadow: 0 8px 25px rgba(46, 213, 115, 0.1);
+    }
+
+    .method-option.crypto:hover {
+        border-color: rgba(247, 147, 26, 0.3);
+        background-color: rgba(247, 147, 26, 0.05);
+        box-shadow: 0 8px 25px rgba(247, 147, 26, 0.1);
     }
 
     .method-option:hover::before {
@@ -194,6 +211,20 @@
         background-color: white;
         padding: 8px;
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .crypto-logo {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--crypto-color), var(--crypto-dark));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.8rem;
+        font-weight: bold;
+        color: white;
+        box-shadow: 0 4px 15px rgba(247, 147, 26, 0.3);
     }
 
     .method-info {
@@ -217,6 +248,10 @@
         color: var(--primary);
         font-size: 1.2rem;
         transition: transform 0.3s ease;
+    }
+
+    .method-option.crypto .method-arrow {
+        color: var(--crypto-color);
     }
 
     .method-option:hover .method-arrow {
@@ -269,6 +304,11 @@
         margin-bottom: 24px;
     }
 
+    .selected-method-display.crypto {
+        background-color: rgba(247, 147, 26, 0.05);
+        border-color: rgba(247, 147, 26, 0.1);
+    }
+
     .selected-method-logo {
         width: 50px;
         height: 50px;
@@ -276,6 +316,20 @@
         border-radius: 8px;
         background-color: white;
         padding: 6px;
+    }
+
+    .selected-crypto-logo {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--crypto-color), var(--crypto-dark));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.4rem;
+        font-weight: bold;
+        color: white;
+        box-shadow: 0 2px 10px rgba(247, 147, 26, 0.3);
     }
 
     .selected-method-info {
@@ -322,10 +376,38 @@
         box-shadow: 0 0 0 3px rgba(46, 213, 115, 0.1);
     }
 
+    .crypto-form .form-control:focus {
+        border-color: var(--crypto-color);
+        box-shadow: 0 0 0 3px rgba(247, 147, 26, 0.1);
+    }
+
     .form-hint {
         margin-top: 6px;
         font-size: 0.8rem;
         color: var(--text-secondary);
+    }
+
+    .select-wrapper {
+        position: relative;
+    }
+
+    .select-wrapper::after {
+        content: '▼';
+        position: absolute;
+        top: 50%;
+        right: 1rem;
+        transform: translateY(-50%);
+        color: var(--text-secondary);
+        pointer-events: none;
+        font-size: 0.8rem;
+    }
+
+    select.form-control {
+        appearance: none;
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        cursor: pointer;
+        padding-right: 3rem;
     }
 
     .btn {
@@ -345,9 +427,17 @@
         overflow: hidden;
     }
 
+    .btn.crypto {
+        background: linear-gradient(135deg, var(--crypto-color), var(--crypto-dark));
+    }
+
     .btn:hover {
         transform: translateY(-2px);
         box-shadow: 0 6px 15px rgba(46, 213, 115, 0.2);
+    }
+
+    .btn.crypto:hover {
+        box-shadow: 0 6px 15px rgba(247, 147, 26, 0.2);
     }
 
     .btn:active {
@@ -642,7 +732,17 @@
         font-size: 0.9rem;
     }
 
-    /* New styles for error alert */
+    .crypto-info-box {
+        background-color: rgba(247, 147, 26, 0.1);
+        border-left: 3px solid var(--crypto-color);
+        color: var(--text);
+        padding: 12px 16px;
+        border-radius: 6px;
+        margin-bottom: 24px;
+        font-size: 0.9rem;
+    }
+
+    /* Error alert */
     .error-alert {
         background-color: rgba(255, 87, 87, 0.05);
         border: 1px solid rgba(255, 87, 87, 0.2);
@@ -692,6 +792,23 @@
         }
     }
 
+    /* Hide traditional fields when crypto is selected */
+    .traditional-fields {
+        display: block;
+    }
+
+    .crypto-fields {
+        display: none;
+    }
+
+    .crypto-form .traditional-fields {
+        display: none;
+    }
+
+    .crypto-form .crypto-fields {
+        display: block;
+    }
+
     @media (max-width: 768px) {
         .container {
             padding: 0 16px;
@@ -710,9 +827,17 @@
             padding: 16px;
         }
 
-        .method-logo, .selected-method-logo {
+        .method-logo, .selected-method-logo, .crypto-logo, .selected-crypto-logo {
             width: 50px;
             height: 50px;
+        }
+
+        .crypto-logo {
+            font-size: 1.4rem;
+        }
+
+        .selected-crypto-logo {
+            font-size: 1.2rem;
         }
 
         .success-message {
@@ -731,8 +856,6 @@
     href="https://i.postimg.cc/FzgPtp2v/photo-2025-05-31-05-36-51.jpg"
     type="image/jpeg"
   />
-
-  <!-- 2) For older browsers, you can also include "shortcut icon" -->
   <link
     rel="shortcut icon"
     href="https://i.postimg.cc/FzgPtp2v/photo-2025-05-31-05-36-51.jpg"
@@ -769,10 +892,19 @@
                     </div>
                     
                     <div class="method-option" onclick="selectMethod('ebirr')">
-                        <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKwAAACUCAMAAAA5xjIqAAAAYFBMVEUskEj///+Twp8TiTgAhjDu9vA+mFcejD/3+/gYizx5s4fB28jR5dYJiTcnjkUjjUJOn2Tm8end7OGz1LtUommbxqaNvpk0lU+ny7DI4M5rrXy72MJ+t43X6dxzsYNgpnEbCZ/1AAAFOUlEQVR4nO2c25qjKhBGJYpIouD5bHz/t9xmpntaAZUkFqb3x3/TF52EJUJRFFU4jtX/SDSi7GwGXZEmu/qEn42hpyhFCNcj+RW9GzUIPXA5OZtEQ1GI/iiN6dko+/qGRfj6+X37DxYFrXs2zJ5+YBGuPr1vZ7AodD7cJsxhUfnhXbuATavP7toFLOo/234tYS+fbRAsLJQsLJQsLJQsLJQsLJQsLJQsLJR+Eyyv0l8Dy6sOnQXLOKGRS7Xl0hs6B5YR7o990WAcBAHWFDoFlrnOtQ7Fxp+VEVgWOWUavElqBpYRvziA1AgsZ2W6z/EZsLRqjulWA7C0TY5ChYZl0eWwboWGZW5xICowLD20X2FhaXkoKigsbY/tV0hYXh1oB4BhmXPbaXryZ5I0DIc0SbDeOwCDJeUmAA7rSxtXnBDCnckdq28a7wEKllVba+xwGf0HJvsrzilx8r7b+AYobLRuYYNmpBOn+HSMU7/ediKBYHm12mx499aOiJgXZ1uDBwh2tWODsto6cuHkPpiGZdVKk4O/lzpA+PoAgoElV/XbzHTyBrx+bQjBwPJa3Zg0rZRadStBYFdGQRFpHmfSWP1iQGB5rmqs0G+Kxsq+BYGlvaKlTG8MfP3CXTVuQWA9xZANVaxfK5iKVuVewsCGUjuJLyVnccIqP87z2J9cBAnYy0zBSiMu6EWbxUledunD3QqSsL76roDLHNm5gIGV5tdNSBmZFtZu/kTBUETCyqaw1TCwUsfGy0HAHTlGk47LzmVccojNwNbe4v8kVtrhejlyiWQAjcAGy9lF8hVfN1tmdEaig2sEtlvMLh6v+uX1wr6R/ATY4D6HZf7GHqJYPBYRPmkCdvDn/RUpDOjPc41zWiJ81ARsNgeg4+ZGMpw7O0RYxgzABvN0rFW3/FvztDjeLj0EA7B4bmRZ3t221BRs/uHENGzycoo58wfTsGH06u+wqjENm70M6xADJ4xL2PoN2Mw07OV1WFqbhi1fb8I8bP+bYH9Vzxa/aYK9Ybq4cdPVePvfUIs5xheFZLETZERf1Pxyi+ebGhb3V32Vxr2uxUaBj0nwhJBpWFTPx4Ho/T8jE7DhvHJj47RhV28YQW1YPM534q4qxPitzVGAspftij4sKhb2gKjD4g+lYzyTL34wNAG7jB6xlSD+n+I/9iNOxPieEVjBpWVEfSAjFCrKIWkzsHgZP2KkVMyyzl9EOFglRXnNwKJMCCW7lXCUGKStcDwiBg3QOwv3U7C4FWh5NNbDN2+Q3HpHCM8yXz4DMWINHm9QitIT4rdlnXVZfbnnTNqumwvTy+2oto2M8y+PRS4GV1pjkNpbFexzNX1kVMzAIIeocFfC4laflivDookPUXCphEU416XlkTJ614EUh6php9eoN+ZILJ+jPQRTd7sCi5KrznSmuZo1ARmyq7AIX7y9BpmXr/iQDUxB8yrs1GK+ncpBJFfrn56YoAfBoqSo1scCodfVwPgAVM68BTs5V9dImSXBiJff1g8coGqvt2EfQzd2yCK1a3Jemd+qJ9ZfNVBF7Xuwj0S0oo2550Wu60bTn2rsu838PtxC3RewD/toPg1vWXGZVHfNsJeJWIPdJaMF+5SGZ3JWTobFPtylEUfD4jvgBRcHw8o5K58LG9whAjEwsLgHZT0UNh2BL2Q5DjboIujLYw6DDXvdXMvTYfEF0LweChskvWPkArS3YXGYtZ6Y8AekSLdUVaFk6OqyrVxjlzIx/3VVlcPlKgZQ2jdkENPKysrKysrKysrKysrKysrq0/Uf/BtW2TS5fbwAAAAASUVORK5CYII=" alt="Ebirr Coop Logo" class="method-logo">
+                        <img src="data:image/png;base64,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" alt="Ebirr Coop Logo" class="method-logo">
                         <div class="method-info">
                             <div class="method-name">Ebirr Coop</div>
                             <div class="method-description">Cooperative Bank's digital payment solution</div>
+                        </div>
+                        <div class="method-arrow">→</div>
+                    </div>
+
+                    <div class="method-option crypto" onclick="selectMethod('crypto')">
+                        <div class="crypto-logo">₿</div>
+                        <div class="method-info">
+                            <div class="method-name">Cryptocurrency</div>
+                            <div class="method-description">Withdraw to your crypto wallet (USDT Polygon, Litecoin)</div>
                         </div>
                         <div class="method-arrow">→</div>
                     </div>
@@ -793,24 +925,58 @@
                     <!-- This will be populated dynamically -->
                 </div>
                 
-                <div class="info-box">
-                    <strong>Important!</strong> Double check your phone number before submitting withdrawal request.  Minimum withdrawal amount: 25 Birr
+                <div class="info-box" id="traditional-info">
+                    <strong>Important!</strong> Double check your phone number before submitting withdrawal request. Minimum withdrawal amount: 25 Birr
+                </div>
+
+                <div class="crypto-info-box" id="crypto-info" style="display: none;">
+                    <strong>Crypto Withdrawal!</strong> Ensure your wallet address is correct. Minimum withdrawal amount: $5 USD. Transactions are irreversible.
                 </div>
 
                 <form id="withdrawal-form" method="POST">
                     {% csrf_token %}
                     <input type="hidden" id="withdrawal-method" name="way" value="">
                     
-                    <div class="form-group">
-                        <label for="amount" class="form-label">Amount (Birr)</label>
-                        <input type="number" id="amount" name="amount" class="form-control" placeholder="Enter amount to withdraw" required min="25">
-                        <div class="form-hint">Minimum withdrawal amount: 25 Birr</div>
+                    <!-- Traditional Payment Fields -->
+                    <div class="traditional-fields">
+                        <div class="form-group">
+                            <label for="amount" class="form-label">Amount (Birr)</label>
+                            <input type="number" id="amount" name="amount" class="form-control" placeholder="Enter amount to withdraw" min="25">
+                            <div class="form-hint">Minimum withdrawal amount: 25 Birr</div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="phone_number" class="form-label">Phone Number</label>
+                            <input type="tel" id="phone_number" name="phone_number" class="form-control" placeholder="Enter your phone number" pattern="[0-9]{9,10}">
+                            <div class="form-hint" id="phone-hint">Enter your registered phone number (e.g., 9xxxxxxxx)</div>
+                        </div>
                     </div>
 
-                    <div class="form-group">
-                        <label for="phone_number" class="form-label">Phone Number</label>
-                        <input type="tel" id="phone_number" name="phone_number" class="form-control" placeholder="Enter your phone number" required pattern="[0-9]{9,10}">
-                        <div class="form-hint" id="phone-hint">Enter your registered phone number (e.g., 9xxxxxxxx)</div>
+                    <!-- Crypto Payment Fields -->
+                    <div class="crypto-fields">
+                        <div class="form-group">
+                            <label for="crypto_type" class="form-label">Cryptocurrency Type</label>
+                            <div class="select-wrapper">
+                                <select id="crypto_type" name="crypto_type" class="form-control">
+                                    <option value="">Select cryptocurrency...</option>
+                                    <option value="usdt_polygon">USDT (Polygon Network)</option>
+                                    <option value="litecoin">Litecoin (LTC)</option>
+                                </select>
+                            </div>
+                            <div class="form-hint">Choose your preferred cryptocurrency</div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="crypto_address" class="form-label">Wallet Address</label>
+                            <input type="text" id="crypto_address" name="crypto_address" class="form-control" placeholder="Enter your wallet address">
+                            <div class="form-hint">Enter your wallet address for the selected cryptocurrency</div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="crypto_amount" class="form-label">Amount (USD)</label>
+                            <input type="number" id="crypto_amount" name="crypto_amount" class="form-control" placeholder="Enter amount in USD" min="5" step="0.01">
+                            <div class="form-hint">Minimum withdrawal amount: $5 USD</div>
+                        </div>
                     </div>
 
                     <button type="submit" class="btn" id="withdraw-btn">Withdraw Funds</button>
@@ -845,10 +1011,15 @@
         const selectedMethodDisplay = document.getElementById('selected-method-display');
         const withdrawalMethodInput = document.getElementById('withdrawal-method');
         const phoneHint = document.getElementById('phone-hint');
+        const traditionalInfo = document.getElementById('traditional-info');
+        const cryptoInfo = document.getElementById('crypto-info');
         
         const form = document.getElementById('withdrawal-form');
         const amountInput = document.getElementById('amount');
         const phoneInput = document.getElementById('phone_number');
+        const cryptoTypeInput = document.getElementById('crypto_type');
+        const cryptoAddressInput = document.getElementById('crypto_address');
+        const cryptoAmountInput = document.getElementById('crypto_amount');
         const loadingOverlay = document.getElementById('loading-overlay');
         const successMessage = document.getElementById('success-message');
         const successDescription = document.getElementById('success-description');
@@ -865,23 +1036,49 @@
                 description: 'Fast and secure mobile wallet service',
                 logo: 'https://i.postimg.cc/wTX9jRCb/photo-2025-05-31-06-49-59.jpg',
                 way: 'tb',
-                hint: 'Enter your Telebirr registered phone number (e.g., 9xxxxxxxx)'
+                hint: 'Enter your Telebirr registered phone number (e.g., 9xxxxxxxx)',
+                type: 'traditional'
             },
             ebirr: {
                 name: 'Ebirr Coop',
                 description: 'Cooperative Bank\'s digital payment solution',
-                logo: 'data:image/png;base64,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',
+                logo: 'data:image/png;base64,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',
                 way: 'eb',
-                hint: 'Enter your Ebirr Coop registered phone number (e.g., 9xxxxxxxx)'
+                hint: 'Enter your Ebirr Coop registered phone number (e.g., 9xxxxxxxx)',
+                type: 'traditional'
             },
-              ebirr: {
-                name: 'crypto',
-                description: 'usdt and Ltc ',
+            crypto: {
+                name: 'Cryptocurrency',
+                description: 'Withdraw to your crypto wallet (USDT Polygon, Litecoin)',
                 logo: '₿',
-                way: 'eb',
-                hint: 'Enter your respective adress to crypto curency selected above  '
+                way: 'crypto',
+                hint: 'Enter your wallet address for the selected cryptocurrency',
+                type: 'crypto'
             }
         };
+
+        // Function to toggle required attributes based on payment method
+        function toggleRequiredFields(isCrypto) {
+            if (isCrypto) {
+                // Remove required from traditional fields
+                amountInput.removeAttribute('required');
+                phoneInput.removeAttribute('required');
+                
+                // Add required to crypto fields
+                cryptoTypeInput.setAttribute('required', 'required');
+                cryptoAddressInput.setAttribute('required', 'required');
+                cryptoAmountInput.setAttribute('required', 'required');
+            } else {
+                // Add required to traditional fields
+                amountInput.setAttribute('required', 'required');
+                phoneInput.setAttribute('required', 'required');
+                
+                // Remove required from crypto fields
+                cryptoTypeInput.removeAttribute('required');
+                cryptoAddressInput.removeAttribute('required');
+                cryptoAmountInput.removeAttribute('required');
+            }
+        }
 
         // Global function to select payment method
         window.selectMethod = function(method) {
@@ -892,16 +1089,43 @@
             withdrawalMethodInput.value = methodConfig.way;
             
             // Update selected method display
-            selectedMethodDisplay.innerHTML = `
-                <img src="${methodConfig.logo}" alt="${methodConfig.name} Logo" class="selected-method-logo">
-                <div class="selected-method-info">
-                    <div class="selected-method-name">${methodConfig.name}</div>
-                    <div class="selected-method-description">${methodConfig.description}</div>
-                </div>
-            `;
+            if (method === 'crypto') {
+                selectedMethodDisplay.innerHTML = `
+                    <div class="selected-crypto-logo">₿</div>
+                    <div class="selected-method-info">
+                        <div class="selected-method-name">${methodConfig.name}</div>
+                        <div class="selected-method-description">${methodConfig.description}</div>
+                    </div>
+                `;
+                selectedMethodDisplay.classList.add('crypto');
+            } else {
+                selectedMethodDisplay.innerHTML = `
+                    <img src="${methodConfig.logo}" alt="${methodConfig.name} Logo" class="selected-method-logo">
+                    <div class="selected-method-info">
+                        <div class="selected-method-name">${methodConfig.name}</div>
+                        <div class="selected-method-description">${methodConfig.description}</div>
+                    </div>
+                `;
+                selectedMethodDisplay.classList.remove('crypto');
+            }
             
-            // Update phone hint
-            phoneHint.textContent = methodConfig.hint;
+            // Update form styling and info boxes
+            if (method === 'crypto') {
+                form.classList.add('crypto-form');
+                withdrawBtn.classList.add('crypto');
+                traditionalInfo.style.display = 'none';
+                cryptoInfo.style.display = 'block';
+                toggleRequiredFields(true);
+            } else {
+                form.classList.remove('crypto-form');
+                withdrawBtn.classList.remove('crypto');
+                traditionalInfo.style.display = 'block';
+                cryptoInfo.style.display = 'none';
+                toggleRequiredFields(false);
+                
+                // Update phone hint for traditional methods
+                phoneHint.textContent = methodConfig.hint;
+            }
             
             // Show form with smooth transition
             methodSelection.classList.add('hidden');
@@ -920,6 +1144,16 @@
             setTimeout(() => {
                 methodSelection.classList.remove('hidden');
             }, 200);
+            
+            // Reset form styling
+            form.classList.remove('crypto-form');
+            withdrawBtn.classList.remove('crypto');
+            selectedMethodDisplay.classList.remove('crypto');
+            traditionalInfo.style.display = 'block';
+            cryptoInfo.style.display = 'none';
+            
+            // Reset required fields
+            toggleRequiredFields(false);
             
             // Clear form
             form.reset();
@@ -991,6 +1225,8 @@
         form.addEventListener('submit', (e) => {
             e.preventDefault();
             
+            console.log('Form submitted, selected method:', selectedMethod);
+            
             // Validate method selection
             if (!selectedMethod || !withdrawalMethodInput.value) {
                 showToast('Error', 'Please select a withdrawal method first', 'error');
@@ -998,21 +1234,59 @@
                 return;
             }
             
-            // Client-side validation before submitting the form
-            const amount = parseFloat(amountInput.value);
-            if (isNaN(amount) || amount < 25) {
-                showToast('Error', 'Withdrawal amount must be greater than 25 birr', 'error');
-                amountInput.focus();
-                return;
+            // Validation based on payment method type
+            if (paymentMethods[selectedMethod].type === 'crypto') {
+                console.log('Validating crypto form...');
+                
+                // Crypto validation
+                const cryptoType = cryptoTypeInput.value;
+                const cryptoAddress = cryptoAddressInput.value.trim();
+                const cryptoAmount = parseFloat(cryptoAmountInput.value);
+                
+                console.log('Crypto validation:', { cryptoType, cryptoAddress, cryptoAmount });
+                
+                if (!cryptoType) {
+                    showToast('Error', 'Please select a cryptocurrency type', 'error');
+                    cryptoTypeInput.focus();
+                    return;
+                }
+                
+                if (!cryptoAddress) {
+                    showToast('Error', 'Please enter your wallet address', 'error');
+                    cryptoAddressInput.focus();
+                    return;
+                }
+                
+                if (isNaN(cryptoAmount) || cryptoAmount < 5) {
+                    showToast('Error', 'Withdrawal amount must be at least $5 USD', 'error');
+                    cryptoAmountInput.focus();
+                    return;
+                }
+                
+                console.log('Crypto validation passed');
+            } else {
+                console.log('Validating traditional form...');
+                
+                // Traditional payment validation
+                const amount = parseFloat(amountInput.value);
+                if (isNaN(amount) || amount < 25) {
+                    showToast('Error', 'Withdrawal amount must be greater than 25 birr', 'error');
+                    amountInput.focus();
+                    return;
+                }
+                
+                // Validate phone number
+                const phoneNumber = phoneInput.value.trim();
+                if (!phoneNumber || !/^[0-9]{9,10}$/.test(phoneNumber)) {
+                    showToast('Error', `Please enter a valid ${paymentMethods[selectedMethod].name} phone number`, 'error');
+                    phoneInput.focus();
+                    return;
+                }
+                
+                console.log('Traditional validation passed');
             }
             
-            // Validate phone number
-            const phoneNumber = phoneInput.value.trim();
-            if (!phoneNumber || !/^[0-9]{9,10}$/.test(phoneNumber)) {
-                showToast('Error', `Please enter a valid ${paymentMethods[selectedMethod].name} phone number`, 'error');
-                phoneInput.focus();
-                return;
-            }
+            console.log('All validation passed, submitting form...');
             
             // Show loading overlay
             loadingOverlay.classList.add('active');
@@ -1022,6 +1296,12 @@
             
             // Get the form data
             const formData = new FormData(form);
+            
+            // Debug: Log form data
+            console.log('Form data being sent:');
+            for (let pair of formData.entries()) {
+                console.log(pair[0] + ': ' + pair[1]);
+            }
             
             // Get the CSRF token from the form
             const csrfToken = document.querySelector('[name="csrfmiddlewaretoken"]').value;
@@ -1035,8 +1315,13 @@
                     'X-Requested-With': 'XMLHttpRequest'
                 }
             })
-            .then(response => response.json())
+            .then(response => {
+                console.log('Response received:', response.status);
+                return response.json();
+            })
             .then(data => {
+                console.log('Response data:', data);
+                
                 // Hide loading overlay
                 loadingOverlay.classList.remove('active');
                 
@@ -1049,7 +1334,15 @@
                 if (data.success === true) {
                     // Show success message
                     const methodName = paymentMethods[selectedMethod].name;
-                    successDescription.textContent = data.message || `Your withdrawal request has been processed successfully. The funds will be transferred to your ${methodName} account shortly.`;
+                    let successMsg = data.message;
+                    if (!successMsg) {
+                        if (selectedMethod === 'crypto') {
+                            successMsg = `Your crypto withdrawal request has been processed successfully. The funds will be transferred to your wallet shortly.`;
+                        } else {
+                            successMsg = `Your withdrawal request has been processed successfully. The funds will be transferred to your ${methodName} account shortly.`;
+                        }
+                    }
+                    successDescription.textContent = successMsg;
                     successMessage.classList.add('active');
                 } else {
                     // Show error message
@@ -1074,8 +1367,24 @@
             });
         });
 
-        // Amount input validation
+        // Input validation for traditional amount
         amountInput.addEventListener('input', (e) => {
+            let value = e.target.value;
+            
+            // Remove non-numeric characters except decimal point
+            value = value.replace(/[^\d.]/g, '');
+            
+            // Ensure only one decimal point
+            const decimalCount = (value.match(/\./g) || []).length;
+            if (decimalCount > 1) {
+                value = value.replace(/\.(?=.*\.)/g, '');
+            }
+            
+            e.target.value = value;
+        });
+
+        // Input validation for crypto amount
+        cryptoAmountInput.addEventListener('input', (e) => {
             let value = e.target.value;
             
             // Remove non-numeric characters except decimal point
@@ -1116,7 +1425,7 @@
         }
 
         // Clear alerts when user starts typing in any field
-        const allInputs = [amountInput, phoneInput];
+        const allInputs = [amountInput, phoneInput, cryptoTypeInput, cryptoAddressInput, cryptoAmountInput];
         allInputs.forEach(input => {
             input.addEventListener('focus', clearAlerts);
         });

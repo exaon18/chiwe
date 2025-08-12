@@ -144,11 +144,6 @@
             font-size: 0.95rem;
         }
 
-        /* Hidden form styles */
-        .hidden-form {
-            display: none;
-        }
-
         /* OTP input styles */
         .otp-container {
             display: flex;
@@ -174,6 +169,17 @@
             outline: none;
             border-color: var(--primary);
             box-shadow: 0 0 0 3px rgba(46, 213, 115, 0.1);
+        }
+
+        .otp-input.error {
+            border-color: var(--error);
+            animation: shake 0.5s ease-in-out;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
         }
 
         /* Button styles */
@@ -373,78 +379,6 @@
             color: var(--warning);
         }
 
-        /* Loading overlay */
-        .loading-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(15, 15, 19, 0.8);
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            z-index: 2000;
-            opacity: 0;
-            visibility: hidden;
-            transition: opacity 0.3s ease, visibility 0.3s ease;
-            backdrop-filter: blur(5px);
-        }
-
-        .loading-overlay.active {
-            opacity: 1;
-            visibility: visible;
-        }
-
-        .loader {
-            position: relative;
-            width: 60px;
-            height: 60px;
-        }
-
-        .loader-circle {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            border-radius: 50%;
-            border: 3px solid transparent;
-            border-top-color: var(--primary);
-            animation: spin-loader 1.2s linear infinite;
-        }
-
-        .loader-circle:nth-child(2) {
-            width: 80%;
-            height: 80%;
-            top: 10%;
-            left: 10%;
-            border-top-color: transparent;
-            border-right-color: var(--primary);
-            animation: spin-loader 1.5s linear infinite reverse;
-        }
-
-        .loader-circle:nth-child(3) {
-            width: 60%;
-            height: 60%;
-            top: 20%;
-            left: 20%;
-            border-top-color: transparent;
-            border-bottom-color: var(--primary);
-            animation: spin-loader 1.7s linear infinite;
-        }
-
-        @keyframes spin-loader {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        .loader-text {
-            margin-top: 24px;
-            color: var(--text);
-            font-size: 1rem;
-            font-weight: 500;
-        }
-
         /* Success message */
         .success-message {
             position: fixed;
@@ -530,161 +464,6 @@
         .success-btn:hover {
             transform: translateY(-2px);
             box-shadow: 0 6px 15px rgba(46, 213, 115, 0.2);
-        }
-
-        /* Leave confirmation modal */
-        .leave-confirmation {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(15, 15, 19, 0.8);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 3000;
-            opacity: 0;
-            visibility: hidden;
-            transition: opacity 0.3s ease, visibility 0.3s ease;
-            backdrop-filter: blur(5px);
-        }
-
-        .leave-confirmation.active {
-            opacity: 1;
-            visibility: visible;
-        }
-
-        .leave-confirmation-content {
-            background-color: var(--card-bg);
-            border-radius: 16px;
-            padding: 30px;
-            text-align: center;
-            max-width: 450px;
-            width: 90%;
-            border: 1px solid var(--card-border);
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            transform: scale(0.95);
-            transition: transform 0.3s ease;
-        }
-
-        .leave-confirmation.active .leave-confirmation-content {
-            transform: scale(1);
-        }
-
-        .leave-confirmation-icon {
-            width: 60px;
-            height: 60px;
-            margin: 0 auto 20px;
-            background-color: rgba(255, 165, 2, 0.1);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: var(--warning);
-            font-size: 30px;
-        }
-
-        .leave-confirmation-title {
-            font-size: 1.25rem;
-            font-weight: 600;
-            color: var(--text);
-            margin-bottom: 12px;
-        }
-
-        .leave-confirmation-message {
-            color: var(--text-secondary);
-            margin-bottom: 24px;
-            font-size: 0.95rem;
-            line-height: 1.6;
-        }
-
-        .leave-confirmation-buttons {
-            display: flex;
-            justify-content: center;
-            gap: 12px;
-        }
-
-        .leave-btn {
-            padding: 10px 20px;
-            background-color: rgba(255, 87, 87, 0.1);
-            color: var(--error);
-            border: 1px solid var(--error);
-            border-radius: 8px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-
-        .leave-btn:hover {
-            background-color: var(--error);
-            color: var(--text);
-        }
-
-        .stay-btn {
-            padding: 10px 20px;
-            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-            color: var(--background);
-            border: none;
-            border-radius: 8px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-
-        .stay-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 15px rgba(46, 213, 115, 0.2);
-        }
-
-        /* Shooting stars */
-        .stars-container {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: -1;
-            pointer-events: none;
-            overflow: hidden;
-        }
-
-        .shooting-star {
-            position: absolute;
-            width: 2px;
-            height: 2px;
-            background-color: var(--primary);
-            border-radius: 50%;
-            animation: shootingStar 3s linear forwards;
-            opacity: 0;
-        }
-
-        .shooting-star::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100px;
-            height: 1px;
-            background: linear-gradient(90deg, var(--primary), transparent);
-            transform: translateX(-100%);
-        }
-
-        @keyframes shootingStar {
-            0% {
-                opacity: 0;
-                transform: translate(0, 0) rotate(315deg);
-            }
-            10% {
-                opacity: 1;
-            }
-            70% {
-                opacity: 1;
-            }
-            100% {
-                opacity: 0;
-                transform: translate(calc(100vw + 100px), calc(100vh + 100px)) rotate(315deg);
-            }
         }
 
         /* Django messages container */
@@ -797,6 +576,56 @@
             to { transform: scaleX(0); }
         }
 
+        /* Shooting stars */
+        .stars-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            pointer-events: none;
+            overflow: hidden;
+        }
+
+        .shooting-star {
+            position: absolute;
+            width: 2px;
+            height: 2px;
+            background-color: var(--primary);
+            border-radius: 50%;
+            animation: shootingStar 3s linear forwards;
+            opacity: 0;
+        }
+
+        .shooting-star::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100px;
+            height: 1px;
+            background: linear-gradient(90deg, var(--primary), transparent);
+            transform: translateX(-100%);
+        }
+
+        @keyframes shootingStar {
+            0% {
+                opacity: 0;
+                transform: translate(0, 0) rotate(315deg);
+            }
+            10% {
+                opacity: 1;
+            }
+            70% {
+                opacity: 1;
+            }
+            100% {
+                opacity: 0;
+                transform: translate(calc(100vw + 100px), calc(100vh + 100px)) rotate(315deg);
+            }
+        }
+
         /* Responsive styles */
         @media (max-width: 768px) {
             .container {
@@ -824,11 +653,6 @@
                 width: 35px;
                 height: 45px;
                 font-size: 1.1rem;
-            }
-
-            .leave-confirmation-buttons {
-                flex-direction: column;
-                gap: 10px;
             }
         }
     </style>
@@ -893,17 +717,18 @@
         </div>
 
         <!-- Activation form -->
-        <form id="activationForm" method="post" >
+        <form id="activationForm" method="post">
             {% csrf_token %}
             <div class="otp-container">
-                <input type="text" class="otp-input" maxlength="1" pattern="[0-9]" inputmode="numeric" required>
-                <input type="text" class="otp-input" maxlength="1" pattern="[0-9]" inputmode="numeric" required>
-                <input type="text" class="otp-input" maxlength="1" pattern="[0-9]" inputmode="numeric" required>
-                <input type="text" class="otp-input" maxlength="1" pattern="[0-9]" inputmode="numeric" required>
-                <input type="text" class="otp-input" maxlength="1" pattern="[0-9]" inputmode="numeric" required>
-                <input type="text" class="otp-input" maxlength="1" pattern="[0-9]" inputmode="numeric" required>
+                <input type="text" class="otp-input" name="otp_1" maxlength="1" pattern="[0-9]" inputmode="numeric" required>
+                <input type="text" class="otp-input" name="otp_2" maxlength="1" pattern="[0-9]" inputmode="numeric" required>
+                <input type="text" class="otp-input" name="otp_3" maxlength="1" pattern="[0-9]" inputmode="numeric" required>
+                <input type="text" class="otp-input" name="otp_4" maxlength="1" pattern="[0-9]" inputmode="numeric" required>
+                <input type="text" class="otp-input" name="otp_5" maxlength="1" pattern="[0-9]" inputmode="numeric" required>
+                <input type="text" class="otp-input" name="otp_6" maxlength="1" pattern="[0-9]" inputmode="numeric" required>
             </div>
-            <input type="hidden" name="token" id="tokenInput">
+            <!-- Hidden input to store the complete OTP -->
+            <input type="hidden" name="otp_code" id="otpCode">
             <button type="submit" class="btn" id="verifyBtn">
                 <span class="btn-text">Verify Account</span>
             </button>
@@ -916,16 +741,6 @@
         </form>
     </div>
 
-    <!-- Loading overlay -->
-    <div class="loading-overlay" id="loadingOverlay">
-        <div class="loader">
-            <div class="loader-circle"></div>
-            <div class="loader-circle"></div>
-            <div class="loader-circle"></div>
-        </div>
-        <div class="loader-text">Verifying your account...</div>
-    </div>
-
     <!-- Success message -->
     <div class="success-message" id="successMessage">
         <div class="success-icon"></div>
@@ -934,37 +749,20 @@
         <div class="success-btn" id="continueBtn">Continue to Login</div>
     </div>
 
-    <!-- Leave confirmation modal -->
-    <div class="leave-confirmation" id="leaveConfirmation">
-        <div class="leave-confirmation-content">
-            <div class="leave-confirmation-icon">⚠️</div>
-            <h3 class="leave-confirmation-title">Leave this page?</h3>
-            <p class="leave-confirmation-message">Your verification is in progress. If you leave now, you'll need to start over. Are you sure you want to leave?</p>
-            <div class="leave-confirmation-buttons">
-                <button class="leave-btn" id="leaveBtn">Yes, Leave Page</button>
-                <button class="stay-btn" id="stayBtn">Stay on This Page</button>
-            </div>
-        </div>
-    </div>
-
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             // DOM elements
             const form = document.getElementById('activationForm');
             const inputs = document.querySelectorAll('.otp-input');
-            const tokenInput = document.getElementById('tokenInput');
+            const otpCodeInput = document.getElementById('otpCode');
             const verifyBtn = document.getElementById('verifyBtn');
             const alert = document.getElementById('alert');
             const alertMessage = document.getElementById('alertMessage');
-            const loadingOverlay = document.getElementById('loadingOverlay');
             const successMessage = document.getElementById('successMessage');
             const successDescription = document.getElementById('successDescription');
             const continueBtn = document.getElementById('continueBtn');
             const resendLink = document.getElementById('resendLink');
             const resendCountdown = document.getElementById('resendCountdown');
-            const leaveConfirmation = document.getElementById('leaveConfirmation');
-            const leaveBtn = document.getElementById('leaveBtn');
-            const stayBtn = document.getElementById('stayBtn');
             const starsContainer = document.getElementById('starsContainer');
             const djangoMessagesContainer = document.getElementById('djangoMessagesContainer');
             const usernameDisplay = document.getElementById('usernameDisplay');
@@ -1099,6 +897,13 @@
                 }, 5000);
             }
 
+            // Function to update the hidden OTP input with combined values
+            function updateOtpCode() {
+                const otpValue = Array.from(inputs).map(input => input.value).join('');
+                otpCodeInput.value = otpValue;
+                console.log('OTP Code updated:', otpValue); // Debug log
+            }
+
             // Handle OTP input navigation
             inputs.forEach((input, index) => {
                 // Auto-focus first input on page load
@@ -1107,20 +912,29 @@
                 }
 
                 input.addEventListener('input', (e) => {
+                    // Only allow numeric input
+                    e.target.value = e.target.value.replace(/[^0-9]/g, '');
+                    
                     if (e.target.value.length === 1) {
                         if (index < inputs.length - 1) {
                             inputs[index + 1].focus();
                         } else {
                             input.blur(); // Remove focus from the last input
-                            // Combine OTP values into the hidden token field
-                            updateTokenValue();
                         }
                     }
+                    
+                    // Update the hidden OTP code field
+                    updateOtpCode();
+                    
+                    // Remove error styling
+                    input.classList.remove('error');
                 });
 
                 input.addEventListener('keydown', (e) => {
                     if (e.key === 'Backspace' && !e.target.value && index > 0) {
                         inputs[index - 1].focus();
+                        inputs[index - 1].value = '';
+                        updateOtpCode();
                     }
                 });
 
@@ -1131,7 +945,10 @@
                     
                     if (/^\d+$/.test(pastedData) && pastedData.length <= inputs.length) {
                         // Clear all inputs first
-                        inputs.forEach(input => input.value = '');
+                        inputs.forEach(input => {
+                            input.value = '';
+                            input.classList.remove('error');
+                        });
                         
                         // Fill inputs with pasted data
                         for (let i = 0; i < pastedData.length; i++) {
@@ -1140,41 +957,36 @@
                             }
                         }
                         
+                        // Update the hidden OTP code field
+                        updateOtpCode();
+                        
                         // Focus on the next empty input or blur the last one
                         const nextEmptyIndex = Math.min(pastedData.length, inputs.length - 1);
                         if (nextEmptyIndex < inputs.length) {
                             inputs[nextEmptyIndex].focus();
                         } else {
                             inputs[inputs.length - 1].blur();
-                            // Combine OTP values into the hidden token field
-                            updateTokenValue();
                         }
                     }
                 });
             });
 
-            // Function to update the hidden token input with combined OTP values
-            function updateTokenValue() {
-                const otpValue = Array.from(inputs).map(input => input.value).join('');
-                tokenInput.value = otpValue;
-            }
-
-            // Form submission with AJAX for Django
+            // Form submission - FIXED VERSION
             form.addEventListener('submit', async (e) => {
                 e.preventDefault();
+                
+                // Update OTP code before validation
+                updateOtpCode();
                 
                 // Check if all inputs are filled
                 const allFilled = Array.from(inputs).every(input => input.value.length === 1);
                 if (!allFilled) {
                     showAlert('Please enter all digits of the verification code');
                     
-                    // Highlight empty inputs
+                    // Highlight empty inputs with error styling
                     inputs.forEach(input => {
                         if (!input.value) {
-                            input.style.borderColor = 'var(--error)';
-                            setTimeout(() => {
-                                input.style.borderColor = 'var(--card-border)';
-                            }, 2000);
+                            input.classList.add('error');
                         }
                     });
                     return;
@@ -1187,14 +999,27 @@
                 verifyBtn.classList.add('loading');
                 
                 try {
-                    // Get the token value
-                    const token = tokenInput.value;
+                    // Get the complete OTP code
+                    const otpCode = otpCodeInput.value;
+                    console.log('Submitting OTP:', otpCode); // Debug log
                     
-                    // Create form data for Django
-                    const formData = new FormData(form);
+                    // Create form data for Django - FIXED: Properly include OTP
+                    const formData = new FormData();
+                    formData.append('csrfmiddlewaretoken', csrfToken);
+                    formData.append('otp_code', otpCode);
+                    
+                    // Also append individual OTP digits for backward compatibility
+                    inputs.forEach((input, index) => {
+                        formData.append(`otp_${index + 1}`, input.value);
+                    });
+                    
+                    // Debug: Log form data
+                    for (let pair of formData.entries()) {
+                        console.log(pair[0] + ': ' + pair[1]);
+                    }
                     
                     // Make AJAX request to Django view
-                    const response = await fetch(form.action, {
+                    const response = await fetch(window.location.pathname, {
                         method: 'POST',
                         headers: {
                             'X-CSRFToken': csrfToken,
@@ -1203,30 +1028,54 @@
                         body: formData
                     });
                     
-                    const data = await response.json();
+                    // Check if response is ok
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
                     
-                    // Handle Django JsonResponse - Fixed case sensitivity
+                    const data = await response.json();
+                    console.log('Server response:', data); // Debug log
+                    
+                    // Handle Django JsonResponse
                     if (data.success) {
                         // Show success message
-                        successDescription.textContent = data.message;
+                        successDescription.textContent = data.message || 'Your account has been successfully activated!';
                         successMessage.classList.add('active');
                         
                         // Create Django success message
-                        createDjangoMessage(data.message, 'success');
+                        createDjangoMessage(data.message || 'Account activated successfully!', 'success');
                         
-                        // Redirect after 5 seconds
+                        // Redirect after 3 seconds
                         setTimeout(() => {
-                            window.location.href = '/login';
-                        }, 5000);
+                            window.location.href = data.redirect_url || '/login/';
+                        }, 3000);
                     } else {
                         // Show error message
-                        showAlert(data.message);
-                        createDjangoMessage(data.message, 'error');
+                        const errorMessage = data.message || 'Invalid verification code. Please try again.';
+                        showAlert(errorMessage);
+                        createDjangoMessage(errorMessage, 'error');
+                        
+                        // Clear inputs and focus first one
+                        inputs.forEach(input => {
+                            input.value = '';
+                            input.classList.add('error');
+                        });
+                        updateOtpCode();
+                        inputs[0].focus();
                     }
                 } catch (error) {
                     console.error('Verification error:', error);
-                    showAlert('An error occurred. Please try again.');
-                    createDjangoMessage('An error occurred. Please try again.', 'error');
+                    const errorMessage = 'An error occurred while verifying your code. Please try again.';
+                    showAlert(errorMessage);
+                    createDjangoMessage(errorMessage, 'error');
+                    
+                    // Clear inputs and focus first one
+                    inputs.forEach(input => {
+                        input.value = '';
+                        input.classList.add('error');
+                    });
+                    updateOtpCode();
+                    inputs[0].focus();
                 } finally {
                     // Reset button state
                     verifyBtn.classList.remove('loading');
@@ -1235,10 +1084,10 @@
 
             // Continue button action
             continueBtn.addEventListener('click', () => {
-                window.location.href = '/login';
+                window.location.href = '/login/';
             });
 
-            // Enhanced resend code functionality using AJAX - SINGLE EVENT LISTENER
+            // Enhanced resend code functionality using AJAX
             resendLink.addEventListener('click', async (e) => {
                 e.preventDefault();
                 
@@ -1263,10 +1112,10 @@
                     // Create FormData with username and type
                     const formData = new FormData();
                     formData.append('username', username);
-                    formData.append('type', 'fp');
+                    formData.append('type', 'resend');
                     formData.append('csrfmiddlewaretoken', csrfToken);
                     
-                    // Make AJAX request to the resend endpoint - Fixed endpoint URL
+                    // Make AJAX request to the resend endpoint
                     const response = await fetch(window.location.pathname, {
                         method: 'POST',
                         headers: {
@@ -1283,25 +1132,30 @@
                     
                     const data = await response.json();
                     
-                    // Handle response - Fixed case sensitivity
+                    // Handle response
                     if (data.success) {
                         // Create Django success message
-                        createDjangoMessage(data.message, 'success');
-                        showAlert(data.message, 'success');
+                        createDjangoMessage(data.message || 'Verification code sent successfully!', 'success');
+                        showAlert(data.message || 'Verification code sent successfully!', 'success');
                         
                         // Clear inputs for new code
-                        inputs.forEach(input => input.value = '');
+                        inputs.forEach(input => {
+                            input.value = '';
+                            input.classList.remove('error');
+                        });
+                        updateOtpCode();
                         inputs[0].focus();
                         
                         // Start countdown after successful request
                         startResendCountdown();
                     } else {
                         // Show error message from server
-                        createDjangoMessage(data.message, 'warning');
-                        showAlert(data.message, 'warning');
+                        const errorMessage = data.message || 'Failed to resend verification code.';
+                        createDjangoMessage(errorMessage, 'warning');
+                        showAlert(errorMessage, 'warning');
                         
                         // Still start countdown even if there's a rate limit
-                        if (data.message.includes('wait') || data.message.includes('seconds') || data.message.includes('minute')) {
+                        if (errorMessage.includes('wait') || errorMessage.includes('seconds') || errorMessage.includes('minute')) {
                             startResendCountdown();
                         }
                     }
@@ -1315,33 +1169,8 @@
                 }
             });
 
-            // Leave page confirmation
-            let isSubmitting = false;
-            
-            window.addEventListener('beforeunload', (e) => {
-                // Only show confirmation if form is filled but not submitted
-                const anyFilled = Array.from(inputs).some(input => input.value.length === 1);
-                
-                if (anyFilled && !isSubmitting) {
-                    e.preventDefault();
-                    e.returnValue = '';
-                    
-                    // Show custom confirmation modal
-                    leaveConfirmation.classList.add('active');
-                    
-                    return e.returnValue;
-                }
-            });
-            
-            // Handle leave confirmation buttons
-            leaveBtn.addEventListener('click', () => {
-                isSubmitting = true;
-                window.location.href = '/';
-            });
-            
-            stayBtn.addEventListener('click', () => {
-                leaveConfirmation.classList.remove('active');
-            });
+            // Initialize OTP code on page load
+            updateOtpCode();
         });
     </script>
 </body>
