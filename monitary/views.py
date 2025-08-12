@@ -12,7 +12,7 @@ from django.template.loader import render_to_string
 from django.core.mail import EmailMessage
 from django.urls import reverse
 from autapp.models import MyUser, Ballance
-from .models import WithdrawalRequest,DepositRequest,TelebirrReq,Ebirreq,CryptoPayment
+from .models import WithdrawalRequest,TelebirrReq,Ebirreq,CryptoPayment
 from autapp.models import chiweProfit,Maintainance
 from django.db.models import Sum
 import random
@@ -191,6 +191,22 @@ def withdraw(request, invalidOtp=invalidOtp):
                 # Reset OTP after use
                 user.save()
                 return JsonResponse({"success":True,"message":f"Your withdrawal request for {amount}  ETB using E-birr has been submitted successfully."})
+            elif way=="crypto":
+                user_balance.ballance -= Decimal(amount)
+                user_balance.save()
+                WithdrawalRequest.objects.create(
+                    user=user,
+                    amount=amount,
+                    phone_number=phone_number,
+                    status="Pending",
+                    way="crypto"
+
+                )
+                user.pendingWithdrwal = True
+                # Reset OTP after use
+                user.save()
+                return JsonResponse({"success":True,"message":f"Your withdrawal request for {amount}  ETB using E-birr has been submitted successfully."})
+            
             else:
                 return JsonResponse({"success":False,"message":"Please select a wallet to withdraw."})
         else:
