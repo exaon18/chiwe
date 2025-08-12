@@ -110,7 +110,7 @@ def signup(request,ref):
         inactive_email = MyUser.objects.filter(email=email, is_active=False).first()
         if inactive_email:
             inactive_email.delete()
-        if referal:
+        if referal and referal != "1":
             try:
            
 
