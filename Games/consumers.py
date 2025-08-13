@@ -348,10 +348,10 @@ class Crack_the_CodeConsumer(WebsocketConsumer):
             Crack_the_CodeConsumer.active_players[self.room] = None
             if self.room_list == 25:
                 room_with_25.pop(0)
-            elif self.room_list == 50:
-                room_with_50.pop(0)
-            elif self.room_list == 100:
-                room_with_100.pop(0)
+            elif self.room_list == 10:
+                room_with_10.pop(0)
+            elif self.room_list == 2:
+                room_with_2.pop(0)
             self.clean_up_room()
             print(f"the game hasnt finished before updated {user.Active_Game}")
             user.Active_Game=False

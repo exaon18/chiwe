@@ -153,13 +153,13 @@ def withdraw(request, invalidOtp=invalidOtp):
         if user.pendingWithdrwal:
             print("⏳ User already has a pending withdrawal. Rendering 'withdraw.html'.")
             
-            return JsonResponse(request,{"success":False,"message":"You already have a pending withdrawal. Please wait for it to be processed."})
+            return JsonResponse({"success":False,"message":"You already have a pending withdrawal. Please wait for it to be processed."})
         
         # Compare after converting token from the form to int
         if  user_balance.ballance >= amount:
-            if amount < 50:
+            if amount < 5:
                 print("❌ Withdrawal amount too low. Rendering 'withdraw.html'.")
-                return JsonResponse(request,{"success":False,"message":"Withdrawal amount must be at least 25 birr."})
+                return JsonResponse({"success":False,"message":"Withdrawal amount must be at least 5 usd."})
             if way=="tb":
                 user_balance.ballance -= Decimal(amount)
                 user_balance.save()
@@ -198,15 +198,14 @@ def withdraw(request, invalidOtp=invalidOtp):
                 WithdrawalRequest.objects.create(
                     user=user,
                     amount=amount,
-                    phone_number=phone_number,
+                    phone_number=request.POST["crypto_address"],
                     status="Pending",
-                    way="crypto"
-
+                    way=request.POST["crypto_type"]
                 )
                 user.pendingWithdrwal = True
                 # Reset OTP after use
                 user.save()
-                return JsonResponse({"success":True,"message":f"Your withdrawal request for {amount}  ETB using E-birr has been submitted successfully."})
+                return JsonResponse({"success":True,"message":f"Your withdrawal request for {amount} using crypto has been submitted successfully."})
             
             else:
                 return JsonResponse({"success":False,"message":"Please select a wallet to withdraw."})
