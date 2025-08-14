@@ -35,7 +35,7 @@ def ctc(request):
         else:
             messages.error(request,"invalid amount")
             print('Error')
-            print(amount)
+            print(type(amount))
             return JsonResponse({"procced":False})
             
     else:
@@ -61,7 +61,7 @@ def bingo(request):
             return JsonResponse({"proceed":False,"message":"You are already in a game"})
           amount=int(request.POST["amount"])
           print("in the view bingo ")
-          if amount == 25 or amount == 50 or amount ==100 or amount==0:
+          if amount == 2 or amount == 10 or amount ==25 or amount==0:
               print('sucess')
               if ballance >=amount:
                   print(Ballance.objects.get(user=user).ballance)
