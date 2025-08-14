@@ -558,10 +558,10 @@ def crypto(request):
     }
 
     headers = {
-        "x-api-key": "9G09B6H-3F7MWMH-K2BBFAF-PT72QCF"
+        "x-api-key": "5DR8BKJ-DYHMW8W-NRWVVRH-KP57S53"
     }
 
-    response = requests.post(" https://api-sandbox.nowpayments.io/v1/invoice", json=payload, headers=headers)
+    response = requests.post("https://api.nowpayments.io/v1/invoice", json=payload, headers=headers)
 
     if response.status_code == 200:
         print(response.text)
@@ -581,7 +581,7 @@ def webhook(request):
         return JsonResponse({"error": "Invalid method"}, status=405)
 
     try:
-        ipn_secret = "scpA8MkH4cWLDEZn9CUHJI8vZoPDqOwx"
+        ipn_secret = "mPltdHLewEFyb2YuRaAhwvRoIUqNGIVo"
         received_sig = request.headers.get("x-nowpayments-sig")
 
         if not received_sig:
