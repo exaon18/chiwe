@@ -959,8 +959,6 @@
             left: 50%;
             transform: translate(-50%, -50%) scale(0.9);
             background: rgba(23, 25, 35, 0.9);
-            border:  -50% scale(0.9);
-            background: rgba(23, 25, 35, 0.9);
             border: 1px solid rgba(46, 213, 115, 0.3);
             color: var(--text);
             padding: 1.5rem;
@@ -1135,7 +1133,7 @@
     type="image/jpeg"
   />
 
-  <!-- 2) For older browsers, you can also include “shortcut icon” -->
+  <!-- 2) For older browsers, you can also include "shortcut icon" -->
   <link
     rel="shortcut icon"
     href="https://i.postimg.cc/FzgPtp2v/photo-2025-05-31-05-36-51.jpg"
@@ -1167,25 +1165,25 @@
             </div>
             
             <div class="money-selector">
-                <div class="money-option" onclick="selectAmount(0)">
+                <div class="money-option" data-amount="0" onclick="selectAmount(0)">
                     0 USDT
                     <div class="loading-spinner">
                         <div class="spinner"></div>
                     </div>
                 </div>
-                <div class="money-option" onclick="selectAmount(2)">
+                <div class="money-option" data-amount="2" onclick="selectAmount(2)">
                     2 usdt
                     <div class="loading-spinner">
                         <div class="spinner"></div>
                     </div>
                 </div>
-                <div class="money-option" onclick="selectAmount(10)">
+                <div class="money-option" data-amount="10" onclick="selectAmount(10)">
                     10 usdt
                     <div class="loading-spinner">
                         <div class="spinner"></div>
                     </div>
                 </div>
-                <div class="money-option" onclick="selectAmount(25)">
+                <div class="money-option" data-amount="25" onclick="selectAmount(25)">
                     25 usdt
                     <div class="loading-spinner">
                         <div class="spinner"></div>
@@ -1948,30 +1946,26 @@
         }
 
         function selectAmount(amount) {
-            // Show loading on the selected button
-            const buttons = document.querySelectorAll('.money-option');
-            buttons.forEach(button => {
-                if (button.textContent.trim().startsWith(amount.toString())) {
-                    showLoading(button);
-                } else {
-                    hideLoading(button);
-                }
+            // Clear all selections first
+            document.querySelectorAll('.money-option').forEach(option => {
+                option.classList.remove('selected');
+                hideLoading(option);
             });
+            
+            // Find and select the correct button using data-amount attribute
+            const selectedButton = document.querySelector(`.money-option[data-amount="${amount}"]`);
+            if (selectedButton) {
+                selectedButton.classList.add('selected');
+                showLoading(selectedButton);
+                
+                // Hide loading after a short delay to show the selection effect
+                setTimeout(() => {
+                    hideLoading(selectedButton);
+                }, 300);
+            }
             
             document.getElementById('amountInput').value = amount;
             document.getElementById('selectedAmount').textContent = amount;
-
-            document.querySelectorAll('.money-option').forEach(option => {
-                option.classList.remove('selected');
-                if (option.textContent.trim().startsWith(amount.toString())) {
-                    option.classList.add('selected');
-                }
-            });
-            
-            // Hide loading after a short delay to show the selection effect
-            setTimeout(() => {
-                buttons.forEach(button => hideLoading(button));
-            }, 1);
         }
 
         document.getElementById('joinForm').addEventListener('submit', async (e) => {
