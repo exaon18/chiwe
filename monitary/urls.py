@@ -7,5 +7,6 @@ urlpatterns=[
     path("Monitering/<str:admin>", views.Monitering, name="Monitering"),
     path("receive_sms/<str:key>/<str:way>", views.receive_sms, name="depositt"),
     path("crypto",views.crypto,name="crypto"),
+
     path("payment-weebhook/",views.webhook, name="weebhook")
 ]

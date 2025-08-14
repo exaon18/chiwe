@@ -343,6 +343,20 @@ body {
     color: var(--text);
 }
 
+/* Referral field highlight */
+.referral-auto-filled {
+    border-color: var(--primary) !important;
+    box-shadow: var(--glow) !important;
+    background: rgba(46, 213, 115, 0.05) !important;
+}
+
+.referral-info {
+    margin-top: 0.5rem;
+    font-size: 0.8rem;
+    color: var(--primary);
+    display: none;
+}
+
 /* Responsive Design */
 @media (max-width: 480px) {
     .container {
@@ -366,7 +380,7 @@ body {
     type="image/jpeg"
   />
 
-  <!-- 2) For older browsers, you can also include “shortcut icon” -->
+  <!-- 2) For older browsers, you can also include "shortcut icon" -->
   <link
     rel="shortcut icon"
     href="https://i.postimg.cc/FzgPtp2v/photo-2025-05-31-05-36-51.jpg"
@@ -397,8 +411,6 @@ body {
                     <input type="text" id="firstName" name="first_name" class="form-input" placeholder="Enter your first name" required>
                     <div id="firstNameError" class="error-message">Please enter your first name</div>
                 </div>
-                
-                
             </div>
             
             <div class="form-group">
@@ -412,10 +424,12 @@ body {
                 <input type="email" id="email" name="email" class="form-input" placeholder="Enter your email" required>
                 <div id="emailError" class="error-message">Please enter a valid email address</div>
             </div>
+            
             <div class="form-group">
-                <label for="referal" class="form-label">referal id</label>
-                <input type="text" id="email" name="referal" class="form-input" placeholder="referal id" >
-                <div id="emailError" class="error-message">Please enter a valid email address</div>
+                <label for="referal" class="form-label">Referral ID</label>
+                <input type="text" id="referal" name="referal" class="form-input" placeholder="Enter referral ID (optional)">
+                <div class="referral-info" id="referralInfo">Referral ID automatically detected from URL</div>
+                <div id="referalError" class="error-message">Please enter a valid referral ID</div>
             </div>
             
             <div class="form-group">
@@ -460,11 +474,14 @@ body {
         const firstNameInput = document.getElementById('firstName');
         const usernameInput = document.getElementById('username');
         const emailInput = document.getElementById('email');
+        const referalInput = document.getElementById('referal');
+        const referralInfo = document.getElementById('referralInfo');
         const passwordInput = document.getElementById('password');
         const confirmPasswordInput = document.getElementById('confirmPassword');
         const firstNameError = document.getElementById('firstNameError');
         const usernameError = document.getElementById('usernameError');
         const emailError = document.getElementById('emailError');
+        const referalError = document.getElementById('referalError');
         const passwordError = document.getElementById('passwordError');
         const confirmPasswordError = document.getElementById('confirmPasswordError');
         const signupBtn = document.getElementById('signupBtn');
@@ -476,6 +493,70 @@ body {
         const toggleConfirmPassword = document.getElementById('toggleConfirmPassword');
         const loginLink = document.getElementById('loginLink');
         
+        // Function to extract referral ID from URL
+        function extractReferralFromURL() {
+            const currentPath = window.location.pathname;
+            console.log('Current path:', currentPath);
+            
+            // Handle different URL patterns:
+            // /signup/referralid
+            // /signup/referralid/
+            // /register/referralid
+            // /register/referralid/
+            
+            const signupMatch = currentPath.match(/\/signup\/([^\/]+)\/?$/);
+            const registerMatch = currentPath.match(/\/register\/([^\/]+)\/?$/);
+            
+            let referralId = null;
+            
+            if (signupMatch && signupMatch[1]) {
+                referralId = signupMatch[1];
+            } else if (registerMatch && registerMatch[1]) {
+                referralId = registerMatch[1];
+            }
+            
+            // Also check URL parameters as fallback
+            if (!referralId) {
+                const urlParams = new URLSearchParams(window.location.search);
+                referralId = urlParams.get('ref') || urlParams.get('referral') || urlParams.get('referal');
+            }
+            
+            console.log('Extracted referral ID:', referralId);
+            
+            // Only populate if referral ID exists and is not "1"
+            if (referralId && referralId !== '1' && referralId.trim() !== '') {
+                referalInput.value = referralId.trim();
+                referalInput.classList.add('referral-auto-filled');
+                referralInfo.style.display = 'block';
+                
+                console.log('Referral ID auto-populated:', referralId.trim());
+                
+                // Show a subtle notification
+                showAlert(`Referral ID "${referralId.trim()}" detected and applied!`, 'success');
+                
+                // Remove the success alert after 3 seconds
+                setTimeout(() => {
+                    if (alertMessage.classList.contains('alert-success')) {
+                        alertMessage.style.display = 'none';
+                    }
+                }, 3000);
+            } else if (referralId === '1') {
+                console.log('Referral ID is "1", not populating field');
+            } else {
+                console.log('No valid referral ID found in URL');
+            }
+        }
+        
+        // Extract referral ID on page load
+        extractReferralFromURL();
+        
+        // Remove auto-fill styling when user manually edits the field
+        referalInput.addEventListener('input', function() {
+            if (this.classList.contains('referral-auto-filled')) {
+                this.classList.remove('referral-auto-filled');
+                referralInfo.style.display = 'none';
+            }
+        });
         
         if (!csrfTokenInput.value) {
             csrfTokenInput.value = getCookie('csrftoken');
