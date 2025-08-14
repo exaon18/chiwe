@@ -1168,25 +1168,25 @@
             
             <div class="money-selector">
                 <div class="money-option" onclick="selectAmount(0)">
-                    0 birr
+                    0 USDT
+                    <div class="loading-spinner">
+                        <div class="spinner"></div>
+                    </div>
+                </div>
+                <div class="money-option" onclick="selectAmount(2)">
+                    2 usdt
+                    <div class="loading-spinner">
+                        <div class="spinner"></div>
+                    </div>
+                </div>
+                <div class="money-option" onclick="selectAmount(10)">
+                    10 usdt
                     <div class="loading-spinner">
                         <div class="spinner"></div>
                     </div>
                 </div>
                 <div class="money-option" onclick="selectAmount(25)">
-                    25 birr
-                    <div class="loading-spinner">
-                        <div class="spinner"></div>
-                    </div>
-                </div>
-                <div class="money-option" onclick="selectAmount(50)">
-                    50 birr
-                    <div class="loading-spinner">
-                        <div class="spinner"></div>
-                    </div>
-                </div>
-                <div class="money-option" onclick="selectAmount(100)">
-                    100 birr
+                    25 usdt
                     <div class="loading-spinner">
                         <div class="spinner"></div>
                     </div>
@@ -1199,7 +1199,7 @@
                     <input type="hidden" id="amountInput" name="amount" value="">
                     <div class="selected-amount">
                         <p class="info-label">Selected Amount:</p>
-                        <p class="info-value"><span id="selectedAmount">0</span> birr</p>
+                        <p class="info-value"><span id="selectedAmount">0</span> USDT</p>
                     </div>
                     <button type="submit" class="submit-btn">
                         Join Game
@@ -1719,7 +1719,7 @@
             document.getElementById('player1').textContent = data.player_1;
             document.getElementById('player2').textContent = data.player_2;
             document.getElementById('betInfo').textContent = 
-                `Bet Amount: ${data.amount} birr | Maximum Jackpot: ${data.amount * 2} birr`;
+                `Bet Amount: ${data.amount} birr | Maximum Jackpot: ${data.amount * 2} USDT`;
 
             document.getElementById('player-username').textContent = currentUsername;
             document.getElementById('opponent-username').textContent = 
@@ -1922,7 +1922,7 @@
                 message.innerHTML = '🏆 You Won! 🏆';
                 trophyIcon.innerHTML = '🏆';
                 // Use the stored bet amount to calculate winnings
-                winningAmount.textContent = `You won ${currentBetAmount * 2} birr!`;
+                winningAmount.textContent = `You won ${currentBetAmount * 2} USDT!`;
                 winningAmount.className = 'result-amount win-amount';
             } else {
                 popup.classList.add('loser');
@@ -1930,7 +1930,7 @@
                 message.innerHTML = '❌ Game Over ❌';
                 trophyIcon.innerHTML = '😢';
                 // Use the stored bet amount for loss
-                winningAmount.textContent = `You lost ${currentBetAmount} birr.`;
+                winningAmount.textContent = `You lost ${currentBetAmount} USDT.`;
                 winningAmount.className = 'result-amount lose-amount';
             }
 
