@@ -1719,7 +1719,7 @@
     type="image/jpeg"
   />
 
-  <!-- 2) For older browsers, you can also include “shortcut icon” -->
+  <!-- 2) For older browsers, you can also include "shortcut icon" -->
   <link
     rel="shortcut icon"
     href="https://i.postimg.cc/FzgPtp2v/photo-2025-05-31-05-36-51.jpg"
@@ -1760,25 +1760,25 @@
             </div>
             
             <div class="money-selector">
-                <div class="money-option" data-amount="100" onclick="selectAmount(0)">
+                <div class="money-option" data-amount="0" onclick="selectAmount(0)">
                     0 USDT
                     <div class="loading-spinner">
                         <div class="spinner"></div>
                     </div>
                 </div>
-                <div class="money-option" data-amount="25" onclick="selectAmount(2)">
+                <div class="money-option" data-amount="2" onclick="selectAmount(2)">
                     2 USDT
                     <div class="loading-spinner">
                         <div class="spinner"></div>
                     </div>
                 </div>
-                <div class="money-option" data-amount="50" onclick="selectAmount(10)">
+                <div class="money-option" data-amount="10" onclick="selectAmount(10)">
                     10 USDT
                     <div class="loading-spinner">
                         <div class="spinner"></div>
                     </div>
                 </div>
-                <div class="money-option" data-amount="100" onclick="selectAmount(25)">
+                <div class="money-option" data-amount="25" onclick="selectAmount(25)">
                     25 USDT
                     <div class="loading-spinner">
                         <div class="spinner"></div>
@@ -1799,6 +1799,7 @@
                         Join Game
                         <div class="loading-spinner">
                             <div class="spinner"></div>
+                        </div>
                     </button>
                 </form>
             </div>
@@ -2760,8 +2761,8 @@ function selectAmount(amount) {
         // Remove highlight after animation
         setTimeout(() => {
             selectedAmountContainer.classList.remove('highlight');
-        }, 5);
-    }, 5);
+        }, 500);
+    }, 500);
 }
 
 document.getElementById('joinForm').addEventListener('submit', async (e) => {
