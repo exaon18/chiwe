@@ -551,8 +551,12 @@ class BingoConsumer(WebsocketConsumer):
 
     def handle_room_connection(self, room_list, amount):
         with BingoConsumer.connect_lock:
-            if len(room_list)==0 or room_list[0]["players_amount"] == 2:
+            if len(room_list)==0:
+                self.create_new_room(room_list, amount)
+            elif room_list[0]["players_amount"] == 2:
+                del room_list[0]
                 print("in handle room connection")
+                
                 self.create_new_room(room_list, amount)
             else:
                 self.join_existing_room(room_list, amount)
