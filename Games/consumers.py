@@ -924,6 +924,21 @@ class BingoConsumer(WebsocketConsumer):
                 print(f"[DISCONNECT] {self.username} left waiting room")
                 self.ballance.ballance += state["amount"]
                 self.ballance.save()
+                amount= state.get("amount")
+                if amount ==2:
+                    print("bingo_room_with_2 befor pop",bingo_room_with_2)
+                    bingo_room_with_2.pop(0)
+                    print("bingo_room_with_2 after pop",bingo_room_with_2)
+                elif amount == 10:
+                    print("bingo_room_with_10 befor pop",bingo_room_with_10)
+                    bingo_room_with_10.pop(0)
+                    print("bingo_room_with_10 after pop",bingo_room_with_10)
+                elif amount == 25:
+                    print("bingo_room_with_25 befor pop",bingo_room_with_25)
+                    bingo_room_with_25.pop(0)
+                    print("bingo_room_with_25 after pop",bingo_room_with_25)
+                elif amount ==0:
+                    bingo_room_with_0.pop(0)
                 BingoConsumer.active_players[self.room] = None
             # 4) Clean up all per-room mappings (only once)
             print(f"[CLEANUP] Removing room state for room {self.room}")
