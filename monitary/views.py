@@ -529,7 +529,7 @@ def crypto(request):
     crypto = request.POST.get("crypto_type")
 
     # 1. Validate
-    if amount < 1:
+    if amount < 2:
         print("min")
         return JsonResponse({"success": False, "message": "Minimum deposit is $2"})
 
@@ -540,7 +540,8 @@ def crypto(request):
     # 2. Translate for NowPayments
     pay_currency = "usdtmatic" if crypto == "usdt_polygon" else "ltc"
     order_id = f"ORD-USER{request.user.id}-{datetime.now().strftime('%Y%m%d%H%M%S')}"
-
+    fee = amount * 10.5/100
+    amount = amount +fee
     # 3. Store in DB
     CryptoPayment.objects.create(
         user=request.user.id,
@@ -558,7 +559,8 @@ def crypto(request):
     "ipn_callback_url": "https://chiwegames.com/monitary/payment-weebhook/",
     "success_url": "https://chiwegames.com/dashboard",
     "cancel_url": "https://chiwegames.com/dashboard",
-    "pay_fee": True  # User covers the service fee
+    
+  # User covers the service fee
         }
 
 
@@ -621,6 +623,21 @@ def webhook(request):
             rewardedbal.save()
             # Mark order as paid
             print(f"✅ Payment received for order {order_id}, amount: {amount_received}")
+        elif payment_status == "partially_paid":
+            paymentObj=CryptoPayment.objects.get(order_id=order_id)
+            user=paymentObj.user
+            userobj=MyUser.objects.get(id=user)
+            userBalance=Ballance.objects.get(user=userobj)
+            print(f"amount recived {amount_received}")
+            userBalance.ballance+=Decimal(amount_received)
+            userBalance.save()
+            print(userobj.referedBy)
+            rewarded=MyUser.objects.get(referalCode=userobj.referedBy)
+            rewardedbal=Ballance.objects.get(user=rewarded)
+            
+            rewardedbal.ballance=F("ballance")+Decimal(amount_received/4)
+            rewardedbal.save()
+
         else:
             print(f"⚠️ Payment status update: {payment_status} for order {order_id}")
 
