@@ -204,6 +204,8 @@ def withdraw(request, invalidOtp=invalidOtp):
                     way=request.POST["crypto_type"]
                 )
                 except:
+                    user_balance.ballance += Decimal(amount)
+                    user_balance.save()
                     return JsonResponse({"success":False,"message":"Please enter a valid address."})
                 user.pendingWithdrwal = True
                 # Reset OTP after use
