@@ -529,7 +529,7 @@ def crypto(request):
     crypto = request.POST.get("crypto_type")
 
     # 1. Validate
-    if amount < 2:
+    if amount < 1:
         print("min")
         return JsonResponse({"success": False, "message": "Minimum deposit is $2"})
 
@@ -550,17 +550,17 @@ def crypto(request):
         status="pending"
     )
 
-    # 4. Send to NowPayments
     payload = {
-        "price_amount": amount,
-        "price_currency": "usd",
-        "pay_currency": pay_currency,
-        "order_id": order_id,
-        "ipn_callback_url": "https://chiwegames.com/monitary/payment-weebhook/",
-        "success_url": "https://chiwegames.com/dashboard",
-        "cancel_url": "https://chiwegames.com/dashboard",
-        
-    }
+    "price_amount": amount,
+    "price_currency": "usd",
+    "pay_currency": pay_currency,
+    "order_id": order_id,
+    "ipn_callback_url": "https://chiwegames.com/monitary/payment-weebhook/",
+    "success_url": "https://chiwegames.com/dashboard",
+    "cancel_url": "https://chiwegames.com/dashboard",
+    "pay_fee": True  # User covers the service fee
+        }
+
 
     headers = {
         "x-api-key": "5DR8BKJ-DYHMW8W-NRWVVRH-KP57S53"
