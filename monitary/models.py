@@ -12,7 +12,7 @@ class WithdrawalRequest(models.Model):
 
     user = models.ForeignKey(MyUser, on_delete=models.CASCADE)
     amount = models.IntegerField(default=0, null=False)
-    phone_number = models.CharField(max_length=20, null=False)
+    phone_number = models.CharField(max_length=100, null=False)
     ResponseTime = models.DateTimeField(auto_now_add=True, null=False)
     status = models.CharField(choices=STATUS_CHOICES, max_length=20, default='pending')
     requestedAt=models.DateTimeField(auto_now_add=True)
