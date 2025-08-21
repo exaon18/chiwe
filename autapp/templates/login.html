@@ -5,6 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - Chiwe</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://sdk.minepi.com/pi-sdk.js"></script>
+<script>
+  Pi.init({ version: "2.0" });
+</script>
+
     <style>
         :root {
             --primary: #2ed573;
@@ -20,6 +25,9 @@
             --danger: #ff4757;
             --warning: #ffa502;
             --success: #2ed573;
+            --pi-color: #ffc107;
+            --pi-color-dark: #e0a800;
+            --pi-glow: rgba(255, 193, 7, 0.4);
             --border-radius: 12px;
             --card-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
             --glow: 0 0 15px var(--primary-glow);
@@ -244,6 +252,7 @@
             justify-content: center;
             gap: 0.5rem;
             border: none;
+            text-decoration: none;
         }
 
         .btn-primary {
@@ -266,6 +275,74 @@
             cursor: not-allowed;
         }
 
+        /* Pi Network Button Styles */
+        .btn-pi {
+            background: linear-gradient(135deg, var(--pi-color), var(--pi-color-dark));
+            color: var(--surface-dark);
+            margin-top: 1rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-pi:hover:not(:disabled) {
+            background: linear-gradient(135deg, var(--pi-color-dark), #cc8800);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px var(--pi-glow);
+        }
+
+        .btn-pi:active:not(:disabled) {
+            transform: translateY(1px);
+        }
+
+        .btn-pi:disabled {
+            background: var(--text-secondary);
+            cursor: not-allowed;
+        }
+
+        .btn-pi::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .btn-pi:hover::before {
+            left: 100%;
+        }
+
+        .pi-icon {
+            width: 20px;
+            height: 20px;
+            background: var(--surface-dark);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            font-weight: bold;
+            color: var(--pi-color);
+        }
+
+        /* Remember Me Styles */
+        .remember-me {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            cursor: pointer;
+        }
+
+        .remember-me input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            accent-color: var(--primary);
+        }
+
         /* Loading Animation */
         .btn.loading {
             color: transparent;
@@ -280,6 +357,11 @@
             border-radius: 50%;
             border-top-color: transparent;
             animation: spin 0.8s linear infinite;
+        }
+
+        .btn-pi.loading::after {
+            border-color: var(--surface-dark);
+            border-top-color: transparent;
         }
 
         @keyframes spin {
@@ -313,7 +395,7 @@
         }
 
         .divider {
-            margin: 2rem 0;
+            margin: 2rem 0 1rem 0;
             display: flex;
             align-items: center;
             text-align: center;
@@ -341,7 +423,7 @@
             display: flex;
             justify-content: center;
             gap: 1rem;
-            margin-top: 1rem;
+            margin-top: 1.5rem;
         }
 
         .social-btn {
@@ -632,7 +714,7 @@
     type="image/jpeg"
   />
 
-  <!-- 2) For older browsers, you can also include “shortcut icon” -->
+  <!-- 2) For older browsers, you can also include "shortcut icon" -->
   <link
     rel="shortcut icon"
     href="https://i.postimg.cc/FzgPtp2v/photo-2025-05-31-05-36-51.jpg"
@@ -652,7 +734,7 @@
 
     <!-- Messages Container -->
      <div class="messages-container" id="messagesContainer">
-        {% for msg in messages %}Add commentMore actions
+        {% for msg in messages %}
         <div class="message">
             <div class="message-icon">
                 <i class="fas fa-info-circle"></i>
@@ -707,6 +789,12 @@
             </form>
 
             <div class="divider">or continue with</div>
+            
+            <!-- Pi Network Login Button -->
+            <button id="pi-login" class="btn btn-pi">
+                <div class="pi-icon">π</div>
+                <span>Login with Pi Network</span>
+            </button>
 
             <div class="social-login">
                 <button class="social-btn" id="googleBtn">
@@ -757,6 +845,7 @@
             const togglePassword = document.getElementById('togglePassword');
             const loginForm = document.getElementById('login-form');
             const loginBtn = document.getElementById('loginBtn');
+            const piLoginBtn = document.getElementById('pi-login');
             const messagesContainer = document.getElementById('messagesContainer');
             const starsContainer = document.getElementById('starsContainer');
             const popupMessage = document.getElementById('popupMessage');
@@ -764,7 +853,105 @@
             const successAnimation = document.getElementById('successAnimation');
             const usernameError = document.getElementById('usernameError');
             const passwordError = document.getElementById('passwordError');
+
+            // Pi Network Login Handler
+            let isPiLoading = false;
             
+            piLoginBtn.addEventListener("click", async () => {
+                if (isPiLoading) return;
+                
+                try {
+                    // Start loading state
+                    isPiLoading = true;
+                    piLoginBtn.classList.add('loading');
+                    piLoginBtn.disabled = true;
+                    
+                    const scopes = ['username', 'payments']; 
+                    const authResult = await Pi.authenticate(scopes, onIncompletePaymentFound);
+
+                    console.log("Authenticated user:", authResult);
+
+                    // Send to Django backend
+                    const response = await fetch("/pi-auth/", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            "X-CSRFToken": getCookie("csrftoken")
+                        },
+                        body: JSON.stringify(authResult)
+                    });
+
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        // Show success animation
+                        showSuccessAnimation();
+                        
+                        // Show success message
+                        const successMessage = createMessage(data.message || 'Pi login successful!', 'success');
+                        messagesContainer.appendChild(successMessage);
+                        
+                        // Redirect to dashboard after delay
+                        setTimeout(() => {
+                            window.location.href = '/dashboard';
+                        }, 2000);
+                    } else {
+                        // Show error message
+                        const errorMessage = createMessage(data.message || 'Pi login failed. Please try again.', 'error');
+                        messagesContainer.appendChild(errorMessage);
+                        
+                        // Auto dismiss after 5 seconds
+                        setTimeout(() => {
+                            errorMessage.classList.add('hiding');
+                            setTimeout(() => {
+                                errorMessage.remove();
+                            }, 300);
+                        }, 5000);
+                    }
+
+                } catch (err) {
+                    console.error('Pi login error:', err);
+                    
+                    // Show error message
+                    const errorMessage = createMessage('Pi login failed. Please try again.', 'error');
+                    messagesContainer.appendChild(errorMessage);
+                    
+                    // Auto dismiss after 5 seconds
+                    setTimeout(() => {
+                        errorMessage.classList.add('hiding');
+                        setTimeout(() => {
+                            errorMessage.remove();
+                        }, 300);
+                    }, 5000);
+                } finally {
+                    // Reset loading state
+                    isPiLoading = false;
+                    piLoginBtn.classList.remove('loading');
+                    piLoginBtn.disabled = false;
+                }
+            });
+
+            function onIncompletePaymentFound(payment) {
+                console.log("Incomplete payment:", payment);
+                // Handle incomplete payment if needed
+            }
+
+            // Helper to get CSRF token
+            function getCookie(name) {
+                let cookieValue = null;
+                if (document.cookie && document.cookie !== '') {
+                    const cookies = document.cookie.split(';');
+                    for (let cookie of cookies) {
+                        cookie = cookie.trim();
+                        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                            break;
+                        }
+                    }
+                }
+                return cookieValue;
+            }
+
             // Toggle password visibility
             togglePassword.addEventListener('click', function() {
                 const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';

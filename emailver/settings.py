@@ -24,7 +24,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-zr*n+*b1v%xb2squ$mi%t)pjxkuxgr7j+)#io5pac7=0a)8$--'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 ALLOWED_HOSTS = ['*','chiwegames.com','chiwe.onrender.com','exaon.tech','127.0.0.1','https://vhlz5hd3-8000.uks1.devtunnels.ms/',"https://exaon.tech","https://chiwegames.com","http://localhost"]
 
 DATABASE_URL="postgresql://chiwepsg_8laz_user:3iWcpxH9aP2sRGBnZEBMR2P4t7o0Mpn8@dpg-d2dlkm2dbo4c73bllsg0-a.oregon-postgres.render.com/chiwepsg_8laz"

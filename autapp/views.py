@@ -12,10 +12,9 @@ from django.conf import settings
 from django.contrib.auth import login, authenticate,logout
 from django.http import Http404, JsonResponse
 from django.contrib.auth import login
-from django.contrib import messages
 from django.shortcuts import render, get_object_or_404
 from django.views.decorators.http import require_POST
-import re
+import json, requests
 from django.middleware.csrf import get_token
 from django.views.decorators.csrf import csrf_exempt
 from django.core.validators import validate_email
@@ -154,7 +153,53 @@ def signup(request,ref):
         return render(request, 'signup.html',{'referal':ref})
 
 
+@csrf_exempt
+def pi_auth(request):
+    if request.method != "POST":
+        return JsonResponse({"success": False, "error": "POST required"}, status=400)
 
+    try:
+        data = json.loads(request.body)
+        access_token = data.get("accessToken")
+        username = data.get("user", {}).get("username")
+
+        if not access_token or not username:
+            return JsonResponse({"success": False, "error": "Missing token or username"}, status=400)
+
+        # Step 1: Verify with Pi API
+        headers = {
+            "Authorization": f"Bearer {access_token}",
+            "Content-Type": "application/json"
+        }
+
+        response = requests.get(
+            "https://api.minepi.com/v2/me",
+            headers=headers
+        )
+
+        if response.status_code != 200:
+            return JsonResponse({"success": False, "error": "Pi verification failed"}, status=401)
+
+        pi_data = response.json()
+        pi_username = pi_data.get("username")
+
+        if pi_username != username:
+            return JsonResponse({"success": False, "error": "Username mismatch"}, status=403)
+
+        # Step 2: Create or get Django user
+        user, created = MyUser.objects.get_or_create(username=pi_username, 
+                                                     defaults={"first_name": pi_username},
+                                                     referalCode=username_to_id(username))
+        user.is_active=True
+        user.save()
+        Ballance.objects.create(user=user, ballance=0.00)
+        # Step 3: Log the user in
+        login(request, user)
+
+        return JsonResponse({"success": True, "username": pi_username})
+
+    except Exception as e:
+        return JsonResponse({"success": False, "error": str(e)}, status=500)
 def verify(request, username):
    
     user = get_object_or_404(MyUser, username=username)
