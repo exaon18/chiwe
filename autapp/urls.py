@@ -20,6 +20,7 @@ urlpatterns = [
     path('resend-otp-signup/<str:username>', views.resend_otp_signup, name='resend_otp'),
     path('recovery/resend-otp-fp/', views.resend_otp_token_fp, name='resend_otp_fp'),
     path('pi-auth/', views.pi_auth, name='pi_auth'),
+    path('validation-key.txt', views.validate_key, name='validate_key'),
 ]
 
 from django.shortcuts import render

@@ -1,3 +1,4 @@
+import os
 from django.contrib import messages
 from django.shortcuts import render,redirect
 import hashlib
@@ -10,7 +11,7 @@ from django.core.mail import EmailMessage
 from django.template.loader import render_to_string
 from django.conf import settings
 from django.contrib.auth import login, authenticate,logout
-from django.http import Http404, JsonResponse
+from django.http import FileResponse, Http404, JsonResponse
 from django.contrib.auth import login
 from django.shortcuts import render, get_object_or_404
 from django.views.decorators.http import require_POST
@@ -425,4 +426,6 @@ def resend_otp_token_fp(request):
     except MyUser.DoesNotExist:
         return JsonResponse({"Success": False, "message": "User not found."})
 
-    
+def validate_key(request):
+    filepath = os.path.join(settings.BASE_DIR, "autapp/validation-key.txt")
+    return FileResponse(open(filepath, "rb"), content_type="text/plain")
