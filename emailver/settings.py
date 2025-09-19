@@ -25,10 +25,19 @@ SECRET_KEY = 'django-insecure-zr*n+*b1v%xb2squ$mi%t)pjxkuxgr7j+)#io5pac7=0a)8$--
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
-ALLOWED_HOSTS = ['*','chiwegames.com','chiwe.onrender.com','exaon.tech','127.0.0.1','https://vhlz5hd3-8000.uks1.devtunnels.ms/',"https://exaon.tech","https://chiwegames.com","http://localhost"]
+ALLOWED_HOSTS = [
+    '*',
+    'chiwegames.com',
+    'chiwe.onrender.com',
+    'exaon.tech',
+    '127.0.0.1',
+    'localhost',
+    '8193a66d4544.ngrok-free.app',
+]
 
-DATABASE_URL="postgresql://chiwepsg_8laz_user:3iWcpxH9aP2sRGBnZEBMR2P4t7o0Mpn8@dpg-d2dlkm2dbo4c73bllsg0-a.oregon-postgres.render.com/chiwepsg_8laz"
+DATABASE_URL="postgresql://chiwedb_user:W2vQaHBpqZojxG9a5M5N7nHQamFbXIoM@dpg-d31a6l15pdvs73901vgg-a.oregon-postgres.render.com/chiwedb"
 # Application definition
+CORS_ALLOW_CREDENTIALS = True
 
 INSTALLED_APPS = [
     'autapp',
@@ -45,13 +54,22 @@ INSTALLED_APPS = [
     'django.contrib.sitemaps'
     
 ]
+# let the page be embedded (needed for Pi Sandbox)
+X_FRAME_OPTIONS = "ALLOWALL"  # disables the DENY header
+
 APPEND_SLASH=True
 CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "channels.layers.InMemoryChannelLayer"
     }
 }
-CSRF_TRUSTED_ORIGINS = ['https://chiwe.onrender.com',"https://exaon.tech","https://chiwegames.com"]
+CSRF_TRUSTED_ORIGINS = [
+    'https://8193a66d4544.ngrok-free.app',
+    'https://chiwe.onrender.com',
+    'https://exaon.tech',
+    'https://chiwegames.com',
+    'https://sandbox.minepi.com',
+]
 
 MIDDLEWARE = [
     
@@ -86,7 +104,32 @@ TEMPLATES = [
 WSGI_APPLICATION = 'emailver.wsgi.application'
 ASGI_APPLICATION = 'emailver.asgi.application'
 
+# Cookie and CSRF security settings
+# For development (DEBUG=True) allow cookies over HTTP so browsers
+# running on localhost can accept session cookies. In production
+# enforce secure cookies and SameSite=None for cross-site flows.
+# Cookie and CSRF security settings
+# For development with ngrok and cross-origin flows (Pi sandbox) we need
+# cookies to be sent in cross-site requests. Set SameSite=None and Secure=True
+# when using HTTPS (ngrok provides HTTPS). If you run locally over plain HTTP
+# without ngrok, consider toggling these appropriately.
+if DEBUG:
+    # When developing via ngrok (HTTPS) set cookies to be cross-site and secure
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SESSION_COOKIE_SAMESITE = 'None'
+    CSRF_COOKIE_SAMESITE = 'None'
+    SESSION_COOKIE_DOMAIN = None
+else:
+    CSRF_COOKIE_SAMESITE = "None"
+    CSRF_COOKIE_SECURE = True
+    SESSION_COOKIE_SAMESITE = "None"
+    SESSION_COOKIE_SECURE = True
+    # If you want the session cookie to be valid for specific domains, set here
+    SESSION_COOKIE_DOMAIN = ".ngrok-free.app"
 
+# Ensure Django trusts the forwarded proto header (ngrok sets it)
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
@@ -164,8 +207,7 @@ EMAIL_HOST_PASSWORD = "vwcpzdzshcxilrwm"
 EMAIL_PORT = 587
 EMAIL_TIMEOUT = 30
 AUTH_USER_MODEL = 'autapp.MyUser'
-SESSION_COOKIE_SECURE = True
-CSRF_COOKIE_SECURE = True
+# Note: final cookie security values are set above depending on DEBUG.
 SECURE_SSL_REDIRECT = False
 AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',

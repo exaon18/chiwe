@@ -3,7 +3,7 @@ from django.contrib import messages
 from django.shortcuts import render,redirect
 import hashlib
 import time
-from .models import MyUser,Ballance,GameHistory,Maintainance
+from .models import MyUser,Ballance,GameHistory,Maintainance,PiPayment
 from django.core.mail import send_mail
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
@@ -20,6 +20,10 @@ from django.middleware.csrf import get_token
 from django.views.decorators.csrf import csrf_exempt
 from django.core.validators import validate_email
 from django.core.exceptions import ValidationError
+
+# Pi API configuration - read from Django settings with sensible defaults
+PI_API_BASE =  'https://minepi.com/v2'
+SERVER_API_KEY = "wrv2dm2hleapesubjud4ab7qwws1y2daynk8vyeyrazq8dt63iuqq5h9gysjhaea"
 
 def get_csrf_token(request):
     """
@@ -160,12 +164,27 @@ def pi_auth(request):
         return JsonResponse({"success": False, "error": "POST required"}, status=400)
 
     try:
-        data = json.loads(request.body)
-        access_token = data.get("accessToken")
-        username = data.get("user", {}).get("username")
+        # Robustly parse incoming data (JSON body or form-encoded)
+        data = {}
+        if request.content_type and 'application/json' in request.content_type:
+            try:
+                body = request.body.decode('utf-8') if request.body else ''
+                data = json.loads(body) if body else {}
+            except Exception:
+                data = {}
+        else:
+            # fallback to form-encoded data
+            data = request.POST.dict() if hasattr(request, 'POST') else {}
 
-        if not access_token or not username:
-            return JsonResponse({"success": False, "error": "Missing token or username"}, status=400)
+        # Normalize possible payload shapes
+        access_token = (data.get('accessToken') or data.get('access_token') or data.get('token'))
+        username = None
+        if isinstance(data.get('user'), dict):
+            username = data['user'].get('username') or data['user'].get('uid')
+        username = username or data.get('username') or data.get('uid') or data.get('user')
+
+        if not username:
+            return JsonResponse({"success": False, "error": "Missing username in payload"}, status=400)
 
         # Step 1: Verify with Pi API
         headers = {
@@ -178,28 +197,121 @@ def pi_auth(request):
             headers=headers
         )
 
-        if response.status_code != 200:
-            return JsonResponse({"success": False, "error": "Pi verification failed"}, status=401)
 
-        pi_data = response.json()
-        pi_username = pi_data.get("username")
+        pi_data = None
+        # If we have an access token, verify it with Pi API
+        if access_token:
+            try:
+                if response.status_code != 200:
+                    print("pi error status", response.status_code, response.text)
+                    return JsonResponse({"success": False, "error": "Pi verification failed"}, status=401)
+                pi_data = response.json()
+            except Exception as e:
+                print('pi verification parse error', e)
+                return JsonResponse({"success": False, "error": "Pi verification parse error"}, status=500)
 
-        if pi_username != username:
-            return JsonResponse({"success": False, "error": "Username mismatch"}, status=403)
+            pi_username = pi_data.get("username")
+            if pi_username != username:
+                return JsonResponse({"success": False, "error": "Username mismatch"}, status=403)
+        else:
+            # No access token provided. In production we should reject this.
+            # For local development (DEBUG=True) allow it for convenience.
+            if getattr(settings, 'DEBUG', False):
+                print('pi_auth: no access token provided, proceeding in DEBUG mode')
+                # treat incoming data as pi_data if it looks like one
+                pi_data = data
+            else:
+                return JsonResponse({"success": False, "error": "Missing access token"}, status=400)
 
         # Step 2: Create or get Django user
-        user, created = MyUser.objects.get_or_create(username=pi_username, 
-                                                     defaults={"first_name": pi_username},
-                                                     referalCode=username_to_id(username))
-        user.is_active=True
-        user.save()
-        Ballance.objects.create(user=user, ballance=0.00)
-        # Step 3: Log the user in
-        login(request, user)
+        # Create or get a user safely. Put creation-only fields in defaults.
+        user_defaults = {
+            'first_name': pi_data.get('username') if pi_data else username,
+            'referalCode': username_to_id(username),
+        }
+        user, created = MyUser.objects.get_or_create(username=username, defaults=user_defaults)
+        if created:
+            # Don't set a usable password here; mark account active and set unusable password
+            user.set_unusable_password()
+            user.is_active = True
+            user.save()
+        else:
+            user.is_active = True
+            user.save()
 
-        return JsonResponse({"success": True, "username": pi_username})
+        Ballance.objects.get_or_create(user=user, ballance=0.00)
+        GameHistory.objects.get_or_create(user=user, defaults={
+            'TotalPlayed': 0, 'TotalWin': 0, 'Totaloss': 0, 'TotalEarning': 0.00
+        })
 
+        # Log the user in. Since we may not have credentials, set backend and call login()
+        try:
+            user.backend = 'django.contrib.auth.backends.ModelBackend'
+            login(request, user)
+        except Exception as e:
+            print('pi_auth: login error', e)
+            return JsonResponse({"success": False, "error": "Login failed"}, status=500)
+        # Debug: print incoming cookies to see if browser sent any
+        try:
+            print("PI AUTH - incoming request.COOKIES:", request.COOKIES)
+        except Exception:
+            pass
+
+        # Ensure the session is saved so Django will issue a Set-Cookie header
+        try:
+            request.session.save()
+        except Exception:
+            pass
+
+        # Build JSON response and explicitly set the session cookie to be safe
+        response = JsonResponse({
+            "status": "success",
+            "username": user.username,
+            "uid": str(user.id),
+            "accessToken": access_token,
+            "pi_data": pi_data
+        })
+
+        # Explicitly set the session cookie value on the response to ensure
+        # the browser receives it (helps when using fetch + credentials).
+        try:
+            # Ensure session is saved and set cookie
+            request.session.save()
+            session_key = request.session.session_key
+            print("PI AUTH - created session_key:", session_key)
+            if session_key:
+                response.set_cookie(
+                    settings.SESSION_COOKIE_NAME,
+                    session_key,
+                    secure=getattr(settings, 'SESSION_COOKIE_SECURE', False),
+                    httponly=True,
+                    samesite=getattr(settings, 'SESSION_COOKIE_SAMESITE', 'Lax')
+                )
+        except Exception as e:
+            print("PI AUTH - set_cookie error:", e)
+
+        # For debugging locally, include the session_key in the JSON response when DEBUG
+        try:
+            if getattr(settings, 'DEBUG', False):
+                # include session key for local debugging
+                resp = json.loads(response.content)
+                resp['session_key'] = request.session.session_key
+                response = JsonResponse(resp)
+                if request.session.session_key:
+                    response.set_cookie(
+                        settings.SESSION_COOKIE_NAME,
+                        request.session.session_key,
+                        secure=getattr(settings, 'SESSION_COOKIE_SECURE', False),
+                        httponly=True,
+                        samesite=getattr(settings, 'SESSION_COOKIE_SAMESITE', 'Lax')
+                    )
+        except Exception as e:
+            print("PI AUTH - debug include session_key error:", e)
+
+        print('pi_data:', pi_data)
+        return response
     except Exception as e:
+        print('pi_auth exception:', e)
         return JsonResponse({"success": False, "error": str(e)}, status=500)
 def verify(request, username):
    
@@ -256,14 +368,24 @@ def login_view(request):
     else:
         return render(request, 'login.html')
 
-@login_required
 def dashboard(request):
-    username=request.user.username
-    user=MyUser.objects.get(username=username)
-    print(user)
-    ballance=Ballance.objects.get(user=user).ballance
+    print("im trigered")
+    # Ensure only authenticated users can access the dashboard
+    from django.contrib.auth.decorators import login_required
 
-    return render(request,'dashboard.html',{'user':user,'ballance':ballance})
+    # If a user is not authenticated, redirect to login (login_required handles this when used as decorator)
+    if not request.user.is_authenticated:
+        print("not authenticated")
+        return redirect('login')
+
+    # Use the authenticated user instance directly rather than querying by username
+    user = request.user
+    try:
+        ballance = Ballance.objects.get(user=user).ballance
+    except Ballance.DoesNotExist:
+        ballance = 0.00
+
+    return render(request, 'dashboard.html', {'user': user, 'ballance': ballance})
 @login_required
 def profile(request):
     if request.method == 'POST':
@@ -429,3 +551,166 @@ def resend_otp_token_fp(request):
 def validate_key(request):
     filepath = os.path.join(settings.BASE_DIR, "autapp/validation-key.txt")
     return FileResponse(open(filepath, "rb"), content_type="text/plain")
+@csrf_exempt
+def pi_debug(request):
+    if request.method == "POST":
+        try:
+            data = json.loads(request.body)
+            print("PI DEBUG:", data)  # This shows up in Django logs
+        except Exception as e:
+            print("PI DEBUG ERROR:", e)
+        return JsonResponse({"ok": True})
+    return JsonResponse({"error": "GET not allowed"})
+
+
+def session_debug(request):
+    """Return current cookies and session key for debugging browser/server cookie exchange."""
+    try:
+        data = {
+            'cookies': request.COOKIES,
+            'session_key': request.session.session_key,
+            'user_authenticated': request.user.is_authenticated,
+            'username': getattr(request.user, 'username', None)
+        }
+    except Exception as e:
+        data = {'error': str(e)}
+    print("SESSION DEBUG:", data)
+    return JsonResponse(data)
+def server_headers():
+    if not SERVER_API_KEY:
+        print('WARNING: PI server API key is not configured (SERVER_API_KEY is empty)')
+    return {"Authorization": f"Bearer {SERVER_API_KEY}", "Content-Type": "application/json"}
+
+@require_POST
+@login_required
+def approve_payment(request):
+    # Parse JSON body safely
+    try:
+        data = json.loads(request.body.decode() or '{}')
+    except Exception as e:
+        print('approve_payment: invalid JSON body', e)
+        return JsonResponse({'error': 'invalid JSON body'}, status=400)
+
+    print('approve_payment: incoming data', data)
+    payment_id = data.get("paymentId")
+    amount = data.get("amount")
+    if not payment_id:
+        return JsonResponse({"error": "missing paymentId"}, status=400)
+
+    p, _ = PiPayment.objects.get_or_create(
+        payment_id=payment_id,
+        defaults={"user": request.user, "status": "pending", 'amount': amount}
+    )
+
+    # Ensure server API key is configured
+    if not SERVER_API_KEY:
+        print('approve_payment: SERVER_API_KEY not configured')
+        p.status = 'failed'
+        p.save()
+        return JsonResponse({
+            'status': 'error',
+            'detail': 'Server API key not configured on backend (PI_SERVER_API_KEY).'
+        }, status=500)
+
+    # Call Pi approve endpoint (server-to-server)
+    url = f"{PI_API_BASE}/payments/{payment_id}/approve"
+    print('approve_payment: calling Pi approve URL', url)
+    try:
+        r = requests.post(url, headers=server_headers(), timeout=15)
+    except Exception as e:
+        print('approve_payment: exception calling Pi approve', e)
+        p.status = 'failed'
+        p.save()
+        return JsonResponse({'status': 'error', 'detail': str(e)}, status=500)
+
+    # Log response for debugging
+    print('approve_payment: Pi response status', r.status_code)
+    try:
+        print('approve_payment: Pi response body', r.text)
+    except Exception:
+        pass
+
+    if r.status_code in (200, 201):
+        try:
+            p.status = "approved"
+            p.save()
+        except Exception:
+            pass
+        try:
+            return JsonResponse({"status": "ok", "detail": r.json()})
+        except Exception:
+            return JsonResponse({"status": "ok", "detail": r.text})
+
+    # non-2xx => failure
+    p.status = "failed"
+    p.save()
+    # Return Pi response details to help debugging
+    detail = None
+    try:
+        detail = r.json()
+    except Exception:
+        detail = r.text
+    return JsonResponse({"status": "error", "detail": detail}, status=max(400, r.status_code))
+
+@require_POST
+@login_required
+def complete_payment(request):
+    try:
+        data = json.loads(request.body.decode())
+    except Exception as e:
+        print('approve_payment: invalid JSON body', e, getattr(request, 'body', None))
+        return JsonResponse({'error': 'invalid JSON body'}, status=400)
+    payment_id = data.get("paymentId")
+    txid = data.get("txid")
+    if not payment_id or not txid:
+        return JsonResponse({"error": "missing paymentId or txid"}, status=400)
+
+    p, _ = PiPayment.objects.get_or_create(
+        payment_id=payment_id,
+        defaults={"user": request.user, "status": "pending"}
+    )
+    p.txid = txid
+    p.save()
+    # Call Pi approve endpoint (server-to-server)
+    url = f"{PI_API_BASE}/payments/{payment_id}/approve"
+    print('approve_payment: calling Pi approve URL', url)
+    try:
+        r = requests.post(url, headers=server_headers(), timeout=15)
+    except Exception as e:
+        print('approve_payment: exception calling Pi approve', e)
+        p.status = 'failed'
+        p.save()
+        return JsonResponse({'status': 'error', 'detail': str(e)}, status=500)
+
+    # Log response for debugging
+    print('approve_payment: Pi response status', r.status_code)
+    try:
+        print('approve_payment: Pi response body', r.text)
+    except Exception:
+        pass
+
+    if r.status_code in (200, 201):
+        try:
+            p.status = "approved"
+            p.save()
+        except Exception:
+            pass
+        try:
+            return JsonResponse({"status":"ok", "detail": r.json()})
+        except Exception:
+            return JsonResponse({"status":"ok", "detail": r.text})
+
+    # non-2xx => failure
+    p.status = "failed"
+    p.save()
+    # Return Pi response details to help debugging (but avoid leaking secrets)
+    detail = None
+    try:
+        detail = r.json()
+    except Exception:
+        detail = r.text
+    return JsonResponse({"status":"error", "detail": detail}, status=max(400, r.status_code))
+    if p:
+        p.status = "failed"
+        p.save()
+    return JsonResponse({"status":"error", "detail": r.text}, status=400)

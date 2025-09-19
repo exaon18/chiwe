@@ -1,5 +1,7 @@
 from django.contrib.auth.models import AbstractUser, Group, Permission
 from django.db import models
+
+from django.conf import settings
 class Maintainance(models.Model):
     enabled = models.BooleanField(default=True)
     message = models.TextField(blank=True, default='We are under maintenance. Please check back later.')
@@ -58,3 +60,12 @@ class chiweProfit(models.Model):
     sum=models.DecimalField(max_digits=100,decimal_places=3, default=0.00)
     def __str__(self):
         return self.gameType
+class PiPayment(models.Model):
+    payment_id = models.CharField(max_length=128, unique=True, null=True, blank=True)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, blank=True)
+    amount = models.DecimalField(max_digits=20, decimal_places=8)
+    memo = models.CharField(max_length=255, blank=True)
+    metadata = models.JSONField(default=dict, blank=True)
+    status = models.CharField(max_length=32, default="created")  # created, approved, completed, failed
+    txid = models.CharField(max_length=256, blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
