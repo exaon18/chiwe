@@ -227,14 +227,17 @@
                 try {
                     this.log('Initializing Pi SDK...');
                     
-                    // Initialize Pi SDK in sandbox mode
-                    await Pi.init({ 
-                        version: "2.0", 
-                        sandbox: true // Always use sandbox for development/testing
+                    // Initialize Pi SDK: detect production domain and disable sandbox there.
+                    const hostname = window.location.hostname || '';
+                    const isProdDomain = /(^|\.)chiwegames\.com$/i.test(hostname);
+                    // sandbox should be false on your real domain (chiwegames.com)
+                    await Pi.init({
+                        version: "2.0",
+                        sandbox: !isProdDomain
                     });
-                    
+
                     this.isInitialized = true;
-                    this.log('Pi SDK initialized successfully in sandbox mode');
+                    this.log(`Pi SDK initialized successfully (${isProdDomain ? 'production' : 'sandbox'}) for ${hostname}`);
                     this.showStatus('Pi SDK ready for authentication', 'info');
                     
                     // Check if user is already authenticated
