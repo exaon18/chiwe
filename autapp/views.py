@@ -25,8 +25,8 @@ from django.core.exceptions import ValidationError
 # Default to the official production API host. For sandbox/testing you can
 # override `PI_API_BASE` in Django settings or set the env var `PI_API_BASE`.
 PI_API_BASE = getattr(settings, 'PI_API_BASE', os.environ.get('PI_API_BASE', 'https://api.minepi.com/v2'))
-# Do NOT store production server API keys in source. Prefer `settings.PI_SERVER_API_KEY`
-SERVER_API_KEY = getattr(settings, 'PI_SERVER_API_KEY', os.environ.get('PI_SERVER_API_KEY', 'rn16d41rygjx25xsdzt0zoffgkq7hunghhpjvfyabl4ki3wnahx1kqprofvxuulx'))
+# Hardcoded Server API Key (temporary for demo/hackathon)
+SERVER_API_KEY = 'rn16d41rygjx25xsdzt0zoffgkq7hunghhpjvfyabl4ki3wnahx1kqprofvxuulx'
 
 def get_csrf_token(request):
     """
@@ -687,9 +687,9 @@ def approve_payment(request):
         defaults={"user": user_obj, "status": "pending", 'amount': amount}
     )
 
-    # Ensure server API key is configured
+    # Ensure server API key is configured (log presence only)
+    print('approve_payment: SERVER_API_KEY present?', 'yes' if SERVER_API_KEY else 'no')
     if not SERVER_API_KEY:
-        print('approve_payment: SERVER_API_KEY not configured')
         p.status = 'failed'
         p.save()
         return JsonResponse({
@@ -714,6 +714,18 @@ def approve_payment(request):
         print('approve_payment: Pi response body', r.text)
     except Exception:
         pass
+
+    # If Pi indicates invalid authorization, return a clear message (likely wrong/missing server key)
+    if r.status_code == 401:
+        detail = None
+        try:
+            detail = r.json()
+        except Exception:
+            detail = r.text
+        print('approve_payment: Pi returned 401 invalid_authorization')
+        p.status = 'failed'
+        p.save()
+        return JsonResponse({'status': 'error', 'detail': 'Pi API returned 401 invalid_authorization - Server API Key may be missing or invalid', 'pi': detail}, status=401)
 
     if r.status_code in (200, 201):
         try:
@@ -800,6 +812,17 @@ def complete_payment(request):
         print('approve_payment: Pi response body', r.text)
     except Exception:
         pass
+
+    if r.status_code == 401:
+        detail = None
+        try:
+            detail = r.json()
+        except Exception:
+            detail = r.text
+        print('approve_payment (complete): Pi returned 401 invalid_authorization')
+        p.status = 'failed'
+        p.save()
+        return JsonResponse({'status': 'error', 'detail': 'Pi API returned 401 invalid_authorization - Server API Key may be missing or invalid', 'pi': detail}, status=401)
 
     if r.status_code in (200, 201):
         try:
