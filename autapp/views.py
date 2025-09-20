@@ -579,6 +579,55 @@ def session_debug(request):
         data = {'error': str(e)}
     print("SESSION DEBUG:", data)
     return JsonResponse(data)
+
+
+@csrf_exempt
+def approve_debug(request):
+    """
+    Debug endpoint to show detailed request context for /api/pi-payments/approve troubleshooting.
+    Returns headers, cookies, session key, CSRF token, user auth status and (optionally)
+    Pi /me verification when an accessToken is provided in the JSON body.
+    Only intended for DEBUG usage.
+    """
+    info = {}
+    info['method'] = request.method
+    info['headers'] = {k: v for k, v in request.headers.items()}
+    info['cookies'] = request.COOKIES
+    info['session_key'] = request.session.session_key
+    info['user_is_authenticated'] = getattr(request.user, 'is_authenticated', False)
+    info['user'] = getattr(request.user, 'username', None)
+    # CSRF token available via middleware
+    try:
+        info['csrf_token'] = get_token(request)
+    except Exception:
+        info['csrf_token'] = None
+
+    body = None
+    try:
+        body = json.loads(request.body.decode() or '{}')
+    except Exception:
+        body = {}
+    info['body'] = body
+
+    # If an access token is provided, attempt to verify it with Pi
+    access_token = body.get('accessToken') or body.get('access_token')
+    if access_token:
+        try:
+            me_resp = requests.get(f"{PI_API_BASE}/me", headers={"Authorization": f"Bearer {access_token}"}, timeout=10)
+            info['pi_me_status'] = me_resp.status_code
+            try:
+                info['pi_me_body'] = me_resp.json()
+            except Exception:
+                info['pi_me_body'] = me_resp.text[:1000]
+        except Exception as e:
+            info['pi_me_error'] = str(e)
+
+    # Only return detailed info when DEBUG is True
+    if not getattr(settings, 'DEBUG', False):
+        return JsonResponse({'error': 'Not available'}, status=404)
+
+    print('approve_debug:', info)
+    return JsonResponse(info)
 def server_headers():
     if not SERVER_API_KEY:
         print('WARNING: PI server API key is not configured (PI_SERVER_API_KEY not found in settings or env)')
@@ -596,10 +645,38 @@ def approve_payment(request):
         return JsonResponse({'error': 'invalid JSON body'}, status=400)
 
     print('approve_payment: incoming data', data)
-    # Ensure requester is authenticated; return JSON 401 for AJAX clients.
+    # If requester is not authenticated, allow a fallback where the client
+    # provides a Pi accessToken. We will verify it with Pi (/v2/me) and map
+    # or create a user for this approval. This avoids depending on session
+    # cookies in environments where cookies are not sent by the Pi browser.
+    user_obj = None
     if not getattr(request, 'user', None) or not request.user.is_authenticated:
-        print('approve_payment: unauthenticated request')
-        return JsonResponse({'status': 'error', 'detail': 'Authentication required'}, status=401)
+        access_token = data.get('accessToken') or data.get('access_token')
+        if not access_token:
+            print('approve_payment: unauthenticated request and no accessToken provided')
+            return JsonResponse({'status': 'error', 'detail': 'Authentication required'}, status=401)
+        # Verify access token with Pi
+        try:
+            me_resp = requests.get(f"{PI_API_BASE}/me", headers={"Authorization": f"Bearer {access_token}"}, timeout=10)
+            if me_resp.status_code != 200:
+                print('approve_payment: PI /me verification failed', me_resp.status_code, me_resp.text[:200])
+                return JsonResponse({'status': 'error', 'detail': 'Invalid access token'}, status=401)
+            pi_user = me_resp.json()
+            pi_username = pi_user.get('username') or pi_user.get('uid')
+            if not pi_username:
+                return JsonResponse({'status': 'error', 'detail': 'Could not determine Pi username from token'}, status=401)
+            # Get or create a MyUser for this pi_username
+            user_defaults = {'first_name': pi_username, 'referalCode': username_to_id(pi_username)}
+            user_obj, created = MyUser.objects.get_or_create(username=pi_username, defaults=user_defaults)
+            if created:
+                user_obj.set_unusable_password()
+                user_obj.is_active = True
+                user_obj.save()
+        except Exception as e:
+            print('approve_payment: exception verifying access token', e)
+            return JsonResponse({'status': 'error', 'detail': 'Error verifying access token'}, status=500)
+    else:
+        user_obj = request.user
     payment_id = data.get("paymentId")
     amount = data.get("amount")
     if not payment_id:
@@ -607,7 +684,7 @@ def approve_payment(request):
 
     p, _ = PiPayment.objects.get_or_create(
         payment_id=payment_id,
-        defaults={"user": request.user, "status": "pending", 'amount': amount}
+        defaults={"user": user_obj, "status": "pending", 'amount': amount}
     )
 
     # Ensure server API key is configured
@@ -672,14 +749,37 @@ def complete_payment(request):
     if not payment_id or not txid:
         return JsonResponse({"error": "missing paymentId or txid"}, status=400)
 
-    # Ensure requester is authenticated for completion as well
+    # If unauthenticated, accept client accessToken and verify with Pi
+    user_obj = None
     if not getattr(request, 'user', None) or not request.user.is_authenticated:
-        print('complete_payment: unauthenticated request')
-        return JsonResponse({'status': 'error', 'detail': 'Authentication required'}, status=401)
+        access_token = data.get('accessToken') or data.get('access_token')
+        if not access_token:
+            print('complete_payment: unauthenticated request and no accessToken provided')
+            return JsonResponse({'status': 'error', 'detail': 'Authentication required'}, status=401)
+        try:
+            me_resp = requests.get(f"{PI_API_BASE}/me", headers={"Authorization": f"Bearer {access_token}"}, timeout=10)
+            if me_resp.status_code != 200:
+                print('complete_payment: PI /me verification failed', me_resp.status_code, me_resp.text[:200])
+                return JsonResponse({'status': 'error', 'detail': 'Invalid access token'}, status=401)
+            pi_user = me_resp.json()
+            pi_username = pi_user.get('username') or pi_user.get('uid')
+            if not pi_username:
+                return JsonResponse({'status': 'error', 'detail': 'Could not determine Pi username from token'}, status=401)
+            user_defaults = {'first_name': pi_username, 'referalCode': username_to_id(pi_username)}
+            user_obj, created = MyUser.objects.get_or_create(username=pi_username, defaults=user_defaults)
+            if created:
+                user_obj.set_unusable_password()
+                user_obj.is_active = True
+                user_obj.save()
+        except Exception as e:
+            print('complete_payment: exception verifying access token', e)
+            return JsonResponse({'status': 'error', 'detail': 'Error verifying access token'}, status=500)
+    else:
+        user_obj = request.user
 
     p, _ = PiPayment.objects.get_or_create(
         payment_id=payment_id,
-        defaults={"user": request.user, "status": "pending"}
+        defaults={"user": user_obj, "status": "pending"}
     )
     p.txid = txid
     p.save()

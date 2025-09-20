@@ -26,6 +26,7 @@ urlpatterns = [
     path('recovery/resend-otp-fp/', views.resend_otp_token_fp, name='resend_otp_fp'),
     path('pi-auth/', views.pi_auth, name='pi_auth'),
     path('session-debug/', views.session_debug, name='session_debug'),
+    path('api/pi-payments/approve-debug', views.approve_debug, name='api_pi_approve_debug'),
     path('validation-key.txt', views.validate_key, name='validate_key'),
     path('pi-debug/', views.pi_debug, name='pi_debug'), 
 ]
