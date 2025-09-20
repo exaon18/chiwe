@@ -21,9 +21,12 @@ from django.views.decorators.csrf import csrf_exempt
 from django.core.validators import validate_email
 from django.core.exceptions import ValidationError
 
-# Pi API configuration - read from Django settings with sensible defaults
-PI_API_BASE =  'https://minepi.com/v2'
-SERVER_API_KEY = "wrv2dm2hleapesubjud4ab7qwws1y2daynk8vyeyrazq8dt63iuqq5h9gysjhaea"
+# Pi API configuration - prefer settings, fallback to environment variables
+# Default to the official production API host. For sandbox/testing you can
+# override `PI_API_BASE` in Django settings or set the env var `PI_API_BASE`.
+PI_API_BASE = getattr(settings, 'PI_API_BASE', os.environ.get('PI_API_BASE', 'https://api.minepi.com/v2'))
+# Do NOT store production server API keys in source. Prefer `settings.PI_SERVER_API_KEY`
+SERVER_API_KEY = getattr(settings, 'PI_SERVER_API_KEY', os.environ.get('PI_SERVER_API_KEY', 'rn16d41rygjx25xsdzt0zoffgkq7hunghhpjvfyabl4ki3wnahx1kqprofvxuulx'))
 
 def get_csrf_token(request):
     """
@@ -578,7 +581,9 @@ def session_debug(request):
     return JsonResponse(data)
 def server_headers():
     if not SERVER_API_KEY:
-        print('WARNING: PI server API key is not configured (SERVER_API_KEY is empty)')
+        print('WARNING: PI server API key is not configured (PI_SERVER_API_KEY not found in settings or env)')
+        return {"Content-Type": "application/json"}
+    # Return headers but avoid logging the full key elsewhere
     return {"Authorization": f"Bearer {SERVER_API_KEY}", "Content-Type": "application/json"}
 
 @require_POST
