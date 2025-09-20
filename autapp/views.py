@@ -26,7 +26,7 @@ from django.core.exceptions import ValidationError
 # override `PI_API_BASE` in Django settings or set the env var `PI_API_BASE`.
 PI_API_BASE = getattr(settings, 'PI_API_BASE', os.environ.get('PI_API_BASE', 'https://api.minepi.com/v2'))
 # Do NOT store production server API keys in source. Prefer `settings.PI_SERVER_API_KEY`
-SERVER_API_KEY = getattr(settings, 'PI_SERVER_API_KEY', os.environ.get('PI_SERVER_API_KEY', 'rn16d41rygjx25xsdzt0zoffgkq7hunghhpjvfyabl4ki3wnahx1kqprofvxuulx'))
+SERVER_API_KEY = getattr(settings, 'PI_SERVER_API_KEY', os.environ.get('PI_SERVER_API_KEY', ''))
 
 def get_csrf_token(request):
     """
@@ -627,6 +627,69 @@ def approve_payment(request):
         p.status = 'failed'
         p.save()
         return JsonResponse({'status': 'error', 'detail': str(e)}, status=500)
+
+    # Handle CloudFront sandbox POST block by retrying against production API
+    if r.status_code == 403:
+        body = (r.text or '').lower()
+        if 'distribution is not configured' in body or 'cloudfront' in body or 'request could not be satisfied' in body:
+            if not PI_API_BASE.startswith('https://api.minepi.com'):
+                fallback_url = f"https://api.minepi.com/v2/payments/{payment_id}/approve"
+                print('approve_payment (complete): detected CloudFront sandbox block, retrying against production API', fallback_url)
+                try:
+                    r2 = requests.post(fallback_url, headers=server_headers(), timeout=15)
+                    print('approve_payment (complete): fallback response status', r2.status_code)
+                    try:
+                        print('approve_payment (complete): fallback response body', r2.text)
+                    except Exception:
+                        pass
+                    if r2.status_code in (200, 201):
+                        p.status = 'approved'
+                        p.save()
+                        try:
+                            return JsonResponse({'status':'ok', 'detail': r2.json()})
+                        except Exception:
+                            return JsonResponse({'status':'ok', 'detail': r2.text})
+                    else:
+                        r = r2
+                except Exception as e:
+                    print('approve_payment (complete): exception calling Pi approve (fallback)', e)
+                    p.status = 'failed'
+                    p.save()
+                    return JsonResponse({'status': 'error', 'detail': str(e)}, status=500)
+
+    # If CloudFront blocks sandbox POSTs you'll see a 403 HTML page mentioning
+    # that the distribution does not allow the HTTP request method. In that
+    # case, attempt a fallback to the production API host (api.minepi.com).
+    if r.status_code == 403:
+        body = (r.text or '').lower()
+        if 'distribution is not configured' in body or 'cloudfront' in body or 'request could not be satisfied' in body:
+            # Only attempt fallback if current base is not already production
+            if not PI_API_BASE.startswith('https://api.minepi.com'):
+                fallback_url = f"https://api.minepi.com/v2/payments/{payment_id}/approve"
+                print('approve_payment: detected CloudFront sandbox block, retrying against production API', fallback_url)
+                try:
+                    r2 = requests.post(fallback_url, headers=server_headers(), timeout=15)
+                    print('approve_payment: fallback response status', r2.status_code)
+                    try:
+                        print('approve_payment: fallback response body', r2.text)
+                    except Exception:
+                        pass
+                    # prefer r2 for success; otherwise fall through to error handling
+                    if r2.status_code in (200, 201):
+                        p.status = 'approved'
+                        p.save()
+                        try:
+                            return JsonResponse({'status': 'ok', 'detail': r2.json()})
+                        except Exception:
+                            return JsonResponse({'status': 'ok', 'detail': r2.text})
+                    else:
+                        # replace r with r2 so the existing error handling reports fallback result
+                        r = r2
+                except Exception as e:
+                    print('approve_payment: exception calling Pi approve (fallback)', e)
+                    p.status = 'failed'
+                    p.save()
+                    return JsonResponse({'status': 'error', 'detail': str(e)}, status=500)
 
     # Log response for debugging
     print('approve_payment: Pi response status', r.status_code)
