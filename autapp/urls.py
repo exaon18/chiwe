@@ -15,7 +15,6 @@ urlpatterns = [
         # API endpoints for Pi payments used by frontend
         path('api/pi-payments/approve', views.approve_payment, name='api_pi_approve'),
         path('api/pi-payments/complete', views.complete_payment, name='api_pi_complete'),
-        path('api/pi-payments/dev-approve', views.dev_approve, name='api_pi_dev_approve'),
     path('dashboard',views.dashboard,name='dashboard'),
     path('verify/<str:username>', views.verify, name='verify'),
     path('profile/', views.profile, name='profile'),
