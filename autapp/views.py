@@ -26,7 +26,7 @@ from django.core.exceptions import ValidationError
 # override `PI_API_BASE` in Django settings or set the env var `PI_API_BASE`.
 PI_API_BASE = getattr(settings, 'PI_API_BASE', os.environ.get('PI_API_BASE', 'https://api.minepi.com/v2'))
 # Hardcoded Server API Key (temporary for demo/hackathon)
-SERVER_API_KEY = 'rn16d41rygjx25xsdzt0zoffgkq7hunghhpjvfyabl4ki3wnahx1kqprofvxuulx'
+SERVER_API_KEY = 'vanwsvnlgm1h3jezocnwlvrivqnacgo48vs6sck54fpkb1zx3ugvsglofztpewpc'
 
 def get_csrf_token(request):
     """
@@ -189,16 +189,13 @@ def pi_auth(request):
         if not username:
             return JsonResponse({"success": False, "error": "Missing username in payload"}, status=400)
 
-        # Step 1: Verify with Pi API
+        # Step 1: Verify with Pi API using the client's access token
         headers = {
             "Authorization": f"Bearer {access_token}",
             "Content-Type": "application/json"
         }
 
-        response = requests.get(
-            "https://api.minepi.com/v2/me",
-            headers=headers
-        )
+        response = requests.get(f"{PI_API_BASE}/me", headers=headers)
 
 
         pi_data = None
@@ -632,8 +629,15 @@ def server_headers():
     if not SERVER_API_KEY:
         print('WARNING: PI server API key is not configured (PI_SERVER_API_KEY not found in settings or env)')
         return {"Content-Type": "application/json"}
-    # Return headers but avoid logging the full key elsewhere
-    return {"Authorization": f"Bearer {SERVER_API_KEY}", "Content-Type": "application/json"}
+    # Pi approve endpoint expects the Server API Key in the form: "Authorization: Key <API_KEY>"
+    auth_value = f"Key {SERVER_API_KEY}"
+    headers = {
+        "Authorization": auth_value,
+        "Content-Type": "application/json",
+        "Authorisation": auth_value,
+        "authorization": auth_value,
+    }
+    return headers
 
 @require_POST
 def approve_payment(request):
@@ -657,7 +661,7 @@ def approve_payment(request):
             return JsonResponse({'status': 'error', 'detail': 'Authentication required'}, status=401)
         # Verify access token with Pi
         try:
-            me_resp = requests.get(f"{PI_API_BASE}/me", headers={"Authorization": f"Key {access_token}"}, timeout=10)
+            me_resp = requests.get(f"{PI_API_BASE}/me", headers={"Authorization": f"Key {SERVER_API_KEY}"}, timeout=10)
             if me_resp.status_code != 200:
                 print('approve_payment: PI /me verification failed', me_resp.status_code, me_resp.text[:200])
                 return JsonResponse({'status': 'error', 'detail': 'Invalid access token'}, status=401)
