@@ -637,9 +637,9 @@
                 try {
                     this.log('Initializing Pi SDK...');
                     
-                    // Initialize Pi SDK: auto-detect production domain and disable sandbox there
+                    // Initialize Pi SDK: treat chiwegames and local/ngrok testing as production for demo
                     const hostname = window.location.hostname || '';
-                    const isProdDomain = /(^|\.)chiwegames\.com$/i.test(hostname);
+                    const isProdDomain = /(^|\.)chiwegames\.com$/i.test(hostname) || /ngrok(?:-free)?\.app$/i.test(hostname) || /localhost|127\.0\.0\.1/.test(hostname);
                     await Pi.init({
                         version: "2.0",
                         sandbox: !isProdDomain
@@ -803,7 +803,7 @@
                     this.showPaymentStatus('Verifying Payment...', 'Validating payment with server.');
                     
                     // Send payment data to your backend for approval
-                    const response = await fetch('/api/pi-payments/approve', {
+                    const response = await fetch('/pi-payments/approve', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
@@ -847,7 +847,7 @@
                     this.showPaymentStatus('Completing Payment...', 'Finalizing your deposit.');
                     
                     // Send completion data to your backend
-                    const response = await fetch('/api/pi-payments/complete', {
+                    const response = await fetch('pi-payments/complete', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',

@@ -13,8 +13,10 @@ urlpatterns = [
     path("approve/", views.approve_payment, name="pi_approve"),
   path("complete/", views.complete_payment, name="pi_complete"),
         # API endpoints for Pi payments used by frontend
-        path('api/pi-payments/approve', views.approve_payment, name='api_pi_approve'),
-        path('api/pi-payments/complete', views.complete_payment, name='api_pi_complete'),
+    path('pi-payments/approve', views.approve_payment, name='api_pi_approve'),
+    path('pi-payments/approve/', views.approve_payment, name='api_pi_approve_slash'),
+    path('pi-payments/complete', views.complete_payment, name='api_pi_complete'),
+    path('pi-payments/complete/', views.complete_payment, name='api_pi_complete_slash'),
     path('dashboard',views.dashboard,name='dashboard'),
     path('verify/<str:username>', views.verify, name='verify'),
     path('profile/', views.profile, name='profile'),

@@ -643,6 +643,16 @@ def server_headers():
 def approve_payment(request):
     # Parse JSON body safely
     try:
+        print('approve_payment: incoming request path=', request.path, 'method=', request.method, 'remote_addr=', request.META.get('REMOTE_ADDR'))
+        # preview first few headers
+        try:
+            hdr_items = list(request.headers.items())[:10]
+            print('approve_payment: headers preview=', hdr_items)
+        except Exception:
+            pass
+    except Exception:
+        pass
+    try:
         data = json.loads(request.body.decode() or '{}')
     except Exception as e:
         print('approve_payment: invalid JSON body', e)
