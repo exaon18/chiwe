@@ -229,6 +229,8 @@
                     
                     // Initialize Pi SDK: detect production domain and disable sandbox there.
                     // Force production mode for Pi SDK during demos
+                    const hostname = window.location.hostname || '';
+                    const isProdDomain = true; // forced for demo
                     await Pi.init({
                         version: "2.0",
                         sandbox: false
