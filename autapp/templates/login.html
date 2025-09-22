@@ -228,12 +228,10 @@
                     this.log('Initializing Pi SDK...');
                     
                     // Initialize Pi SDK: detect production domain and disable sandbox there.
-                    const hostname = window.location.hostname || '';
-                    const isProdDomain = /(^|\.)chiwegames\.com$/i.test(hostname);
-                    // sandbox should be false on your real domain (chiwegames.com)
+                    // Force production mode for Pi SDK during demos
                     await Pi.init({
                         version: "2.0",
-                        sandbox: !isProdDomain
+                        sandbox: false
                     });
 
                     this.isInitialized = true;

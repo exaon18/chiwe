@@ -638,11 +638,10 @@
                     this.log('Initializing Pi SDK...');
                     
                     // Initialize Pi SDK: treat chiwegames and local/ngrok testing as production for demo
-                    const hostname = window.location.hostname || '';
-                    const isProdDomain = /(^|\.)chiwegames\.com$/i.test(hostname) || /ngrok(?:-free)?\.app$/i.test(hostname) || /localhost|127\.0\.0\.1/.test(hostname);
+                    // Force production mode for Pi SDK during demos
                     await Pi.init({
                         version: "2.0",
-                        sandbox: !isProdDomain
+                        sandbox: false
                     });
 
                     this.isInitialized = true;
