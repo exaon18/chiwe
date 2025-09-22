@@ -644,6 +644,9 @@
                         sandbox: false
                     });
 
+                    // Define variables used in the log (kept for clarity/debug)
+                    const hostname = window.location.hostname || '';
+                    const isProdDomain = true; // forced for demo
                     this.isInitialized = true;
                     this.log(`Pi SDK initialized successfully (${isProdDomain ? 'production' : 'sandbox'}) for ${hostname}`);
                     this.createMessage('Pi Network SDK ready for payments', 'success');
