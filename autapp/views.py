@@ -657,7 +657,7 @@ def approve_payment(request):
             return JsonResponse({'status': 'error', 'detail': 'Authentication required'}, status=401)
         # Verify access token with Pi
         try:
-            me_resp = requests.get(f"{PI_API_BASE}/me", headers={"Authorization": f"Bearer {access_token}"}, timeout=10)
+            me_resp = requests.get(f"{PI_API_BASE}/me", headers={"Authorization": f"Key {access_token}"}, timeout=10)
             if me_resp.status_code != 200:
                 print('approve_payment: PI /me verification failed', me_resp.status_code, me_resp.text[:200])
                 return JsonResponse({'status': 'error', 'detail': 'Invalid access token'}, status=401)
