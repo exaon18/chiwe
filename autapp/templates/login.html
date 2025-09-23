@@ -227,17 +227,19 @@
                 try {
                     this.log('Initializing Pi SDK...');
                     
-                    // Initialize Pi SDK: detect production domain and disable sandbox there.
-                    // Force production mode for Pi SDK during demos
+                    // Initialize Pi SDK: detect Pi Browser or dev hosts and enable sandbox there.
                     const hostname = window.location.hostname || '';
-                    const isProdDomain = true; // forced for demo
+                    const ua = navigator.userAgent || '';
+                    const isPiBrowser = /pibrowser/i.test(ua) || /pi browser/i.test(ua);
+                    const isDevHost = hostname === 'localhost' || hostname === '127.0.0.1' || hostname.endsWith('.ngrok.io') || hostname.includes('sandbox.minepi.com');
+                    const sandboxFlag = isPiBrowser || isDevHost;
                     await Pi.init({
                         version: "2.0",
                         sandbox: false
                     });
 
                     this.isInitialized = true;
-                    this.log(`Pi SDK initialized successfully (${isProdDomain ? 'production' : 'sandbox'}) for ${hostname}`);
+                    this.log(`Pi SDK initialized successfully (${sandboxFlag ? 'sandbox' : 'production'}) for ${hostname}`);
                     this.showStatus('Pi SDK ready for authentication', 'info');
                     
                     // Check if user is already authenticated
