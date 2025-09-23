@@ -24,9 +24,9 @@ from django.core.exceptions import ValidationError
 # Pi API configuration - prefer settings, fallback to environment variables
 # Default to the official production API host. For sandbox/testing you can
 # override `PI_API_BASE` in Django settings or set the env var `PI_API_BASE`.
-PI_API_BASE = getattr(settings, 'PI_API_BASE', os.environ.get('PI_API_BASE', 'https://api.minepi.com/v2'))
+PI_API_BASE = getattr(settings, 'PI_API_BASE', os.environ.get('PI_API_BASE', 'https://api.sandbox.minepi.com/v2'))
 # Hardcoded Server API Key (temporary for demo/hackathon)
-SERVER_API_KEY = '7vqrbckrr4fvplcmt5ox3uqyhfxlaiwwqde3jjvt3gn1oo9ni4yyn0utxlb6e9yk'
+SERVER_API_KEY = '0dvx2tf8nlsh3umq0bs6e0tamgznfhjjyagnmn6zzhlgcvzfmprqyyirwbsmkqai'
 
 def get_csrf_token(request):
     """
