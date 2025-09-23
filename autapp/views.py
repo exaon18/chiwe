@@ -26,7 +26,7 @@ from django.core.exceptions import ValidationError
 # override `PI_API_BASE` in Django settings or set the env var `PI_API_BASE`.
 PI_API_BASE = getattr(settings, 'PI_API_BASE', os.environ.get('PI_API_BASE', 'https://api.minepi.com/v2'))
 # Hardcoded Server API Key (temporary for demo/hackathon)
-SERVER_API_KEY = '0dvx2tf8nlsh3umq0bs6e0tamgznfhjjyagnmn6zzhlgcvzfmprqyyirwbsmkqai'
+SERVER_API_KEY = '7vqrbckrr4fvplcmt5ox3uqyhfxlaiwwqde3jjvt3gn1oo9ni4yyn0utxlb6e9yk'
 
 def get_csrf_token(request):
     """
