@@ -1166,25 +1166,25 @@
             
             <div class="money-selector">
                 <div class="money-option" data-amount="0" onclick="selectAmount(0)">
-                    0 USDT
+                    0 pi
                     <div class="loading-spinner">
                         <div class="spinner"></div>
                     </div>
                 </div>
                 <div class="money-option" data-amount="2" onclick="selectAmount(2)">
-                    2 usdt
+                    2 pi
                     <div class="loading-spinner">
                         <div class="spinner"></div>
                     </div>
                 </div>
                 <div class="money-option" data-amount="10" onclick="selectAmount(10)">
-                    10 usdt
+                    10 pi
                     <div class="loading-spinner">
                         <div class="spinner"></div>
                     </div>
                 </div>
                 <div class="money-option" data-amount="25" onclick="selectAmount(25)">
-                    25 usdt
+                    25 pi
                     <div class="loading-spinner">
                         <div class="spinner"></div>
                     </div>
@@ -1197,7 +1197,7 @@
                     <input type="hidden" id="amountInput" name="amount" value="">
                     <div class="selected-amount">
                         <p class="info-label">Selected Amount:</p>
-                        <p class="info-value"><span id="selectedAmount">0</span> USDT</p>
+                        <p class="info-value"><span id="selectedAmount">0</span> pi</p>
                     </div>
                     <button type="submit" class="submit-btn">
                         Join Game
@@ -1717,7 +1717,7 @@
             document.getElementById('player1').textContent = data.player_1;
             document.getElementById('player2').textContent = data.player_2;
             document.getElementById('betInfo').textContent = 
-                `Bet Amount: ${data.amount} USDT | Maximum Jackpot: ${data.amount * 2} USDT`;
+                `Bet Amount: ${data.amount} pi | Maximum Jackpot: ${data.amount * 2} pi`;
 
             document.getElementById('player-username').textContent = currentUsername;
             document.getElementById('opponent-username').textContent = 
@@ -1920,7 +1920,7 @@
                 message.innerHTML = '🏆 You Won! 🏆';
                 trophyIcon.innerHTML = '🏆';
                 // Use the stored bet amount to calculate winnings
-                winningAmount.textContent = `You won ${currentBetAmount * 2} USDT!`;
+                winningAmount.textContent = `You won ${currentBetAmount * 2} pi!`;
                 winningAmount.className = 'result-amount win-amount';
             } else {
                 popup.classList.add('loser');
@@ -1928,7 +1928,7 @@
                 message.innerHTML = '❌ Game Over ❌';
                 trophyIcon.innerHTML = '😢';
                 // Use the stored bet amount for loss
-                winningAmount.textContent = `You lost ${currentBetAmount} USDT.`;
+                winningAmount.textContent = `You lost ${currentBetAmount} pi.`;
                 winningAmount.className = 'result-amount lose-amount';
             }
 

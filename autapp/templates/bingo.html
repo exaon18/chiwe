@@ -1761,25 +1761,25 @@
             
             <div class="money-selector">
                 <div class="money-option" data-amount="0" onclick="selectAmount(0)">
-                    0 USDT
+                    0 pi
                     <div class="loading-spinner">
                         <div class="spinner"></div>
                     </div>
                 </div>
                 <div class="money-option" data-amount="2" onclick="selectAmount(2)">
-                    2 USDT
+                    2 pi
                     <div class="loading-spinner">
                         <div class="spinner"></div>
                     </div>
                 </div>
                 <div class="money-option" data-amount="10" onclick="selectAmount(10)">
-                    10 USDT
+                    10 pi
                     <div class="loading-spinner">
                         <div class="spinner"></div>
                     </div>
                 </div>
                 <div class="money-option" data-amount="25" onclick="selectAmount(25)">
-                    25 USDT
+                    25 pi
                     <div class="loading-spinner">
                         <div class="spinner"></div>
                     </div>
@@ -1793,7 +1793,7 @@
                     <input type="hidden" id="amountInput" name="amount" value="">
                     <div class="selected-amount" id="selectedAmountContainer">
                         <p class="info-label">Selected Amount:</p>
-                        <p class="info-value"><span id="selectedAmount">0</span> USDT</p>
+                        <p class="info-value"><span id="selectedAmount">0</span> pi</p>
                     </div>
                     <button type="submit" id="joinButton" class="submit-btn" disabled>
                         Join Game
@@ -1863,7 +1863,7 @@
                 <div class="player-card">
                     <div class="player-info">
                         <div class="player-name" id="player1Name">Player 1</div>
-                        <div class="player-amount" id="player1Amount">50 USDT</div>
+                        <div class="player-amount" id="player1Amount">50 pi</div>
                     </div>
                 </div>
                 
@@ -1872,7 +1872,7 @@
                 <div class="player-card">
                     <div class="player-info">
                         <div class="player-name" id="player2Name">Player 2</div>
-                        <div class="player-amount" id="player2Amount">50 USDT</div>
+                        <div class="player-amount" id="player2Amount">50 pi</div>
                     </div>
                 </div>
             </div>
@@ -1887,12 +1887,12 @@
             <div class="game-info">
                 <div class="player-info-card">
                     <div class="player-info-name" id="currentPlayerName">Your Name</div>
-                    <div class="player-info-detail">Bet: <span id="currentPlayerAmount">50 USDT</span></div>
+                    <div class="player-info-detail">Bet: <span id="currentPlayerAmount">50 pi</span></div>
                 </div>
                 
                 <div class="player-info-card">
                     <div class="player-info-name" id="opponentName">Opponent</div>
-                    <div class="player-info-detail">Bet: <span id="opponentAmount">50 USDT</span></div>
+                    <div class="player-info-detail">Bet: <span id="opponentAmount">50 pi</span></div>
                 </div>
             </div>
             
@@ -2010,11 +2010,11 @@
                 </div>
                 <div class="result-row">
                     <div class="result-label">Bet Amount:</div>
-                    <div class="result-value" id="betAmount">25 USDT</div>
+                    <div class="result-value" id="betAmount">25 pi</div>
                 </div>
                 <div class="result-row">
                     <div class="result-label">Winning Amount:</div>
-                    <div class="result-value winning-amount" id="winningAmount">50 USDT</div>
+                    <div class="result-value winning-amount" id="winningAmount">50 pi</div>
                 </div>
             </div>
             
@@ -3063,8 +3063,8 @@ function handleGameStartMessage(message) {
     // Update player matching screen
     document.getElementById('player1Name').textContent = message.player_1;
     document.getElementById('player2Name').textContent = message.player_2;
-    document.getElementById('player1Amount').textContent = `${message.amount} USDT`;
-    document.getElementById('player2Amount').textContent = `${message.amount} USDT`;
+    document.getElementById('player1Amount').textContent = `${message.amount} pi`;
+    document.getElementById('player2Amount').textContent = `${message.amount} pi`;
     
     // Show player matching screen
     document.getElementById('gameStatus').style.display = 'none';
@@ -3089,8 +3089,8 @@ function handleGameStartMessage(message) {
             // Update player info in game board
             document.getElementById('currentPlayerName').textContent = message.player_1;
             document.getElementById('opponentName').textContent = message.player_2;
-            document.getElementById('currentPlayerAmount').textContent = `${message.amount} USDT`;
-            document.getElementById('opponentAmount').textContent = `${message.amount} USDT`;
+            document.getElementById('currentPlayerAmount').textContent = `${message.amount} pi`;
+            document.getElementById('opponentAmount').textContent = `${message.amount} pi`;
         }
     }, 1000);
 }
@@ -3116,8 +3116,8 @@ function handleGameOver(message) {
         'Better luck next time!';
     
     document.getElementById('winnerName').textContent = message.winner;
-    document.getElementById('betAmount').textContent = `${betAmount} USDT`;
-    document.getElementById('winningAmount').textContent = `${winningAmount} USDT`;
+    document.getElementById('betAmount').textContent = `${betAmount} pi`;
+    document.getElementById('winningAmount').textContent = `${winningAmount} pi`;
     
     // Show confetti only for winner
     if (isWinner) {
