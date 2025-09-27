@@ -1,3 +1,4 @@
+import decimal
 import os
 from django.contrib import messages
 from django.shortcuts import render,redirect
@@ -845,6 +846,9 @@ def complete_payment(request):
         try:
             p.status = "approved"
             p.save()
+            ballance= Ballance.objects.get_or_create(user=user_obj)
+            ballance.balance = decimal(p.amount)
+            ballance.save()
         except Exception:
             pass
         try:
