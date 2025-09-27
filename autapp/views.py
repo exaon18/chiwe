@@ -367,7 +367,7 @@ def login_view(request):
             return JsonResponse({"success": False, "message": "Invalid username or password"})
             
     else:
-        return render(request, 'login_new.html')
+        return render(request, 'login.html')
 
 def dashboard(request):
     print("im trigered")
