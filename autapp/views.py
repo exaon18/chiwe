@@ -339,7 +339,7 @@ def verify(request, username):
             user.save()
             login(request, user)
             
-            return JsonResponse({"success": True, "message":"Account Verified successfully, redirecting you to the login page "})  # Redirect to the home page or any other page
+            return JsonResponse({"success": True, "message":"Account Verified successfully, redirecting you to the dashboard "})  # Redirect to the home page or any other page
         else:
             
             return JsonResponse({"success": False, "message":"Invalid token"})
@@ -366,7 +366,7 @@ def login_view(request):
             return JsonResponse({"success": False, "message": "Invalid username or password"})
             
     else:
-        return render(request, 'login.html')
+        return render(request, 'login_new.html')
 
 def dashboard(request):
     print("im trigered")
@@ -439,7 +439,10 @@ def profile(request):
     print(f"total loss {Game_Stat.Totaloss}")
 
     return render(request, 'profile.html', {'user': request.user, 'stat': Game_Stat,'ballance':ballance})
-
+@login_required
+def leaderboard(request):
+    users=MyUser.objects.all().order_by('points')[:10]
+    return render(request, 'leaderboard.html', {'users': users})
 @login_required
 def logout_view(request):
     user=MyUser.objects.get(username=request.user.username)

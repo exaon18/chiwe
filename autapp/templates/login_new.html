@@ -1,0 +1,98 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Login - Chiwe</title>
+    <link rel="icon" href="https://i.postimg.cc/FzgPtp2v/photo-2025-05-31-05-36-51.jpg" />
+    <style>
+        body { font-family: Inter, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; background:#0b0b0b; color:#fff; display:flex; align-items:center; justify-content:center; min-height:100vh; }
+        .card { background:#121212; border:1px solid #222; padding:28px; border-radius:12px; width:360px; box-shadow:0 8px 30px rgba(0,0,0,0.6); }
+        h1 { font-size:1.4rem; margin-bottom:8px; }
+        p.subtitle { color:#9aa4b2; margin-bottom:18px; font-size:0.95rem }
+        label { display:block; font-size:0.85rem; margin-bottom:6px; color:#cbd5e1 }
+        input[type=text], input[type=password] { width:100%; padding:10px 12px; border-radius:8px; border:1px solid #2b2b2b; background:#0f0f0f; color:#fff; margin-bottom:12px }
+        button { width:100%; padding:10px 12px; border-radius:8px; border:0; background:linear-gradient(90deg,#2ed573,#25a65b); color:#081012; font-weight:700; cursor:pointer }
+        .meta { margin-top:12px; display:flex; justify-content:center; gap:8px; color:#91a5b8 }
+        .error { background:#7f1d1d; color:#fff; padding:8px 10px; border-radius:8px; margin-bottom:12px; display:none }
+        .success { background:#064e3b; color:#9ff7d4; padding:8px 10px; border-radius:8px; margin-bottom:12px; display:none }
+    </style>
+</head>
+<body>
+    <div class="card" role="main">
+        <h1>Sign in to Chiwe</h1>
+        <p class="subtitle">Enter your username and password to continue.</p>
+
+        <div id="alert-error" class="error" role="alert"></div>
+        <div id="alert-success" class="success" role="status"></div>
+
+        <form id="login-form">
+            {% csrf_token %}
+            <label for="username">Username</label>
+            <input id="username" name="username" type="text" inputmode="text" autocomplete="username" required placeholder="e.g. PIONEER01" />
+
+            <label for="password">Password</label>
+            <input id="password" name="password" type="password" autocomplete="current-password" required placeholder="Your password" />
+
+            <button id="submit-btn" type="submit">Sign In</button>
+        </form>
+
+        <div class="meta">
+            <a href="/forgot/" style="color:inherit; text-decoration:none; opacity:0.8;">Forgot password?</a>
+        </div>
+    </div>
+
+    <script>
+        (function(){
+            const form = document.getElementById('login-form');
+            const errEl = document.getElementById('alert-error');
+            const okEl = document.getElementById('alert-success');
+            const submitBtn = document.getElementById('submit-btn');
+
+            function showError(msg){ errEl.textContent = msg; errEl.style.display = 'block'; okEl.style.display = 'none'; }
+            function showSuccess(msg){ okEl.textContent = msg; okEl.style.display = 'block'; errEl.style.display = 'none'; }
+
+            form.addEventListener('submit', async function(e){
+                e.preventDefault();
+                errEl.style.display = 'none'; okEl.style.display = 'none';
+                submitBtn.disabled = true;
+                submitBtn.textContent = 'Signing in...';
+
+                // Build FormData to match view's expectations (request.POST)
+                const data = new FormData(form);
+
+                try{
+                    const resp = await fetch(window.location.href, {
+                        method: 'POST',
+                        body: data,
+                        credentials: 'same-origin'
+                    });
+
+                    if (!resp.ok) {
+                        let bodyText = await resp.text();
+                        showError('Server error: ' + resp.status + ' ' + resp.statusText);
+                        submitBtn.disabled = false;
+                        submitBtn.textContent = 'Sign In';
+                        return;
+                    }
+
+                    const json = await resp.json();
+                    if (json.success) {
+                        showSuccess(json.message || 'Login successful');
+                        // redirect to dashboard (adjust if your route differs)
+                        setTimeout(()=>{ window.location.href = '/dashboard'; }, 600);
+                    } else {
+                        showError(json.message || 'Login failed');
+                    }
+                } catch (err) {
+                    showError('Network error: ' + (err.message || err));
+                } finally {
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = 'Sign In';
+                }
+            });
+        })();
+    </script>
+</body>
+</html>

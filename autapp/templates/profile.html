@@ -797,7 +797,7 @@
         <!-- Profile Card -->
         <div class="card">
             <div class="profile-header">
-                <div class="profile-picture" id="profilePicture">👨‍🏫</div>
+                <div class="profile-picture" id="profilePicture">π</div>
                 <div class="profile-info">
                     <h1 id="username">{{user.username}}</h1>
                     <p><i class="fas fa-calendar-alt"></i> Member since <span id="memberSince">{{user.date_joined}}</span></p>
@@ -846,7 +846,7 @@
                     <div class="stat-label"><i class="fas fa-coins"></i> Chiwe Points</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-value" id="totalWinnings">${{stat.TotalEarning}}</div>
+                    <div class="stat-value" id="totalWinnings">π{{stat.TotalEarning}}</div>
                     <div class="stat-label"><i class="fas fa-money-bill-wave"></i> Total Winnings</div>
                 </div>
                 <div class="stat-card">
@@ -876,7 +876,7 @@
             </div>
             <div class="detail-row">
                 <span class="detail-label"><i class="fas fa-wallet"></i> Current Balance</span>
-                <span class="detail-value" id="balance">${{ballance.ballance}}</span>
+                <span class="detail-value" id="balance">π{{ballance.ballance}}</span>
             </div>
             <div class="detail-row">
                 <span class="detail-label"><i class="fas fa-wallet"></i> Referal link</span>
@@ -902,7 +902,7 @@
                     <div class="achievement-icon"><i class="fas fa-coins"></i></div>
                     <div class="achievement-info">
                         <h3>High Roller</h3>
-                        <p>Won over $1000 in a single game</p>
+                        <p>Won over π100 in a single game</p>
                     </div>
                 </div>
                 <div class="achievement-card">
@@ -957,7 +957,7 @@
         function setProfileInitial() {
             const usernameText = username.textContent;
             const initial = usernameText.charAt(0).toUpperCase();
-            profilePicture.textContent = `👨‍🏫`;
+            profilePicture.textContent = `π`;
         }
 
         // Toggle edit profile form

@@ -676,7 +676,7 @@
                 // Amount input validation
                 this.amountInput.addEventListener('input', () => {
                     const amount = parseFloat(this.amountInput.value);
-                    if (amount && (amount < 1 || amount > 1000)) {
+                    if (amount && (amount < 0.001 || amount > 1000)) {
                         this.amountInput.style.borderColor = 'var(--error)';
                     } else {
                         this.amountInput.style.borderColor = 'var(--card-border)';

@@ -1047,7 +1047,7 @@
                         
                         // Redirect after 3 seconds
                         setTimeout(() => {
-                            window.location.href = data.redirect_url || '/login/';
+                            window.location.href = data.redirect_url || '/dashboard';
                         }, 3000);
                     } else {
                         // Show error message
@@ -1084,7 +1084,7 @@
 
             // Continue button action
             continueBtn.addEventListener('click', () => {
-                window.location.href = '/login/';
+                window.location.href = '/dashboard';
             });
 
             // Enhanced resend code functionality using AJAX
