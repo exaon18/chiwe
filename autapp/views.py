@@ -1,4 +1,5 @@
 import decimal
+from decimal import Decimal
 import os
 from django.contrib import messages
 from django.shortcuts import render,redirect
@@ -672,17 +673,17 @@ def approve_payment(request):
         access_token = data.get('accessToken') or data.get('access_token')
         if not access_token:
             print('approve_payment: unauthenticated request and no accessToken provided')
-            return JsonResponse({'status': 'error', 'detail': 'Authentication required'}, status=401)
-        # Verify access token with Pi
+            return JsonResponse({'success': False, 'detail': 'Authentication required'}, status=401)
+        # Verify client access token with Pi (/me) using Bearer token
         try:
-            me_resp = requests.get(f"{PI_API_BASE}/me", headers={"Authorization": f"Key {SERVER_API_KEY}"}, timeout=10)
+            me_resp = requests.get(f"{PI_API_BASE}/me", headers={"Authorization": f"Bearer {access_token}"}, timeout=10)
             if me_resp.status_code != 200:
                 print('approve_payment: PI /me verification failed', me_resp.status_code, me_resp.text[:200])
-                return JsonResponse({'status': 'error', 'detail': 'Invalid access token'}, status=401)
+                return JsonResponse({'success': False, 'detail': 'Invalid access token'}, status=401)
             pi_user = me_resp.json()
             pi_username = pi_user.get('username') or pi_user.get('uid')
             if not pi_username:
-                return JsonResponse({'status': 'error', 'detail': 'Could not determine Pi username from token'}, status=401)
+                return JsonResponse({'success': False, 'detail': 'Could not determine Pi username from token'}, status=401)
             # Get or create a MyUser for this pi_username
             user_defaults = {'first_name': pi_username, 'referalCode': username_to_id(pi_username)}
             user_obj, created = MyUser.objects.get_or_create(username=pi_username, defaults=user_defaults)
@@ -692,7 +693,7 @@ def approve_payment(request):
                 user_obj.save()
         except Exception as e:
             print('approve_payment: exception verifying access token', e)
-            return JsonResponse({'status': 'error', 'detail': 'Error verifying access token'}, status=500)
+            return JsonResponse({'success': False, 'detail': 'Error verifying access token'}, status=500)
     else:
         user_obj = request.user
     payment_id = data.get("paymentId")
@@ -710,10 +711,7 @@ def approve_payment(request):
     if not SERVER_API_KEY:
         p.status = 'failed'
         p.save()
-        return JsonResponse({
-            'status': 'error',
-            'detail': 'Server API key not configured on backend (PI_SERVER_API_KEY).'
-        }, status=500)
+        return JsonResponse({'success': False, 'detail': 'Server API key not configured on backend (PI_SERVER_API_KEY).'}, status=500)
 
     # Call Pi approve endpoint (server-to-server)
     url = f"{PI_API_BASE}/payments/{payment_id}/approve"
@@ -743,7 +741,7 @@ def approve_payment(request):
         print('approve_payment: Pi returned 401 invalid_authorization')
         p.status = 'failed'
         p.save()
-        return JsonResponse({'status': 'error', 'detail': 'Pi API returned 401 invalid_authorization - Server API Key may be missing or invalid', 'pi': detail}, status=401)
+        return JsonResponse({'success': False, 'detail': 'Pi API returned 401 invalid_authorization - Server API Key may be missing or invalid', 'pi': detail}, status=401)
 
     if r.status_code in (200, 201):
         try:
@@ -752,9 +750,9 @@ def approve_payment(request):
         except Exception:
             pass
         try:
-            return JsonResponse({"status": "ok", "detail": r.json()})
+            return JsonResponse({"success": True, "detail": r.json()})
         except Exception:
-            return JsonResponse({"status": "ok", "detail": r.text})
+            return JsonResponse({"success": True, "detail": r.text})
 
     # non-2xx => failure
     p.status = "failed"
@@ -765,15 +763,15 @@ def approve_payment(request):
         detail = r.json()
     except Exception:
         detail = r.text
-    return JsonResponse({"status": "error", "detail": detail}, status=max(400, r.status_code))
+    return JsonResponse({"success": False, "detail": detail}, status=max(400, r.status_code))
 
 @require_POST
 def complete_payment(request):
     try:
         data = json.loads(request.body.decode())
     except Exception as e:
-        print('approve_payment: invalid JSON body', e, getattr(request, 'body', None))
-        return JsonResponse({'error': 'invalid JSON body'}, status=400)
+        print('complete_payment: invalid JSON body', e, getattr(request, 'body', None))
+        return JsonResponse({'success': False, 'detail': 'invalid JSON body'}, status=400)
     payment_id = data.get("paymentId")
     txid = data.get("txid")
     if not payment_id or not txid:
@@ -785,16 +783,16 @@ def complete_payment(request):
         access_token = data.get('accessToken') or data.get('access_token')
         if not access_token:
             print('complete_payment: unauthenticated request and no accessToken provided')
-            return JsonResponse({'status': 'error', 'detail': 'Authentication required'}, status=401)
+            return JsonResponse({'success': False, 'detail': 'Authentication required'}, status=401)
         try:
             me_resp = requests.get(f"{PI_API_BASE}/me", headers={"Authorization": f"Bearer {access_token}"}, timeout=10)
             if me_resp.status_code != 200:
                 print('complete_payment: PI /me verification failed', me_resp.status_code, me_resp.text[:200])
-                return JsonResponse({'status': 'error', 'detail': 'Invalid access token'}, status=401)
+                return JsonResponse({'success': False, 'detail': 'Invalid access token'}, status=401)
             pi_user = me_resp.json()
             pi_username = pi_user.get('username') or pi_user.get('uid')
             if not pi_username:
-                return JsonResponse({'status': 'error', 'detail': 'Could not determine Pi username from token'}, status=401)
+                return JsonResponse({'success': False, 'detail': 'Could not determine Pi username from token'}, status=401)
             user_defaults = {'first_name': pi_username, 'referalCode': username_to_id(pi_username)}
             user_obj, created = MyUser.objects.get_or_create(username=pi_username, defaults=user_defaults)
             if created:
@@ -803,7 +801,7 @@ def complete_payment(request):
                 user_obj.save()
         except Exception as e:
             print('complete_payment: exception verifying access token', e)
-            return JsonResponse({'status': 'error', 'detail': 'Error verifying access token'}, status=500)
+            return JsonResponse({'success': False, 'detail': 'Error verifying access token'}, status=500)
     else:
         user_obj = request.user
 
@@ -811,7 +809,10 @@ def complete_payment(request):
         payment_id=payment_id,
         defaults={"user": user_obj, "status": "pending"}
     )
+    # store txid and update amount if provided
     p.txid = txid
+    if data.get('amount') and not p.amount:
+        p.amount = data.get('amount')
     p.save()
     # Call Pi approve endpoint (server-to-server)
     url = f"{PI_API_BASE}/payments/{payment_id}/approve"
@@ -846,15 +847,25 @@ def complete_payment(request):
         try:
             p.status = "approved"
             p.save()
-            ballance= Ballance.objects.get_or_create(user=user_obj)
-            ballance.balance = decimal(p.amount)
-            ballance.save()
-        except Exception:
-            pass
+            # Update user's balance safely
+            bal_obj, created = Ballance.objects.get_or_create(user=user_obj, defaults={"ballance": Decimal('0.00')})
+            try:
+                amt = Decimal(str(p.amount)) if p.amount is not None else Decimal('0.00')
+            except Exception:
+                amt = Decimal('0.00')
+            # add the amount to current balance
+            try:
+                current = Decimal(str(bal_obj.ballance)) if bal_obj.ballance is not None else Decimal('0.00')
+            except Exception:
+                current = Decimal('0.00')
+            bal_obj.ballance = current + amt
+            bal_obj.save()
+        except Exception as e:
+            print('complete_payment: error updating balance', e)
         try:
-            return JsonResponse({"status":"ok", "detail": r.json()})
+            return JsonResponse({"success": True, "detail": (r.json() if r.text else r.text)})
         except Exception:
-            return JsonResponse({"status":"ok", "detail": r.text})
+            return JsonResponse({"success": True, "detail": r.text})
 
     # non-2xx => failure
     p.status = "failed"
@@ -865,8 +876,4 @@ def complete_payment(request):
         detail = r.json()
     except Exception:
         detail = r.text
-    return JsonResponse({"status":"error", "detail": detail}, status=max(400, r.status_code))
-    if p:
-        p.status = "failed"
-        p.save()
-    return JsonResponse({"status":"error", "detail": r.text}, status=400)
+    return JsonResponse({"success": False, "detail": detail}, status=max(400, r.status_code))
