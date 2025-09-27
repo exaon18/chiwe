@@ -562,14 +562,12 @@
                 <label for="pi-amount" class="form-label">Pi Amount</label>
                 <div class="pi-amount-group">
                     <input 
-                        type="number" 
+                         
                         id="pi-amount" 
                         name="pi_amount" 
                         class="form-control pi-amount-input" 
                         placeholder="Enter Pi amount" 
-                        min="0.001" 
-                        max="1000" 
-                        required
+                        
                     >
                 </div>
             </div>
@@ -700,7 +698,7 @@
                 const amount = parseFloat(this.amountInput.value);
                 const memo = this.memoInput.value.trim();
                 
-                if (!amount || amount < 1 || amount > 1000) {
+                if (!amount || amount < 0.001 || amount > 1000) {
                     this.createMessage('Please enter a valid Pi amount between 1 and 1000', 'error');
                     return;
                 }
