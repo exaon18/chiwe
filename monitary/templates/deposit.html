@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -803,7 +804,7 @@
                     this.showPaymentStatus('Verifying Payment...', 'Validating payment with server.');
                     
                     // Send payment data to your backend for approval
-                    const response = await fetch('/pi-payments/approve', {
+                    const response = await fetch('{% url "api_pi_approve" %}', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
@@ -847,7 +848,7 @@
                     this.showPaymentStatus('Completing Payment...', 'Finalizing your deposit.');
                     
                     // Send completion data to your backend
-                    const response = await fetch('pi-payments/complete', {
+                    const response = await fetch('{% url "api_pi_complete" %}', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
