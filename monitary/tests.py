@@ -1,19 +1,16 @@
-import time
 import requests
 
-URL = "https://chiwegames.com"
+DEV_KEY = "7vqrbckrr4fvplcmt5ox3uqyhfxlaiwwqde3jjvt3gn1oo9ni4yyn0utxlb6e9yk"
+PAYMENT_ID = "hY5c0lJixCnW1TxWpHVr36tWtVxC"
+HEADERS = {"Authorization": f"key {DEV_KEY}", "Content-Type": "application/json"}
 
-def ping_site():
-    try:
-        response = requests.get(URL, timeout=10)
-        if response.status_code == 200:
-            print(f"[OK] Site is up. Status: {response.status_code}")
-        else:
-            print(f"[WARN] Site responded with status: {response.status_code}")
-    except requests.exceptions.RequestException as e:
-        print(f"[ERROR] Could not reach site: {e}")
+# GET
+r = requests.get(f"https://api.minepi.com/v2/payments/{PAYMENT_ID}", headers=HEADERS, timeout=15)
+print("GET", r.status_code)
+print(r.text)
 
-if __name__ == "__main__":
-    while True:
-        ping_site()
-        time.sleep(180)  #wait 3 minutes 
+# If GET shows transaction.txid and verified==true, POST complete:
+txid = "9688b9708334c2efd0477825eca0ad1e41be6526b6caac4aa81257489f67a98b"  # from GET
+r2 = requests.post(f"https://api.minepi.com/v2/payments/{PAYMENT_ID}/complete", headers=HEADERS, json={"txid": txid}, timeout=15)
+print("POST complete", r2.status_code)
+print(r2.text)
