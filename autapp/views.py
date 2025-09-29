@@ -22,6 +22,7 @@ from django.middleware.csrf import get_token
 from django.views.decorators.csrf import csrf_exempt
 from django.core.validators import validate_email
 from django.core.exceptions import ValidationError
+from django.contrib.admin.views.decorators import staff_member_required
 
 # Pi API configuration - prefer settings, fallback to environment variables
 # Default to the official production API host. For sandbox/testing you can
@@ -644,6 +645,90 @@ def server_headers():
     }
     return headers
 
+
+@staff_member_required
+@require_POST
+def admin_resolve_payment(request):
+    """Admin-only helper: accept JSON {paymentId, txid, amount?} and submit server-side approve to Pi.
+    This is intended for emergency/manual resolution when client didn't send txid.
+    """
+    # Support both application/json and form-encoded POSTs (from browser forms)
+    raw_body = request.body or b''
+    try:
+        if raw_body.strip():
+            data = json.loads(raw_body.decode() or '{}')
+        else:
+            # Fallback to form-encoded body (request.POST)
+            data = request.POST.dict() if hasattr(request, 'POST') else {}
+    except Exception as e:
+        # Log some debug context to help diagnose 400s
+        print('admin_resolve_payment: invalid JSON/form data', str(e), 'headers=', {k: v for k, v in list(request.headers.items())[:10]})
+        return JsonResponse({'success': False, 'detail': 'invalid JSON body or form data'}, status=400)
+
+    payment_id = data.get('paymentId')
+    txid = data.get('txid')
+    amount = data.get('amount')
+    if not payment_id or not txid:
+        return JsonResponse({'success': False, 'detail': 'paymentId and txid are required'}, status=400)
+
+    try:
+        p = PiPayment.objects.filter(payment_id=payment_id).first()
+        if not p:
+            # create a record if missing
+            p = PiPayment.objects.create(payment_id=payment_id, status='pending')
+        p.txid = txid
+        if amount and not p.amount:
+            p.amount = amount
+        p.save()
+
+        # Call Pi approve endpoint server-to-server using server API key
+        url = f"{PI_API_BASE}/payments/{payment_id}/approve"
+        try:
+            r = requests.post(url, headers=server_headers(), timeout=15)
+        except Exception as e:
+            p.status = 'failed'
+            p.save()
+            return JsonResponse({'success': False, 'detail': f'exception calling Pi approve: {e}'}, status=500)
+
+        if r.status_code in (200, 201):
+            p.status = 'approved'
+            p.save()
+            # credit balance to associated user if present
+            if p.user:
+                try:
+                    bal_obj, created = Ballance.objects.get_or_create(user=p.user, defaults={"ballance": Decimal('0.00')})
+                    try:
+                        amt = Decimal(str(p.amount)) if p.amount is not None else Decimal('0.00')
+                    except Exception:
+                        amt = Decimal('0.00')
+                    current = Decimal(str(bal_obj.ballance)) if bal_obj.ballance is not None else Decimal('0.00')
+                    bal_obj.ballance = current + amt
+                    bal_obj.save()
+                except Exception as e:
+                    print('admin_resolve_payment: error updating balance', e)
+
+            try:
+                return JsonResponse({'success': True, 'detail': r.json()})
+            except Exception:
+                return JsonResponse({'success': True, 'detail': r.text})
+        else:
+            p.status = 'failed'
+            p.save()
+            try:
+                detail = r.json()
+            except Exception:
+                detail = r.text
+            return JsonResponse({'success': False, 'detail': detail}, status=max(400, r.status_code))
+
+    except Exception as e:
+        return JsonResponse({'success': False, 'detail': str(e)}, status=500)
+
+
+@staff_member_required
+def admin_resolve_page(request):
+    """Render a simple admin UI to resolve stuck Pi payments."""
+    return render(request, 'admin_resolve.html')
+
 @require_POST
 def approve_payment(request):
     # Parse JSON body safely
@@ -701,9 +786,15 @@ def approve_payment(request):
     if not payment_id:
         return JsonResponse({"error": "missing paymentId"}, status=400)
 
+    # Ensure we never try to create a PiPayment with a NULL amount (model requires Decimal)
+    try:
+        create_amount = Decimal(str(amount)) if amount is not None else Decimal('0.00')
+    except Exception:
+        create_amount = Decimal('0.00')
+
     p, _ = PiPayment.objects.get_or_create(
         payment_id=payment_id,
-        defaults={"user": user_obj, "status": "pending", 'amount': amount}
+        defaults={"user": user_obj, "status": "pending", 'amount': create_amount}
     )
 
     # Ensure server API key is configured (log presence only)
@@ -742,17 +833,82 @@ def approve_payment(request):
         p.status = 'failed'
         p.save()
         return JsonResponse({'success': False, 'detail': 'Pi API returned 401 invalid_authorization - Server API Key may be missing or invalid', 'pi': detail}, status=401)
+    # If Pi returned success
+    body = None
+    try:
+        body = r.json()
+    except Exception:
+        body = None
 
+    # Treat 2xx as success
     if r.status_code in (200, 201):
         try:
             p.status = "approved"
             p.save()
         except Exception:
             pass
+        # Return backend-saved indicator plus Pi response
         try:
-            return JsonResponse({"success": True, "detail": r.json()})
+            return JsonResponse({"success": True, "paymentId": payment_id, "local_id": p.id, "txid": p.txid, "amount": str(p.amount), "detail": r.json()})
         except Exception:
-            return JsonResponse({"success": True, "detail": r.text})
+            return JsonResponse({"success": True, "paymentId": payment_id, "local_id": p.id, "txid": p.txid, "amount": str(p.amount), "detail": r.text})
+
+    # Special-case Pi's "already_approved" error: treat as success but reconcile local record
+    already_approved_flag = False
+    try:
+        if r.status_code == 400 and isinstance(body, dict) and body.get('error') == 'already_approved':
+            already_approved_flag = True
+        elif 'already_approved' in (r.text or ''):
+            # fallback: some Pi responses may include text mentioning already_approved
+            already_approved_flag = True
+    except Exception:
+        already_approved_flag = False
+
+    if already_approved_flag:
+        print('approve_payment: detected already_approved response from Pi, reconciling locally')
+        payment_info = (body or {}).get('payment', {}) if isinstance(body, dict) else {}
+        payment_info = body.get('payment', {})
+        # Extract txid and amount if available, prefer transaction.txid
+        txid = None
+        try:
+            txid = payment_info.get('transaction', {}).get('txid') if payment_info else None
+        except Exception:
+            txid = None
+        amount_val = payment_info.get('amount') if isinstance(payment_info, dict) else None
+
+        # Update local record safely
+        try:
+            if txid and not p.txid:
+                p.txid = txid
+            # Only set amount if it's not already set
+            if amount_val is not None and (p.amount is None or p.amount == Decimal('0')):
+                try:
+                    p.amount = Decimal(str(amount_val))
+                except Exception:
+                    pass
+            # If local status is not approved, mark approved and credit balance
+            already_approved_locally = (p.status == 'approved')
+            p.status = 'approved'
+            p.save()
+
+            # Credit balance only if this record wasn't already approved locally
+            if p.user and not already_approved_locally:
+                try:
+                    bal_obj, created = Ballance.objects.get_or_create(user=p.user, defaults={"ballance": Decimal('0.00')})
+                    amt = Decimal(str(p.amount)) if p.amount is not None else Decimal('0.00')
+                    current = Decimal(str(bal_obj.ballance)) if bal_obj.ballance is not None else Decimal('0.00')
+                    bal_obj.ballance = current + amt
+                    bal_obj.save()
+                except Exception as e:
+                    print('approve_payment: error updating balance for already_approved', e)
+        except Exception as e:
+            print('approve_payment: reconciliation error for already_approved', e)
+
+        # return success to client with Pi body/text
+        try:
+            return JsonResponse({'success': True, 'paymentId': payment_id, 'local_id': p.id, 'txid': p.txid, 'amount': str(p.amount), 'detail': body or r.text})
+        except Exception:
+            return JsonResponse({'success': True, 'paymentId': payment_id, 'local_id': p.id, 'txid': p.txid, 'amount': str(p.amount), 'detail': r.text})
 
     # non-2xx => failure
     p.status = "failed"
@@ -767,113 +923,130 @@ def approve_payment(request):
 
 @require_POST
 def complete_payment(request):
+    # parse body
     try:
-        data = json.loads(request.body.decode())
+        data = json.loads(request.body.decode() or "{}")
     except Exception as e:
-        print('complete_payment: invalid JSON body', e, getattr(request, 'body', None))
         return JsonResponse({'success': False, 'detail': 'invalid JSON body'}, status=400)
+
     payment_id = data.get("paymentId")
     txid = data.get("txid")
     if not payment_id or not txid:
         return JsonResponse({"error": "missing paymentId or txid"}, status=400)
 
-    # If unauthenticated, accept client accessToken and verify with Pi
+    # find or create local record
     user_obj = None
+    # Support unauthenticated Pi browser flow: allow client-provided accessToken to map/create a user
     if not getattr(request, 'user', None) or not request.user.is_authenticated:
         access_token = data.get('accessToken') or data.get('access_token')
-        if not access_token:
-            print('complete_payment: unauthenticated request and no accessToken provided')
-            return JsonResponse({'success': False, 'detail': 'Authentication required'}, status=401)
-        try:
-            me_resp = requests.get(f"{PI_API_BASE}/me", headers={"Authorization": f"Bearer {access_token}"}, timeout=10)
-            if me_resp.status_code != 200:
-                print('complete_payment: PI /me verification failed', me_resp.status_code, me_resp.text[:200])
-                return JsonResponse({'success': False, 'detail': 'Invalid access token'}, status=401)
-            pi_user = me_resp.json()
-            pi_username = pi_user.get('username') or pi_user.get('uid')
-            if not pi_username:
-                return JsonResponse({'success': False, 'detail': 'Could not determine Pi username from token'}, status=401)
-            user_defaults = {'first_name': pi_username, 'referalCode': username_to_id(pi_username)}
-            user_obj, created = MyUser.objects.get_or_create(username=pi_username, defaults=user_defaults)
-            if created:
-                user_obj.set_unusable_password()
-                user_obj.is_active = True
-                user_obj.save()
-        except Exception as e:
-            print('complete_payment: exception verifying access token', e)
-            return JsonResponse({'success': False, 'detail': 'Error verifying access token'}, status=500)
-    else:
-        user_obj = request.user
+        if access_token:
+            try:
+                me_resp = requests.get(f"{PI_API_BASE}/me", headers={"Authorization": f"Bearer {access_token}"}, timeout=10)
+                if me_resp.status_code == 200:
+                    pi_user = me_resp.json()
+                    pi_username = pi_user.get('username') or pi_user.get('uid')
+                    if pi_username:
+                        user_defaults = {'first_name': pi_username, 'referalCode': username_to_id(pi_username)}
+                        user_obj, created_user = MyUser.objects.get_or_create(username=pi_username, defaults=user_defaults)
+                        if created_user:
+                            user_obj.set_unusable_password()
+                            user_obj.is_active = True
+                            user_obj.save()
+            except Exception as e:
+                print('complete_payment: exception verifying access token', e)
+                # proceed without mapping user; we'll still try to reconcile
 
-    p, _ = PiPayment.objects.get_or_create(
+    # Create or fetch PiPayment and attach user_obj when available
+    p, created = PiPayment.objects.get_or_create(
         payment_id=payment_id,
-        defaults={"user": user_obj, "status": "pending"}
+        defaults={"user": user_obj, "status": "pending", 'amount': Decimal('0.00')}
     )
-    # store txid and update amount if provided
-    p.txid = txid
-    if data.get('amount') and not p.amount:
-        p.amount = data.get('amount')
-    p.save()
-    # Call Pi approve endpoint (server-to-server)
-    url = f"{PI_API_BASE}/payments/{payment_id}/approve"
-    print('approve_payment: calling Pi approve URL', url)
+    # If the record existed but had no user, attach the mapped user if we found one
     try:
-        r = requests.post(url, headers=server_headers(), timeout=15)
-    except Exception as e:
-        print('approve_payment: exception calling Pi approve', e)
-        p.status = 'failed'
-        p.save()
-        return JsonResponse({'status': 'error', 'detail': str(e)}, status=500)
-
-    # Log response for debugging
-    print('approve_payment: Pi response status', r.status_code)
-    try:
-        print('approve_payment: Pi response body', r.text)
+        if user_obj and p.user is None:
+            p.user = user_obj
+            p.save(update_fields=['user'])
     except Exception:
         pass
 
-    if r.status_code == 401:
-        detail = None
-        try:
-            detail = r.json()
-        except Exception:
-            detail = r.text
-        print('approve_payment (complete): Pi returned 401 invalid_authorization')
-        p.status = 'failed'
-        p.save()
-        return JsonResponse({'status': 'error', 'detail': 'Pi API returned 401 invalid_authorization - Server API Key may be missing or invalid', 'pi': detail}, status=401)
+    # If already approved locally — idempotent success
+    if p.status == "approved":
+        return JsonResponse({"success": True, "paymentId": payment_id, "local_id": p.id, "txid": p.txid, "amount": str(p.amount)})
 
-    if r.status_code in (200, 201):
-        try:
-            p.status = "approved"
-            p.save()
-            # Update user's balance safely
-            bal_obj, created = Ballance.objects.get_or_create(user=user_obj, defaults={"ballance": Decimal('0.00')})
-            try:
-                amt = Decimal(str(p.amount)) if p.amount is not None else Decimal('0.00')
-            except Exception:
-                amt = Decimal('0.00')
-            # add the amount to current balance
-            try:
-                current = Decimal(str(bal_obj.ballance)) if bal_obj.ballance is not None else Decimal('0.00')
-            except Exception:
-                current = Decimal('0.00')
-            bal_obj.ballance = current + amt
-            bal_obj.save()
-        except Exception as e:
-            print('complete_payment: error updating balance', e)
-        try:
-            return JsonResponse({"success": True, "detail": (r.json() if r.text else r.text)})
-        except Exception:
-            return JsonResponse({"success": True, "detail": r.text})
+    # store txid locally (so we have a record even if Pi replies "already_approved")
+    p.txid = txid
+    p.save(update_fields=['txid'])
 
-    # non-2xx => failure
-    p.status = "failed"
-    p.save()
-    # Return Pi response details to help debugging (but avoid leaking secrets)
-    detail = None
+    # Call Pi /complete endpoint (not /approve) — server to server
+    complete_url = f"{PI_API_BASE}/payments/{payment_id}/complete"
     try:
-        detail = r.json()
+        resp = requests.post(complete_url, headers=server_headers(), json={"txid": txid}, timeout=15)
+    except Exception as e:
+        p.status = "failed"
+        p.save(update_fields=['status'])
+        return JsonResponse({'success': False, 'detail': f'exception calling Pi: {str(e)}'}, status=500)
+
+    # parse body safely
+    try:
+        body = resp.json()
     except Exception:
-        detail = r.text
-    return JsonResponse({"success": False, "detail": detail}, status=max(400, r.status_code))
+        body = None
+
+    # Success path
+    if resp.status_code in (200, 201, 204):
+        # mark local approved & credit user if needed (idempotent)
+        already_approved_locally = (p.status == 'approved')
+        p.status = "approved"
+        p.save(update_fields=['status', 'txid'])
+        if p.user and not already_approved_locally:
+            try:
+                bal_obj, _ = Ballance.objects.get_or_create(user=p.user, defaults={"ballance": Decimal('0.00')})
+                amt = Decimal(str(p.amount or 0))
+                bal_obj.ballance = (Decimal(str(bal_obj.ballance or 0)) + amt)
+                bal_obj.save(update_fields=['ballance'])
+            except Exception as e:
+                # log but do not fail the response
+                print("complete_payment: error crediting balance", e)
+        return JsonResponse({"success": True, "paymentId": payment_id, "local_id": p.id, "txid": p.txid, "amount": str(p.amount), "detail": body})
+
+    # Handle "already_approved" or similar recoverable responses
+    if resp.status_code in (400, 422) and isinstance(body, dict) and body.get("error") in ("already_approved", "payment_already_linked_with_a_tx"):
+        # fetch authoritative payment from Pi and reconcile
+        try:
+            get_resp = requests.get(f"{PI_API_BASE}/payments/{payment_id}", headers=server_headers(), timeout=10)
+            if get_resp.status_code == 200:
+                remote = get_resp.json()
+                # extract txid/verified/status
+                remote_tx = remote.get("transaction", {}).get("txid")
+                remote_status = remote.get("status", {})
+                # update local
+                if remote_tx:
+                    p.txid = remote_tx
+                p.status = "approved" if remote_status.get("developer_completed") else p.status
+                # update amount if missing
+                remote_amt = remote.get("amount")
+                if remote_amt and (not p.amount or p.amount == Decimal('0')):
+                    try:
+                        p.amount = Decimal(str(remote_amt))
+                    except Exception:
+                        pass
+                p.save(update_fields=['txid', 'status', 'amount'])
+                # credit if needed
+                if p.user and p.status == "approved":
+                    bal_obj, _ = Ballance.objects.get_or_create(user=p.user, defaults={"ballance": Decimal('0.00')})
+                    try:
+                        amt = Decimal(str(p.amount or 0))
+                        bal_obj.ballance = (Decimal(str(bal_obj.ballance or 0)) + amt)
+                        bal_obj.save(update_fields=['ballance'])
+                    except Exception as e:
+                        print("complete_payment: error crediting after reconcile", e)
+                return JsonResponse({'success': True, 'paymentId': payment_id, 'local_id': p.id, 'txid': p.txid, 'amount': str(p.amount), 'detail': 'reconciled via GET'})
+        except Exception as e:
+            print("complete_payment: reconcile GET failed", e)
+            # fall-through to return original Pi error
+
+    # For other non-2xx responses: store failed and return Pi detail
+    p.status = "failed"
+    p.save(update_fields=['status'])
+    detail = body if body is not None else resp.text
+    return JsonResponse({"success": False, "detail": detail}, status=max(400, resp.status_code))

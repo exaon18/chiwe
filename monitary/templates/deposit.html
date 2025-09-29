@@ -802,42 +802,57 @@
                 try {
                     this.log('Handling server approval for payment:', paymentId);
                     this.showPaymentStatus('Verifying Payment...', 'Validating payment with server.');
-                    
+
+                    // Try to include a Pi access token when available (Pi Browser / unauthenticated flows)
+                    let accessToken = null;
+                    try {
+                        if (Pi && Pi.User && typeof Pi.User.get === 'function') {
+                            const currentUser = await Pi.User.get();
+                            accessToken = (currentUser && currentUser.credentials && (currentUser.credentials.accessToken || currentUser.credentials.access_token)) || null;
+                        }
+                    } catch (tErr) {
+                        // ignore - token is optional but helpful for server-side verification
+                        this.log('Could not read Pi user token before approval:', tErr);
+                    }
+
                     // Send payment data to your backend for approval
                     const response = await fetch('{% url "api_pi_approve" %}', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
+                            'Accept': 'application/json',
                             'X-CSRFToken': this.getCsrfToken()
                         },
                         body: JSON.stringify({
                             paymentId: paymentId,
                             amount: paymentData.amount,
                             memo: paymentData.memo,
-                            metadata: paymentData.metadata
+                            metadata: paymentData.metadata,
+                            accessToken: accessToken
                         }),
                         credentials: 'include'
                     });
-                    
+
                     if (!response.ok) {
-                        throw new Error(`Server approval failed: ${response.status}`);
+                        let txt = await response.text().catch(() => '');
+                        throw new Error(`Server approval failed: ${response.status} ${txt}`);
                     }
-                    
+
                     const result = await response.json();
                     this.log('Server approval response:', result);
-                    
+
                     if (result.success) {
                         // Approve the payment
                         await Pi.approvePayment(paymentId);
                         this.log('Payment approved successfully');
                         this.showPaymentStatus('Payment Approved', 'Payment has been approved and is being processed.');
                     } else {
-                        throw new Error(result.message || 'Server approval failed');
+                        throw new Error(result.detail || result.message || 'Server approval failed');
                     }
-                    
+
                 } catch (error) {
-                    this.log('Server approval error:', error.message);
-                    this.createMessage('Payment approval failed: ' + error.message, 'error');
+                    this.log('Server approval error:', error && error.message ? error.message : String(error));
+                    this.createMessage('Payment approval failed: ' + (error && error.message ? error.message : String(error)), 'error');
                     this.hidePaymentStatus();
                 }
             }
@@ -846,52 +861,65 @@
                 try {
                     this.log('Handling server completion:', { paymentId, txid });
                     this.showPaymentStatus('Completing Payment...', 'Finalizing your deposit.');
-                    
-                    // Send completion data to your backend
+
+                    // Try to include Pi access token for server verification as well
+                    let accessToken = null;
+                    try {
+                        if (Pi && Pi.User && typeof Pi.User.get === 'function') {
+                            const currentUser = await Pi.User.get();
+                            accessToken = (currentUser && currentUser.credentials && (currentUser.credentials.accessToken || currentUser.credentials.access_token)) || null;
+                        }
+                    } catch (tErr) {
+                        this.log('Could not read Pi user token before completion:', tErr);
+                    }
+
                     const response = await fetch('{% url "api_pi_complete" %}', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
+                            'Accept': 'application/json',
                             'X-CSRFToken': this.getCsrfToken()
                         },
                         body: JSON.stringify({
                             paymentId: paymentId,
-                            txid: txid
+                            txid: txid,
+                            accessToken: accessToken
                         }),
                         credentials: 'include'
                     });
-                    
+
                     if (!response.ok) {
-                        throw new Error(`Server completion failed: ${response.status}`);
+                        let txt = await response.text().catch(() => '');
+                        throw new Error(`Server completion failed: ${response.status} ${txt}`);
                     }
-                    
+
                     const result = await response.json();
                     this.log('Server completion response:', result);
-                    
+
                     if (result.success) {
                         // Complete the payment
                         await Pi.completePayment(paymentId);
                         this.log('Payment completed successfully');
-                        
+
                         this.showPaymentStatus('Payment Successful!', 
                             `Your deposit of ${this.amountInput.value} π has been completed successfully.`);
                         this.createMessage('Pi deposit completed successfully!', 'success');
-                        
+
                         // Reset form
                         this.form.reset();
-                        
+
                         // Hide status after delay
                         setTimeout(() => {
                             this.hidePaymentStatus();
                         }, 5000);
-                        
+
                     } else {
-                        throw new Error(result.message || 'Server completion failed');
+                        throw new Error(result.detail || result.message || 'Server completion failed');
                     }
-                    
+
                 } catch (error) {
-                    this.log('Server completion error:', error.message);
-                    this.createMessage('Payment completion failed: ' + error.message, 'error');
+                    this.log('Server completion error:', error && error.message ? error.message : String(error));
+                    this.createMessage('Payment completion failed: ' + (error && error.message ? error.message : String(error)), 'error');
                     this.hidePaymentStatus();
                 }
             }

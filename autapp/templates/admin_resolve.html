@@ -1,0 +1,91 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Admin - Resolve Pi Payment</title>
+    <style>
+        body{font-family:Inter,system-ui,Segoe UI,Roboto,sans-serif;background:#0b0b0b;color:#fff;display:flex;align-items:center;justify-content:center;min-height:100vh}
+        .card{background:#121212;padding:24px;border-radius:10px;width:480px;border:1px solid #222}
+        label{display:block;margin-top:12px;color:#9fb3c8}
+        input{width:100%;padding:10px;border-radius:8px;border:1px solid #2b2b2b;background:#0f0f0f;color:#fff}
+        button{margin-top:16px;padding:10px;border-radius:8px;border:0;background:#2ed573;color:#03120a;font-weight:700;cursor:pointer}
+        .msg{margin-top:12px;padding:10px;border-radius:8px;display:none}
+        .msg.success{background:#063; color:#bfffe0}
+        .msg.error{background:#600;color:#ffd2d2}
+        small{color:#7997aa}
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h2>Admin: Resolve Pi Payment</h2>
+        <p><small>Use this page only if a payment is stuck pending. You must be logged in as a staff user.</small></p>
+        <form id="resolve-form">
+            {% csrf_token %}
+            <label for="paymentId">Payment ID</label>
+            <input id="paymentId" name="paymentId" required />
+
+            <label for="txid">TxID</label>
+            <input id="txid" name="txid" required />
+
+            <label for="amount">Amount (optional)</label>
+            <input id="amount" name="amount" placeholder="e.g. 12.5" />
+
+            <button type="submit">Resolve Payment</button>
+        </form>
+
+        <div id="result" class="msg"></div>
+    </div>
+
+    <script>
+        (function(){
+            const form = document.getElementById('resolve-form');
+            const resultEl = document.getElementById('result');
+
+            form.addEventListener('submit', async (e)=>{
+                e.preventDefault();
+                resultEl.style.display='none';
+                resultEl.className='msg';
+                const paymentId = document.getElementById('paymentId').value.trim();
+                const txid = document.getElementById('txid').value.trim();
+                const amount = document.getElementById('amount').value.trim();
+                if(!paymentId || !txid){
+                    resultEl.textContent = 'paymentId and txid are required';
+                    resultEl.classList.add('error'); resultEl.style.display='block';
+                    return;
+                }
+
+                const body = { paymentId, txid };
+                if(amount) body.amount = amount;
+
+                try{
+                    // find CSRF token from hidden input or cookie fallback
+                    function getCookie(name){
+                        const v = document.cookie.match('(^|;)\\s*' + name + '\\s*=\\s*([^;]+)');
+                        return v ? v.pop() : '';
+                    }
+                    let csrf = (document.querySelector('[name=csrfmiddlewaretoken]')||{}).value || getCookie('csrftoken');
+                    const resp = await fetch('{% url "api_pi_admin_resolve" %}', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrf },
+                        credentials: 'same-origin',
+                        body: JSON.stringify(body)
+                    });
+                    const json = await resp.json();
+                    if(resp.ok && json.success){
+                        resultEl.textContent = 'Resolved: ' + (json.detail ? JSON.stringify(json.detail) : 'OK');
+                        resultEl.classList.add('success');
+                        resultEl.style.display='block';
+                    } else {
+                        resultEl.textContent = 'Error: ' + (json.detail || JSON.stringify(json));
+                        resultEl.classList.add('error'); resultEl.style.display='block';
+                    }
+                } catch(err){
+                    resultEl.textContent = 'Network error: ' + err.message; resultEl.classList.add('error'); resultEl.style.display='block';
+                }
+            });
+        })();
+    </script>
+</body>
+</html>
