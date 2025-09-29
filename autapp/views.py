@@ -632,19 +632,17 @@ def approve_debug(request):
     print('approve_debug:', info)
     return JsonResponse(info)
 def server_headers():
+    """
+    Minimal, canonical headers Pi expects: exactly one Authorization with value 'key <API_KEY>'.
+    Keep Content-Type. Avoid extra auth header variants that may confuse proxies/logging.
+    """
     if not SERVER_API_KEY:
-        print('WARNING: PI server API key is not configured (PI_SERVER_API_KEY not found in settings or env)')
+        print('WARNING: PI server API key is not configured (PI_SERVER_API_KEY not found)')
         return {"Content-Type": "application/json"}
-    # Pi approve endpoint expects the Server API Key in the form: "Authorization: Key <API_KEY>"
-    auth_value = f"Key {SERVER_API_KEY}"
-    headers = {
-        "Authorization": auth_value,
+    return {
+        "Authorization": f"key {SERVER_API_KEY}",
         "Content-Type": "application/json",
-        "Authorisation": auth_value,
-        "authorization": auth_value,
     }
-    return headers
-
 
 @staff_member_required
 @require_POST
@@ -921,9 +919,17 @@ def approve_payment(request):
         detail = r.text
     return JsonResponse({"success": False, "detail": detail}, status=max(400, r.status_code))
 
+def dump_log(name, data):
+    try:
+        path = os.path.join(LOG_DIR, f"{int(time.time())}-{name}.json")
+        with open(path, "w", encoding="utf-8") as f:
+            json.dump(data, f, indent=2, default=str)
+        print("Wrote log:", path)
+    except Exception as e:
+        print("Failed to write Pi log:", e)
+
 @require_POST
 def complete_payment(request):
-    # parse body
     try:
         data = json.loads(request.body.decode() or "{}")
     except Exception as e:
@@ -931,70 +937,78 @@ def complete_payment(request):
 
     payment_id = data.get("paymentId")
     txid = data.get("txid")
+    access_token = data.get("accessToken") or data.get("access_token")
     if not payment_id or not txid:
         return JsonResponse({"error": "missing paymentId or txid"}, status=400)
 
-    # find or create local record
+    # Map client token -> user (optional)
     user_obj = None
-    # Support unauthenticated Pi browser flow: allow client-provided accessToken to map/create a user
-    if not getattr(request, 'user', None) or not request.user.is_authenticated:
-        access_token = data.get('accessToken') or data.get('access_token')
+    if not getattr(request, "user", None) or not request.user.is_authenticated:
         if access_token:
             try:
-                me_resp = requests.get(f"{PI_API_BASE}/me", headers={"Authorization": f"Bearer {access_token}"}, timeout=10)
+                me_resp = requests.get(f"{PI_API_BASE}/me", headers={"Authorization": f"Bearer {access_token}"}, timeout=8)
                 if me_resp.status_code == 200:
                     pi_user = me_resp.json()
-                    pi_username = pi_user.get('username') or pi_user.get('uid')
+                    pi_username = pi_user.get("username") or pi_user.get("uid")
                     if pi_username:
                         user_defaults = {'first_name': pi_username, 'referalCode': username_to_id(pi_username)}
-                        user_obj, created_user = MyUser.objects.get_or_create(username=pi_username, defaults=user_defaults)
-                        if created_user:
-                            user_obj.set_unusable_password()
-                            user_obj.is_active = True
-                            user_obj.save()
+                        user_obj, _ = MyUser.objects.get_or_create(username=pi_username, defaults=user_defaults)
+                else:
+                    print("complete_payment: /me returned", me_resp.status_code, me_resp.text[:400])
             except Exception as e:
-                print('complete_payment: exception verifying access token', e)
-                # proceed without mapping user; we'll still try to reconcile
+                print("complete_payment: /me exception", e)
 
-    # Create or fetch PiPayment and attach user_obj when available
+    # Ensure local record exists
     p, created = PiPayment.objects.get_or_create(
         payment_id=payment_id,
-        defaults={"user": user_obj, "status": "pending", 'amount': Decimal('0.00')}
+        defaults={"user": user_obj, "status": "pending", "amount": Decimal("0.00")}
     )
-    # If the record existed but had no user, attach the mapped user if we found one
-    try:
-        if user_obj and p.user is None:
-            p.user = user_obj
-            p.save(update_fields=['user'])
-    except Exception:
-        pass
+    if user_obj and not p.user:
+        p.user = user_obj
+        p.save(update_fields=['user'])
 
-    # If already approved locally — idempotent success
+    # Idempotent: if already approved locally, return success
     if p.status == "approved":
         return JsonResponse({"success": True, "paymentId": payment_id, "local_id": p.id, "txid": p.txid, "amount": str(p.amount)})
 
-    # store txid locally (so we have a record even if Pi replies "already_approved")
+    # store txid locally for audit
     p.txid = txid
     p.save(update_fields=['txid'])
 
-    # Call Pi /complete endpoint (not /approve) — server to server
-    complete_url = f"{PI_API_BASE}/payments/{payment_id}/complete"
-    try:
-        resp = requests.post(complete_url, headers=server_headers(), json={"txid": txid}, timeout=15)
-    except Exception as e:
+    complete_url = f"{PI_API_BASE}/payments/{txid}/complete"
+    payload = {"txid": txid}
+    attempt = 0
+    resp = None
+    last_exc = None
+    while attempt < 2:  # try twice (quick retry)
+        attempt += 1
+        try:
+            resp = requests.post(complete_url, headers=server_headers(), json=payload, timeout=15)
+            break
+        except Exception as e:
+            last_exc = str(e)
+            print("complete_payment: POST exception", e)
+            time.sleep(0.6 * attempt)
+
+    log_obj = {"paymentId": payment_id, "txid": txid, "attempt": attempt, "request": {"url": complete_url, "payload": payload}}
+    if resp is None:
         p.status = "failed"
         p.save(update_fields=['status'])
-        return JsonResponse({'success': False, 'detail': f'exception calling Pi: {str(e)}'}, status=500)
+        log_obj["error"] = last_exc
+        dump_log("complete_error", log_obj)
+        return JsonResponse({"success": False, "detail": "exception calling Pi /complete", "error": last_exc}, status=500)
 
-    # parse body safely
+    # parse response
     try:
         body = resp.json()
     except Exception:
-        body = None
+        body = resp.text
 
-    # Success path
+    log_obj["response"] = {"status_code": resp.status_code, "body": body}
+    dump_log("complete_response", log_obj)
+
+    # success: mark approved and credit
     if resp.status_code in (200, 201, 204):
-        # mark local approved & credit user if needed (idempotent)
         already_approved_locally = (p.status == 'approved')
         p.status = "approved"
         p.save(update_fields=['status', 'txid'])
@@ -1005,48 +1019,39 @@ def complete_payment(request):
                 bal_obj.ballance = (Decimal(str(bal_obj.ballance or 0)) + amt)
                 bal_obj.save(update_fields=['ballance'])
             except Exception as e:
-                # log but do not fail the response
                 print("complete_payment: error crediting balance", e)
         return JsonResponse({"success": True, "paymentId": payment_id, "local_id": p.id, "txid": p.txid, "amount": str(p.amount), "detail": body})
 
-    # Handle "already_approved" or similar recoverable responses
+    # handle recoverable errors (already_approved/linked)
     if resp.status_code in (400, 422) and isinstance(body, dict) and body.get("error") in ("already_approved", "payment_already_linked_with_a_tx"):
-        # fetch authoritative payment from Pi and reconcile
+        # reconcile from Pi authoritative GET
         try:
             get_resp = requests.get(f"{PI_API_BASE}/payments/{payment_id}", headers=server_headers(), timeout=10)
             if get_resp.status_code == 200:
                 remote = get_resp.json()
-                # extract txid/verified/status
                 remote_tx = remote.get("transaction", {}).get("txid")
                 remote_status = remote.get("status", {})
-                # update local
                 if remote_tx:
                     p.txid = remote_tx
-                p.status = "approved" if remote_status.get("developer_completed") else p.status
-                # update amount if missing
+                if remote_status.get("developer_completed"):
+                    p.status = "approved"
                 remote_amt = remote.get("amount")
                 if remote_amt and (not p.amount or p.amount == Decimal('0')):
-                    try:
-                        p.amount = Decimal(str(remote_amt))
-                    except Exception:
-                        pass
+                    p.amount = Decimal(str(remote_amt))
                 p.save(update_fields=['txid', 'status', 'amount'])
-                # credit if needed
                 if p.user and p.status == "approved":
-                    bal_obj, _ = Ballance.objects.get_or_create(user=p.user, defaults={"ballance": Decimal('0.00')})
                     try:
-                        amt = Decimal(str(p.amount or 0))
-                        bal_obj.ballance = (Decimal(str(bal_obj.ballance or 0)) + amt)
+                        bal_obj, _ = Ballance.objects.get_or_create(user=p.user, defaults={"ballance": Decimal('0.00')})
+                        bal_obj.ballance = Decimal(str(bal_obj.ballance or 0)) + Decimal(str(p.amount or 0))
                         bal_obj.save(update_fields=['ballance'])
                     except Exception as e:
-                        print("complete_payment: error crediting after reconcile", e)
+                        print("complete_payment: error credit after reconcile", e)
                 return JsonResponse({'success': True, 'paymentId': payment_id, 'local_id': p.id, 'txid': p.txid, 'amount': str(p.amount), 'detail': 'reconciled via GET'})
         except Exception as e:
             print("complete_payment: reconcile GET failed", e)
-            # fall-through to return original Pi error
+            # fall through to return original Pi error
 
-    # For other non-2xx responses: store failed and return Pi detail
+    # any other non-2xx: save failed and pass Pi response to caller
     p.status = "failed"
     p.save(update_fields=['status'])
-    detail = body if body is not None else resp.text
-    return JsonResponse({"success": False, "detail": detail}, status=max(400, resp.status_code))
+    return JsonResponse({"success": False, "detail": body}, status=max(400, resp.status_code))
