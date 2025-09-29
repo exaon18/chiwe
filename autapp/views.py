@@ -959,23 +959,17 @@ def complete_payment(request):
                 print("complete_payment: /me exception", e)
 
     # Ensure local record exists
-    p, created = PiPayment.objects.get_or_create(
-        payment_id=payment_id,
-        defaults={"user": user_obj, "status": "pending", "amount": Decimal("0.00")}
-    )
-    if user_obj and not p.user:
-        p.user = user_obj
-        p.save(update_fields=['user'])
+    p = PiPayment.objects.get(payment_id=payment_id)
+    
 
     # Idempotent: if already approved locally, return success
-    if p.status == "approved":
-        return JsonResponse({"success": True, "paymentId": payment_id, "local_id": p.id, "txid": p.txid, "amount": str(p.amount)})
+    
 
     # store txid locally for audit
     p.txid = txid
     p.save(update_fields=['txid'])
 
-    complete_url = f"{PI_API_BASE}/payments/{txid}/complete"
+    complete_url = f"{PI_API_BASE}/payments/{payment_id}/complete"
     payload = {"txid": txid}
     attempt = 0
     resp = None
@@ -1009,8 +1003,8 @@ def complete_payment(request):
 
     # success: mark approved and credit
     if resp.status_code in (200, 201, 204):
-        already_approved_locally = (p.status == 'approved')
-        p.status = "approved"
+        already_approved_locally = (p.status == 'completed')
+        p.status = "completed"
         p.save(update_fields=['status', 'txid'])
         if p.user and not already_approved_locally:
             try:
