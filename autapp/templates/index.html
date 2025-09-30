@@ -3,14 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chiwe - 1v1 Multiplayer Gaming Platform</title>
+    <title>Chiwe - First Multiplayer Esport Arena on Pi Network</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&family=Orbitron:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         :root {
-            /* Primary color palette */
+            /* Pi Network color palette */
+            --pi-primary: #ffc107;
+            --pi-gold: #ffd700;
+            --pi-gold-dark: #e0a800;
+            --pi-glow: rgba(255, 193, 7, 0.4);
+            
+            /* Chiwe colors */
             --primary: #2eD573;
             --primary-dark: #25a85c;
             --primary-light: #4aea8b;
@@ -46,7 +52,7 @@
             --border-radius-lg: 1.5rem;
             --card-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
             --glow: 0 0 20px var(--primary-glow);
-            --secondary-glow: 0 0 20px var(--secondary-glow);
+            --pi-glow-effect: 0 0 30px var(--pi-glow);
             
             /* Animation speeds */
             --transition-fast: 0.15s;
@@ -90,8 +96,8 @@
             overflow-x: hidden;
             line-height: 1.6;
             background-image: 
-                radial-gradient(circle at 25% 25%, rgba(46, 213, 115, 0.03) 0%, transparent 50%),
-                radial-gradient(circle at 75% 75%, rgba(0, 201, 183, 0.03) 0%, transparent 50%);
+                radial-gradient(circle at 25% 25%, rgba(255, 193, 7, 0.05) 0%, transparent 50%),
+                radial-gradient(circle at 75% 75%, rgba(46, 213, 115, 0.03) 0%, transparent 50%);
         }
 
         /* Typography */
@@ -104,7 +110,7 @@
 
         h1 {
             font-size: clamp(2.5rem, 5vw, 4.5rem);
-            background: linear-gradient(90deg, var(--primary) 0%, var(--secondary) 100%);
+            background: linear-gradient(90deg, var(--pi-primary) 0%, var(--primary) 50%, var(--secondary) 100%);
             -webkit-background-clip: text;
             background-clip: text;
             color: transparent;
@@ -127,7 +133,7 @@
             left: 0;
             width: 60px;
             height: 4px;
-            background: linear-gradient(90deg, var(--primary) 0%, var(--secondary) 100%);
+            background: linear-gradient(90deg, var(--pi-primary) 0%, var(--primary) 100%);
             border-radius: 2px;
         }
 
@@ -170,7 +176,7 @@
             backdrop-filter: blur(10px);
             -webkit-backdrop-filter: blur(10px);
             z-index: 1000;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            border-bottom: 1px solid rgba(255, 193, 7, 0.1);
             transition: all var(--transition-normal) ease;
             height: var(--header-height);
         }
@@ -178,7 +184,7 @@
         .header.scrolled {
             padding: var(--space-3) var(--space-5);
             background-color: rgba(10, 10, 16, 0.95);
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 4px 20px rgba(255, 193, 7, 0.2);
         }
 
         .header .container {
@@ -203,7 +209,7 @@
         .logo {
             width: 48px;
             height: 48px;
-            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            background: linear-gradient(135deg, var(--pi-primary) 0%, var(--pi-gold) 100%);
             border-radius: 12px;
             display: flex;
             align-items: center;
@@ -212,7 +218,7 @@
             font-size: 24px;
             font-weight: bold;
             color: var(--background);
-            box-shadow: 0 0 15px rgba(46, 213, 115, 0.5);
+            box-shadow: 0 0 20px var(--pi-glow);
             transition: all var(--transition-normal) ease;
             position: relative;
             overflow: hidden;
@@ -228,60 +234,62 @@
             background: linear-gradient(
                 to bottom right,
                 rgba(255, 255, 255, 0) 0%,
-                rgba(255, 255, 255, 0.1) 50%,
+                rgba(255, 255, 255, 0.2) 50%,
                 rgba(255, 255, 255, 0) 100%
             );
             transform: rotate(45deg);
             animation: shine 3s infinite;
         }
 
+        .logo:hover {
+            box-shadow: 0 0 30px var(--pi-glow);
+            transform: scale(1.05);
+        }
+
         .logo-text {
             font-family: 'Orbitron', sans-serif;
             font-weight: 700;
             font-size: 1.5rem;
-            background: linear-gradient(90deg, var(--primary) 0%, var(--secondary) 100%);
+            background: linear-gradient(90deg, var(--pi-primary) 0%, var(--primary) 100%);
             -webkit-background-clip: text;
             background-clip: text;
             color: transparent;
             display: none;
         }
 
-        .auth-buttons {
-            display: flex;
-            gap: var(--space-3);
-        }
-
-        .auth-btn {
-            position: relative;
-            padding: var(--space-2) var(--space-4);
-            border: none;
-            border-radius: var(--border-radius);
-            color: var(--text);
+        .pi-signin-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: var(--space-2);
+            padding: var(--space-2) var(--space-5);
+            background: linear-gradient(90deg, var(--pi-primary) 0%, var(--pi-gold) 100%);
+            color: var(--background);
             text-decoration: none;
-            font-weight: 600;
-            font-size: 0.875rem;
+            font-weight: 700;
+            font-size: 1rem;
+            border-radius: var(--border-radius);
             transition: all var(--transition-normal) ease;
             cursor: pointer;
             overflow: hidden;
-            display: inline-flex;
+            position: relative;
+            box-shadow: 0 4px 15px var(--pi-glow);
+            border: none;
+        }
+
+        .pi-signin-btn .pi-icon {
+            width: 24px;
+            height: 24px;
+            background: var(--background);
+            border-radius: 50%;
+            display: flex;
             align-items: center;
             justify-content: center;
-            min-width: 100px;
+            font-size: 0.9rem;
+            font-weight: bold;
+            color: var(--pi-primary);
         }
 
-        .auth-btn.login {
-            background-color: transparent;
-            border: 1px solid var(--primary);
-            color: var(--primary);
-        }
-
-        .auth-btn.signup {
-            background: linear-gradient(90deg, var(--primary) 0%, var(--secondary) 100%);
-            color: var(--background);
-            box-shadow: 0 4px 15px rgba(46, 213, 115, 0.3);
-        }
-
-        .auth-btn::before {
+        .pi-signin-btn::before {
             content: '';
             position: absolute;
             top: -50%;
@@ -291,7 +299,7 @@
             background: linear-gradient(
                 to bottom right,
                 rgba(255, 255, 255, 0) 0%,
-                rgba(255, 255, 255, 0.1) 50%,
+                rgba(255, 255, 255, 0.2) 50%,
                 rgba(255, 255, 255, 0) 100%
             );
             transform: rotate(45deg);
@@ -300,39 +308,22 @@
             opacity: 0;
         }
 
-        .auth-btn:hover::before {
+        .pi-signin-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px var(--pi-glow);
+        }
+
+        .pi-signin-btn:hover::before {
             animation: shine 1.5s;
         }
 
-        .auth-btn.login:hover {
-            background-color: var(--primary);
-            color: var(--background);
-            border-color: var(--primary);
-        }
-
-        .auth-btn.signup:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 25px rgba(46, 213, 115, 0.5);
-        }
-
-        /* FIXED: Loading state for auth buttons - Improved Animation */
-        .auth-btn.loading {
+        .pi-signin-btn.loading {
             pointer-events: none;
             position: relative;
-        }
-
-        .auth-btn.login.loading {
             color: transparent;
-            background-color: transparent;
-            border-color: var(--primary);
         }
 
-        .auth-btn.signup.loading {
-            color: transparent;
-            background: linear-gradient(90deg, var(--primary) 0%, var(--secondary) 100%);
-        }
-
-        .auth-btn.loading::after {
+        .pi-signin-btn.loading::after {
             content: "";
             position: absolute;
             width: 20px;
@@ -341,41 +332,11 @@
             left: 50%;
             margin: -10px 0 0 -10px;
             border-radius: 50%;
-            border: 2px solid rgba(255, 255, 255, 0.3);
-            border-top-color: var(--text);
+            border: 2px solid rgba(10, 10, 16, 0.3);
+            border-top-color: var(--background);
             animation: spin 0.8s linear infinite;
         }
 
-        .auth-btn.loading::before {
-            content: "";
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            top: 0;
-            left: 0;
-            background: linear-gradient(90deg, 
-                transparent 25%, 
-                rgba(255, 255, 255, 0.3) 50%, 
-                transparent 75%);
-            background-size: 200% 100%;
-            animation: shimmer 1.5s infinite;
-        }
-
-        .auth-btn.login.loading::after {
-            border: 2px solid rgba(46, 213, 115, 0.3);
-            border-top-color: var(--primary);
-        }
-
-        @keyframes shimmer {
-            0% {
-                background-position: 200% 0;
-            }
-            100% {
-                background-position: -200% 0;
-            }
-        }
-
-        /* REMOVED: Mobile menu toggle and nav-links mobile styles */
         .nav-links {
             display: flex;
             gap: var(--space-5);
@@ -399,14 +360,14 @@
             left: 0;
             width: 100%;
             height: 2px;
-            background: linear-gradient(90deg, var(--primary) 0%, var(--secondary) 100%);
+            background: linear-gradient(90deg, var(--pi-primary) 0%, var(--primary) 100%);
             transform: scaleX(0);
             transform-origin: right;
             transition: transform var(--transition-normal) ease;
         }
 
         .nav-link:hover {
-            color: var(--primary);
+            color: var(--pi-primary);
         }
 
         .nav-link:hover::after {
@@ -429,7 +390,7 @@
 
         .hero-content {
             text-align: center;
-            max-width: 800px;
+            max-width: 900px;
             margin: 0 auto;
             z-index: 2;
             animation: fadeInUp 1s ease-out;
@@ -447,6 +408,34 @@
             }
         }
 
+        .pi-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: var(--space-2);
+            padding: var(--space-2) var(--space-4);
+            background: rgba(255, 193, 7, 0.1);
+            border: 1px solid rgba(255, 193, 7, 0.3);
+            border-radius: 50px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--pi-primary);
+            margin-bottom: var(--space-5);
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        .pi-icon {
+            width: 24px;
+            height: 24px;
+            background: var(--pi-primary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            font-weight: bold;
+            color: var(--background);
+        }
+
         .hero-subtitle {
             font-size: clamp(1.25rem, 3vw, 2.25rem);
             font-weight: 300;
@@ -460,7 +449,10 @@
             font-weight: 700;
             height: 3.5rem;
             margin-bottom: var(--space-6);
-            color: var(--primary);
+            background: linear-gradient(90deg, var(--pi-primary) 0%, var(--primary) 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
             position: relative;
             display: inline-block;
         }
@@ -469,6 +461,7 @@
             content: '|';
             position: absolute;
             right: -8px;
+            color: var(--pi-primary);
             animation: blink 1s infinite;
         }
 
@@ -476,6 +469,16 @@
             font-size: 1.25rem;
             margin-bottom: var(--space-8);
             color: var(--text-secondary);
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .cta-buttons {
+            display: flex;
+            gap: var(--space-4);
+            justify-content: center;
+            flex-wrap: wrap;
         }
 
         .cta-btn {
@@ -483,7 +486,7 @@
             align-items: center;
             justify-content: center;
             padding: var(--space-3) var(--space-6);
-            background: linear-gradient(90deg, var(--primary) 0%, var(--secondary) 100%);
+            background: linear-gradient(90deg, var(--pi-primary) 0%, var(--pi-gold) 100%);
             color: var(--background);
             text-decoration: none;
             font-weight: 700;
@@ -492,8 +495,15 @@
             transition: all var(--transition-normal) ease;
             position: relative;
             overflow: hidden;
-            box-shadow: 0 8px 25px rgba(46, 213, 115, 0.3);
+            box-shadow: 0 8px 25px var(--pi-glow);
             z-index: 1;
+        }
+
+        .cta-btn.secondary {
+            background: transparent;
+            border: 2px solid var(--pi-primary);
+            color: var(--pi-primary);
+            box-shadow: none;
         }
 
         .cta-btn::before {
@@ -506,7 +516,7 @@
             background: linear-gradient(
                 to bottom right,
                 rgba(255, 255, 255, 0) 0%,
-                rgba(255, 255, 255, 0.1) 50%,
+                rgba(255, 255, 255, 0.2) 50%,
                 rgba(255, 255, 255, 0) 100%
             );
             transform: rotate(45deg);
@@ -517,7 +527,12 @@
 
         .cta-btn:hover {
             transform: translateY(-5px);
-            box-shadow: 0 15px 35px rgba(46, 213, 115, 0.5);
+            box-shadow: 0 15px 35px var(--pi-glow);
+        }
+
+        .cta-btn.secondary:hover {
+            background: var(--pi-primary);
+            color: var(--background);
         }
 
         .cta-btn:hover::before {
@@ -533,34 +548,25 @@
             transform: translateX(5px);
         }
 
-        .hero-image-container {
-            position: relative;
+        .hero-features {
+            display: flex;
+            justify-content: center;
+            gap: var(--space-6);
             margin-top: var(--space-8);
-            width: 100%;
-            max-width: 500px;
-            z-index: 2;
+            flex-wrap: wrap;
         }
 
-        .hero-image {
-            width: 100%;
-            height: auto;
-            filter: drop-shadow(0 10px 30px rgba(46, 213, 115, 0.5));
-            animation: float 6s ease-in-out infinite;
-            transform-origin: center;
+        .hero-feature {
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+            color: var(--text-secondary);
+            font-size: 1rem;
         }
 
-        .hero-image-glow {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 100%;
-            height: 100%;
-            background: radial-gradient(circle, rgba(46, 213, 115, 0.3) 0%, rgba(46, 213, 115, 0) 70%);
-            z-index: -1;
-            filter: blur(30px);
-            opacity: 0.8;
-            animation: pulse 4s ease-in-out infinite alternate;
+        .hero-feature i {
+            color: var(--pi-primary);
+            font-size: 1.25rem;
         }
 
         .hero-particles {
@@ -578,16 +584,16 @@
             position: absolute;
             width: 3px;
             height: 3px;
-            background-color: var(--primary);
+            background-color: var(--pi-primary);
             border-radius: 50%;
             opacity: 0.5;
             animation: float-particle 15s infinite linear;
-            box-shadow: 0 0 10px var(--primary-glow);
+            box-shadow: 0 0 10px var(--pi-glow);
         }
 
         .particle:nth-child(even) {
-            background-color: var(--secondary);
-            box-shadow: 0 0 10px var(--secondary-glow);
+            background-color: var(--primary);
+            box-shadow: 0 0 10px var(--primary-glow);
         }
 
         .scroll-indicator {
@@ -610,11 +616,12 @@
         .scroll-indicator i {
             font-size: 1.5rem;
             margin-top: 8px;
+            color: var(--pi-primary);
         }
 
         .scroll-indicator:hover {
             opacity: 1;
-            color: var(--primary);
+            color: var(--pi-primary);
         }
 
         @keyframes bounce {
@@ -633,6 +640,7 @@
         .games-section {
             position: relative;
             padding: var(--space-12) 0;
+            background-color: var(--background-alt);
         }
 
         .section-header {
@@ -640,9 +648,23 @@
             margin-bottom: var(--space-10);
         }
 
+        .section-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: var(--space-2);
+            padding: var(--space-2) var(--space-4);
+            background: rgba(255, 193, 7, 0.1);
+            border: 1px solid rgba(255, 193, 7, 0.3);
+            border-radius: 50px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--pi-primary);
+            margin-bottom: var(--space-4);
+        }
+
         .game-list {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
             gap: var(--space-6);
             margin-bottom: var(--space-10);
         }
@@ -654,7 +676,7 @@
             overflow: hidden;
             transition: all var(--transition-normal) cubic-bezier(0.17, 0.67, 0.83, 0.67);
             position: relative;
-            border: 1px solid rgba(46, 213, 115, 0.1);
+            border: 1px solid rgba(255, 193, 7, 0.1);
             box-shadow: var(--card-shadow);
             height: 100%;
             display: flex;
@@ -669,15 +691,15 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: linear-gradient(to bottom, rgba(46, 213, 115, 0.05), transparent);
+            background: linear-gradient(to bottom, rgba(255, 193, 7, 0.05), transparent);
             opacity: 0;
             transition: opacity var(--transition-normal) ease;
         }
 
         .game-item:hover {
             transform: translateY(-10px) scale(1.02);
-            border-color: var(--primary);
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3), 0 0 20px rgba(46, 213, 115, 0.4);
+            border-color: var(--pi-primary);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3), 0 0 20px var(--pi-glow);
         }
 
         .game-item:hover::before {
@@ -686,9 +708,9 @@
 
         .game-image {
             width: 100%;
-            height: 180px;
+            height: 200px;
             object-fit: cover;
-            border-bottom: 1px solid rgba(46, 213, 115, 0.1);
+            border-bottom: 1px solid rgba(255, 193, 7, 0.1);
         }
 
         .game-content {
@@ -716,6 +738,7 @@
             display: flex;
             justify-content: space-between;
             margin-top: auto;
+            margin-bottom: var(--space-4);
         }
 
         .game-stat {
@@ -727,7 +750,7 @@
         }
 
         .game-stat i {
-            color: var(--primary);
+            color: var(--pi-primary);
         }
 
         .game-action {
@@ -741,7 +764,7 @@
             justify-content: center;
             width: 100%;
             padding: var(--space-2) var(--space-4);
-            background: linear-gradient(90deg, var(--primary) 0%, var(--secondary) 100%);
+            background: linear-gradient(90deg, var(--pi-primary) 0%, var(--pi-gold) 100%);
             color: var(--background);
             border: none;
             border-radius: var(--border-radius);
@@ -767,7 +790,7 @@
         }
 
         .game-btn:hover {
-            box-shadow: 0 5px 15px rgba(46, 213, 115, 0.5);
+            box-shadow: 0 5px 15px var(--pi-glow);
             transform: translateY(-2px);
         }
 
@@ -788,7 +811,6 @@
         .how-it-works {
             position: relative;
             padding: var(--space-12) 0;
-            background-color: var(--background-alt);
         }
 
         .steps {
@@ -804,15 +826,15 @@
             padding: var(--space-6);
             text-align: center;
             position: relative;
-            border: 1px solid rgba(46, 213, 115, 0.1);
+            border: 1px solid rgba(255, 193, 7, 0.1);
             transition: all var(--transition-normal) ease;
             overflow: hidden;
         }
 
         .step:hover {
             transform: translateY(-5px);
-            border-color: var(--primary);
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2), 0 0 15px rgba(46, 213, 115, 0.2);
+            border-color: var(--pi-primary);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2), 0 0 15px var(--pi-glow);
         }
 
         .step-number {
@@ -821,7 +843,7 @@
             right: 10px;
             font-size: 5rem;
             font-weight: 800;
-            color: rgba(46, 213, 115, 0.1);
+            color: rgba(255, 193, 7, 0.1);
             line-height: 1;
             font-family: 'Orbitron', sans-serif;
         }
@@ -830,14 +852,14 @@
             width: 80px;
             height: 80px;
             margin: 0 auto var(--space-4);
-            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            background: linear-gradient(135deg, var(--pi-primary) 0%, var(--pi-gold) 100%);
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 2rem;
             color: var(--background);
-            box-shadow: 0 5px 15px rgba(46, 213, 115, 0.3);
+            box-shadow: 0 5px 15px var(--pi-glow);
         }
 
         .step-title {
@@ -856,6 +878,7 @@
         .community-section {
             position: relative;
             padding: var(--space-12) 0;
+            background-color: var(--background-alt);
         }
 
         .stats {
@@ -870,20 +893,20 @@
             border-radius: var(--border-radius);
             padding: var(--space-6);
             text-align: center;
-            border: 1px solid rgba(46, 213, 115, 0.1);
+            border: 1px solid rgba(255, 193, 7, 0.1);
             transition: all var(--transition-normal) ease;
         }
 
         .stat-card:hover {
             transform: translateY(-5px);
-            border-color: var(--primary);
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2), 0 0 15px rgba(46, 213, 115, 0.2);
+            border-color: var(--pi-primary);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2), 0 0 15px var(--pi-glow);
         }
 
         .stat-icon {
             font-size: 2.5rem;
             margin-bottom: var(--space-4);
-            background: linear-gradient(90deg, var(--primary) 0%, var(--secondary) 100%);
+            background: linear-gradient(90deg, var(--pi-primary) 0%, var(--primary) 100%);
             -webkit-background-clip: text;
             background-clip: text;
             color: transparent;
@@ -893,7 +916,7 @@
             font-size: 3rem;
             font-weight: 800;
             font-family: 'Orbitron', sans-serif;
-            background: linear-gradient(90deg, var(--primary) 0%, var(--secondary) 100%);
+            background: linear-gradient(90deg, var(--pi-primary) 0%, var(--primary) 100%);
             -webkit-background-clip: text;
             background-clip: text;
             color: transparent;
@@ -960,7 +983,7 @@
         }
 
         .social-link:hover {
-            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            background: linear-gradient(135deg, var(--pi-primary) 0%, var(--pi-gold) 100%);
             color: var(--background);
             transform: translateY(-3px);
         }
@@ -990,7 +1013,7 @@
         }
 
         .footer-links a:hover {
-            color: var(--primary);
+            color: var(--pi-primary);
         }
 
         .footer-links a i {
@@ -1016,7 +1039,7 @@
             border-radius: var(--border-radius);
             padding: var(--space-6);
             z-index: 1010;
-            border: 1px solid rgba(46, 213, 115, 0.1);
+            border: 1px solid rgba(255, 193, 7, 0.2);
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
             opacity: 0;
             transition: all var(--transition-normal) ease;
@@ -1087,7 +1110,7 @@
         }
 
         .dropdown-close:hover {
-            background-color: var(--primary);
+            background-color: var(--pi-primary);
             color: var(--background);
         }
 
@@ -1100,7 +1123,7 @@
         }
 
         .footer-bottom a {
-            color: var(--primary);
+            color: var(--pi-primary);
             text-decoration: none;
         }
 
@@ -1112,7 +1135,7 @@
 
         @keyframes pulse {
             0%, 100% { opacity: 0.5; transform: scale(1); }
-            50% { opacity: 0.8; transform: scale(1.1); }
+            50% { opacity: 1; transform: scale(1.05); }
         }
 
         @keyframes shine {
@@ -1156,28 +1179,6 @@
                 display: block;
             }
 
-            .auth-btn {
-                font-size: 1rem;
-                padding: var(--space-2) var(--space-5);
-            }
-
-            .hero {
-                flex-direction: row;
-                text-align: left;
-                justify-content: space-between;
-                gap: var(--space-8);
-                align-items: center;
-            }
-
-            .hero-content {
-                text-align: left;
-                max-width: 600px;
-            }
-
-            .hero-image-container {
-                margin-top: 0;
-            }
-
             .section-header {
                 text-align: left;
             }
@@ -1200,33 +1201,16 @@
             .container {
                 padding: 0 var(--space-8);
             }
-
-            .hero-content {
-                max-width: 650px;
-            }
         }
 
-        /* Dark mode optimization */
-        @media (prefers-color-scheme: dark) {
-            :root {
-                --primary: #2eD573;
-                --secondary: #00c9b7;
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
             }
         }
     </style>
-      <link
-    rel="icon"
-    href="https://i.postimg.cc/FzgPtp2v/photo-2025-05-31-05-36-51.jpg"
-    type="image/jpeg"
-  />
-
-  <!-- 2) For older browsers, you can also include “shortcut icon” -->
-  <link
-    rel="shortcut icon"
-    href="https://i.postimg.cc/FzgPtp2v/photo-2025-05-31-05-36-51.jpg"
-    type="image/jpeg"
-  />
-    
+    <link rel="icon" href="https://i.postimg.cc/FzgPtp2v/photo-2025-05-31-05-36-51.jpg" type="image/jpeg" />
+    <link rel="shortcut icon" href="https://i.postimg.cc/FzgPtp2v/photo-2025-05-31-05-36-51.jpg" type="image/jpeg" />
 </head>
 <body>
     <!-- Background particles -->
@@ -1239,11 +1223,6 @@
                     <div class="logo">C</div>
                     <div class="logo-text">Chiwe</div>
                 </div>
-                
-                <div class="auth-buttons">
-                    <a href="/login" class="auth-btn login" id="loginBtn">Log In</a>
-                    <a href="/login" class="auth-btn signup" id="signupBtn">Sign Up</a>
-                </div>
             </div>
             
             <nav class="nav-links" id="navLinks">
@@ -1253,6 +1232,11 @@
                 <a href="#community" class="nav-link">Community</a>
                 <a href="#" class="nav-link">About</a>
             </nav>
+
+            <button class="pi-signin-btn" id="piSigninBtn">
+                <div class="pi-icon">π</div>
+                <span>Sign in with Pi</span>
+            </button>
         </div>
     </header>
 
@@ -1260,14 +1244,36 @@
         <section class="hero">
             <div class="container">
                 <div class="hero-content">
-                    <h1>Welcome to Chiwe</h1>
+                    <div class="pi-badge">
+                        <div class="pi-icon">π</div>
+                        <span>Powered by Pi Network</span>
+                    </div>
+                    <h1>Chiwe</h1>
+                    <p class="hero-subtitle">The First Multiplayer Esport Arena on Pi Network</p>
                     <div class="typewriter" id="typewriter"></div>
-                    <p class="hero-description">Challenge players 1v1. Winner takes all. Are you ready to prove your skills and earn rewards in real-time competitive gaming?</p>
-                    <a href="#games" class="cta-btn">Start Playing Now <i class="fas fa-arrow-right"></i></a>
+                    <p class="hero-description">Challenge players in 1v1 skill-based esport competitions. Master your game, climb the rankings, and become a champion in the Pi ecosystem.</p>
+                    <div class="cta-buttons">
+                        <a href="#games" class="cta-btn">Start Competing <i class="fas fa-gamepad"></i></a>
+                        <a href="#how-it-works" class="cta-btn secondary">Learn More <i class="fas fa-arrow-right"></i></a>
+                    </div>
+                    <div class="hero-features">
+                        <div class="hero-feature">
+                            <i class="fas fa-trophy"></i>
+                            <span>Skill-Based Matches</span>
+                        </div>
+                        <div class="hero-feature">
+                            <i class="fas fa-shield-alt"></i>
+                            <span>Secure on Pi</span>
+                        </div>
+                        <div class="hero-feature">
+                            <i class="fas fa-users"></i>
+                            <span>1v1 Competition</span>
+                        </div>
+                    </div>
                 </div>
             </div>
             <div class="scroll-indicator" id="scrollIndicator">
-                <span>Scroll to explore</span>
+                <span>Discover More</span>
                 <i class="fas fa-chevron-down"></i>
             </div>
         </section>
@@ -1275,28 +1281,32 @@
         <section class="games-section" id="games">
             <div class="container">
                 <div class="section-header">
-                    <h2>Featured Games</h2>
-                    <p>Discover our collection of skill-based games where you can compete head-to-head with other players and win real rewards.</p>
+                    <div class="section-badge">
+                        <i class="fas fa-gamepad"></i>
+                        <span>Esport Arenas</span>
+                    </div>
+                    <h2>Featured Competitions</h2>
+                    <p>Choose your arena and prove your skills in these competitive multiplayer games on Pi Network.</p>
                 </div>
                 
                 <div class="game-list">
                     <div class="game-item">
                         <img src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/ctc.jpg-MjCvQhlHB5t3g4kWv12B3cuoUD72Co.jpeg" alt="Crack the Code" class="game-image">
                         <div class="game-content">
-                            <h3 class="game-title">Crack the code</h3>
-                            <p class="game-description">Test your strategic thinking in this classic game of skill. Challenge opponents and win based on your cracking mastery.</p>
+                            <h3 class="game-title">Crack the Code</h3>
+                            <p class="game-description">Test your strategic thinking and logical skills. Challenge opponents in this classic brain game and prove your mastery.</p>
                             <div class="game-stats">
                                 <div class="game-stat">
                                     <i class="fas fa-users"></i>
-                                    <span>250+ Players</span>
+                                    <span>250+ Competitors</span>
                                 </div>
                                 <div class="game-stat">
-                                    <i class="fas fa-trophy"></i>
-                                    <span>2x Max Win</span>
+                                    <i class="fas fa-bolt"></i>
+                                    <span>Fast-Paced</span>
                                 </div>
                             </div>
                             <div class="game-action">
-                                <button class="game-btn">Play Now <i class="fas fa-arrow-right"></i></button>
+                                <button class="game-btn">Enter Arena <i class="fas fa-arrow-right"></i></button>
                             </div>
                         </div>
                     </div>
@@ -1305,19 +1315,19 @@
                         <img src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/photo_2025-05-29_13-20-52.jpg-ZxKeFERZ8rzsiH919GbKt99Wm8zgHy.jpeg" alt="Bingo" class="game-image">
                         <div class="game-content">
                             <h3 class="game-title">Bingo</h3>
-                            <p class="game-description">Bluff your way to victory in this strategic card game. Read your opponents and make calculated decisions.</p>
+                            <p class="game-description">Master strategic decisions and outplay your opponents in this exciting competitive game of skill and timing.</p>
                             <div class="game-stats">
                                 <div class="game-stat">
                                     <i class="fas fa-users"></i>
-                                    <span>120+ Players</span>
+                                    <span>120+ Competitors</span>
                                 </div>
                                 <div class="game-stat">
-                                    <i class="fas fa-trophy"></i>
-                                    <span>2x Max Win</span>
+                                    <i class="fas fa-star"></i>
+                                    <span>Skill-Based</span>
                                 </div>
                             </div>
                             <div class="game-action">
-                                <button class="game-btn">Play Now <i class="fas fa-arrow-right"></i></button>
+                                <button class="game-btn">Enter Arena <i class="fas fa-arrow-right"></i></button>
                             </div>
                         </div>
                     </div>
@@ -1328,8 +1338,12 @@
         <section class="how-it-works" id="how-it-works">
             <div class="container">
                 <div class="section-header">
-                    <h2>How It Works</h2>
-                    <p>Getting started with Chiwe is simple. Follow these steps to begin your competitive gaming journey.</p>
+                    <div class="section-badge">
+                        <i class="fas fa-question-circle"></i>
+                        <span>Getting Started</span>
+                    </div>
+                    <h2>How to Compete</h2>
+                    <p>Join the first esport arena on Pi Network in just three simple steps.</p>
                 </div>
                 
                 <div class="steps">
@@ -1338,8 +1352,8 @@
                         <div class="step-icon">
                             <i class="fas fa-user-plus"></i>
                         </div>
-                        <h3 class="step-title">Create Account</h3>
-                        <p class="step-description">Sign up for free and customize your profile. Verify your account to unlock all features.</p>
+                        <h3 class="step-title">Create Profile</h3>
+                        <p class="step-description">Sign up with your Pi Network account and customize your competitive profile.</p>
                     </div>
                     
                     <div class="step">
@@ -1347,8 +1361,8 @@
                         <div class="step-icon">
                             <i class="fas fa-gamepad"></i>
                         </div>
-                        <h3 class="step-title">Choose a Game</h3>
-                        <p class="step-description">Browse our selection of skill-based games. Set your stake and find an opponent.</p>
+                        <h3 class="step-title">Choose Your Arena</h3>
+                        <p class="step-description">Select from our skill-based games and find worthy opponents to challenge.</p>
                     </div>
                     
                     <div class="step">
@@ -1356,8 +1370,8 @@
                         <div class="step-icon">
                             <i class="fas fa-trophy"></i>
                         </div>
-                        <h3 class="step-title">Win & Earn</h3>
-                        <p class="step-description">Defeat your opponent and claim the prize. Withdraw your winnings anytime.</p>
+                        <h3 class="step-title">Compete & Rank</h3>
+                        <p class="step-description">Master your skills, climb the leaderboards, and become a Pi Network champion.</p>
                     </div>
                 </div>
             </div>
@@ -1366,8 +1380,12 @@
         <section class="community-section" id="community">
             <div class="container">
                 <div class="section-header">
+                    <div class="section-badge">
+                        <div class="pi-icon">π</div>
+                        <span>Pi Champions</span>
+                    </div>
                     <h2>Chiwe Community</h2>
-                    <p>Join thousands of players already competing and winning on our platform.</p>
+                    <p>Join thousands of competitors in the first multiplayer esport arena on Pi Network.</p>
                 </div>
                 
                 <div class="stats">
@@ -1376,7 +1394,7 @@
                             <i class="fas fa-users"></i>
                         </div>
                         <div id="totalUsers" class="stat-value">0</div>
-                        <div class="stat-label">Total Users</div>
+                        <div class="stat-label">Active Competitors</div>
                     </div>
                     
                     <div class="stat-card">
@@ -1384,15 +1402,15 @@
                             <i class="fas fa-gamepad"></i>
                         </div>
                         <div id="activeGames" class="stat-value">0</div>
-                        <div class="stat-label">Active Games</div>
+                        <div class="stat-label">Matches Played</div>
                     </div>
                     
                     <div class="stat-card">
                         <div class="stat-icon">
-                            <i class="fas fa-dollar-sign"></i>
+                            <div class="pi-icon" style="width: 2.5rem; height: 2.5rem; font-size: 1.5rem;">π</div>
                         </div>
-                        <div id="totalWinnings" class="stat-value">pi 0</div>
-                        <div class="stat-label">Total Winnings Paid</div>
+                        <div id="totalWinnings" class="stat-value">π 0</div>
+                        <div class="stat-label">Pi Rewards</div>
                     </div>
                 </div>
             </div>
@@ -1407,7 +1425,7 @@
                         <div class="logo">C</div>
                         <div class="logo-text">Chiwe</div>
                     </div>
-                    <p class="footer-description">Chiwe is a skill-based gaming platform where players can compete 1v1 and win real rewards based on their performance.</p>
+                    <p class="footer-description">The first multiplayer esport arena on Pi Network. Compete in skill-based 1v1 matches and climb the rankings.</p>
                     <div class="social-links">
                         <a href="https://www.tiktok.com/@chiwegames" class="social-link"><i class="fab fa-tiktok"></i></a>
                         <a href="https://twitter.com/chiwegames" class="social-link"><i class="fab fa-twitter"></i></a>
@@ -1427,7 +1445,7 @@
                             <a href="#" class="dropdown-toggle" data-dropdown="privacy"><i class="fas fa-chevron-right"></i> Privacy Policy</a>
                         </li>
                         <li class="footer-dropdown">
-                            <a href="#" class="dropdown-toggle" data-dropdown="responsible"><i class="fas fa-chevron-right"></i> Responsible Gaming</a>
+                            <a href="#" class="dropdown-toggle" data-dropdown="responsible"><i class="fas fa-chevron-right"></i> Fair Play Policy</a>
                         </li>
                     </ul>
                 </div>
@@ -1444,7 +1462,7 @@
                 </div>
                 
                 <div class="footer-section">
-                    <h3>Games</h3>
+                    <h3>Arenas</h3>
                     <ul class="footer-links">
                         <li><a href="#"><i class="fas fa-chevron-right"></i> Crack The Code</a></li>
                         <li><a href="#"><i class="fas fa-chevron-right"></i> Bingo</a></li>
@@ -1453,7 +1471,7 @@
             </div>
             
             <div class="footer-bottom">
-                <p>&copy; 2025 Chiwe. All rights reserved. | Designed with <i class="fas fa-heart" style="color: var(--primary);"></i> and by Chiwe Team</p>
+                <p>&copy; 2025 Chiwe. All rights reserved. | First Multiplayer Esport Arena on <span style="color: var(--pi-primary);">Pi Network</span></p>
             </div>
         </div>
     </footer>
@@ -1467,10 +1485,10 @@
         <p>By using Chiwe, you agree to the following terms:</p>
         <ul>
             <li>You must be at least 18 years old to use our platform</li>
-            <li>All games are skill-based and comply with local regulations</li>
+            <li>All games are skill-based competitive matches</li>
             <li>Chiwe reserves the right to suspend accounts that violate our terms</li>
-            <li>Withdrawals are processed within 24-48 hours</li>
-            <li>Users are responsible for taxes on their winnings</li>
+            <li>Fair play and sportsmanship are required</li>
+            <li>Users are responsible for maintaining account security</li>
         </ul>
         <p>For the complete terms, please contact our support team.</p>
     </div>
@@ -1491,26 +1509,26 @@
     
     <div class="dropdown-content" id="responsible-dropdown">
         <div class="dropdown-close"><i class="fas fa-times"></i></div>
-        <h4>Responsible Gaming</h4>
-        <p>At Chiwe, we promote responsible gaming:</p>
+        <h4>Fair Play Policy</h4>
+        <p>At Chiwe, we promote fair competitive play:</p>
         <ul>
-            <li>Set personal limits on deposits and playing time</li>
-            <li>Take regular breaks from gaming</li>
-            <li>Never play to recover losses</li>
-            <li>Gaming should be for entertainment, not a source of income</li>
-            <li>If you need help, we provide resources for gaming addiction</li>
+            <li>All matches are skill-based and fair</li>
+            <li>Compete responsibly and respect other players</li>
+            <li>Take breaks between competitive sessions</li>
+            <li>Report any suspicious behavior or cheating</li>
+            <li>Esports should be enjoyable and competitive</li>
         </ul>
-        <p>If you're concerned about your gaming habits, please contact our support team for assistance.</p>
+        <p>If you have concerns about fair play, please contact our support team.</p>
     </div>
     
     <div class="dropdown-content" id="faq-dropdown">
         <div class="dropdown-close"><i class="fas fa-times"></i></div>
         <h4>Frequently Asked Questions</h4>
-        <p><strong>How do I deposit funds?</strong><br>You can deposit using credit/debit cards, bank transfers, or cryptocurrency.</p>
-        <p><strong>How long do withdrawals take?</strong><br>Withdrawals are processed within 24-48 hours depending on your payment method.</p>
-        <p><strong>Is Chiwe available worldwide?</strong><br>Chiwe is available in most countries, but some restrictions apply based on local regulations.</p>
-        <p><strong>How are winners determined?</strong><br>Winners are determined based on skill and performance in each game.</p>
-        <p><strong>What if I have a dispute?</strong><br>Contact our support team, and we'll resolve any issues within 24 hours.</p>
+        <p><strong>How do I start competing?</strong><br>Create an account, choose your game arena, and the system will find you an opponent</p>
+        <p><strong>Is Chiwe really on Pi Network?</strong><br>Yes! Chiwe is the first multiplayer esport arena built on Pi Network.</p>
+        <p><strong>Are the games skill-based?</strong><br>All our games are 100% skill-based competitions.</p>
+        <p><strong>How do rankings work?</strong><br>Your ranking is based on your chiwe points, you will earn them by wining 1v1 game.</p>
+        <p><strong>How do i win pi</strong>?</strong><br>the top 5 pioneers on the leaderboard will share the pi reward,the more chiwepoints the closer you are to win PI</p>
     </div>
 
     <script>
@@ -1527,7 +1545,7 @@
 
             // Typewriter effect
             const typewriterElement = document.getElementById('typewriter');
-            const words = ["Compete", "Win", "Earn"];
+            const words = ["Compete", "win", "earn", "Dominate"];
             let wordIndex = 0;
             let charIndex = 0;
             let isDeleting = false;
@@ -1546,13 +1564,13 @@
 
                 if (!isDeleting && charIndex === currentWord.length) {
                     isDeleting = true;
-                    typingSpeed = 1000; // Pause before deleting
+                    typingSpeed = 1000;
                 } else if (isDeleting && charIndex === 0) {
                     isDeleting = false;
                     wordIndex = (wordIndex + 1) % words.length;
-                    typingSpeed = 150; // Normal typing speed
+                    typingSpeed = 150;
                 } else {
-                    typingSpeed = isDeleting ? 100 : 150; // Slightly faster when deleting
+                    typingSpeed = isDeleting ? 100 : 150;
                 }
 
                 setTimeout(typeWriter, typingSpeed);
@@ -1569,19 +1587,15 @@
                     const particle = document.createElement('div');
                     particle.classList.add('particle');
                     
-                    // Random position
                     particle.style.top = `${Math.random() * 100}%`;
                     particle.style.left = `${Math.random() * 100}%`;
                     
-                    // Random size
                     const size = Math.random() * 3 + 1;
                     particle.style.width = `${size}px`;
                     particle.style.height = `${size}px`;
                     
-                    // Random opacity
                     particle.style.opacity = Math.random() * 0.5 + 0.1;
                     
-                    // Random animation delay
                     particle.style.animationDelay = `${Math.random() * 15}s`;
                     particle.style.animationDuration = `${Math.random() * 10 + 10}s`;
                     
@@ -1611,9 +1625,9 @@
             const statsObserver = new IntersectionObserver((entries) => {
                 entries.forEach(entry => {
                     if (entry.isIntersecting) {
-                        animateValue('totalUsers', 0, 1000, 200);
-                        animateValue('activeGames', 0, 500, 200);
-                        animateValue('totalWinnings', 0, 10000, 2000, 'pi');
+                        animateValue('totalUsers', 0, 200, 100);
+                        animateValue('activeGames', 0, 2000, 1000);
+                        animateValue('totalWinnings', 0, 200, 100, 'π ');
                         statsObserver.disconnect();
                     }
                 });
@@ -1621,49 +1635,33 @@
 
             statsObserver.observe(document.querySelector('.community-section'));
 
-            // FIXED: Login and Signup button handling - No delay, proper loading state management
-            const loginBtn = document.getElementById('loginBtn');
-            const signupBtn = document.getElementById('signupBtn');
+            // Pi Sign-in button handling
+            const piSigninBtn = document.getElementById('piSigninBtn');
 
-            // Function to handle button click with immediate response
-            function handleAuthButtonClick(button) {
-                // Add loading state immediately
+            function handlePiSignin(button) {
                 button.classList.add('loading');
-                
-                // Navigate immediately (no delay)
-                window.location.href = button.getAttribute('href');
+                // Replace '/login' with your actual Pi Network authentication endpoint
+                window.location.href = '/login';
             }
 
-            // FIXED: Remove loading state when page becomes visible again (back button fix)
-            function resetButtonStates() {
-                loginBtn.classList.remove('loading');
-                signupBtn.classList.remove('loading');
+            function resetButtonState() {
+                piSigninBtn.classList.remove('loading');
             }
 
-            // Reset button states on page load and when page becomes visible
-            resetButtonStates();
+            resetButtonState();
             
-            // Handle page visibility change (when user comes back from another page)
             document.addEventListener('visibilitychange', () => {
                 if (!document.hidden) {
-                    resetButtonStates();
+                    resetButtonState();
                 }
             });
 
-            // Handle page focus (when user comes back to the tab)
-            window.addEventListener('focus', resetButtonStates);
+            window.addEventListener('focus', resetButtonState);
+            window.addEventListener('pageshow', resetButtonState);
 
-            // Handle page show event (when user uses back button)
-            window.addEventListener('pageshow', resetButtonStates);
-
-            loginBtn.addEventListener('click', function(e) {
+            piSigninBtn.addEventListener('click', function(e) {
                 e.preventDefault();
-                handleAuthButtonClick(this);
-            });
-
-            signupBtn.addEventListener('click', function(e) {
-                e.preventDefault();
-                handleAuthButtonClick(this);
+                handlePiSignin(this);
             });
 
             // Smooth scrolling for anchor links
@@ -1699,7 +1697,6 @@
             // Make game cards clickable
             document.querySelectorAll('.game-item').forEach(card => {
                 card.addEventListener('click', function(e) {
-                    // Don't trigger if clicking on the button itself
                     if (!e.target.closest('.game-btn')) {
                         const button = this.querySelector('.game-btn');
                         if (button) {
@@ -1707,6 +1704,10 @@
                         }
                     }
                 });
+                            button.click();
+                        }
+                    
+                );
             });
 
             // Scroll indicator functionality
@@ -1731,7 +1732,6 @@
             const dropdownOverlay = document.getElementById('dropdown-overlay');
             const dropdownCloseButtons = document.querySelectorAll('.dropdown-close');
             
-            // Close dropdown function
             function closeAllDropdowns() {
                 document.querySelectorAll('.dropdown-content').forEach(content => {
                     content.classList.remove('active');
@@ -1740,33 +1740,27 @@
                 document.body.style.overflow = '';
             }
             
-            // Close dropdown when clicking on close button
             dropdownCloseButtons.forEach(button => {
                 button.addEventListener('click', closeAllDropdowns);
             });
             
-            // Close dropdown when clicking on overlay
             dropdownOverlay.addEventListener('click', closeAllDropdowns);
             
-            // Toggle dropdown when clicking on toggle button
             dropdownToggles.forEach(toggle => {
                 toggle.addEventListener('click', function(e) {
                     e.preventDefault();
                     const dropdownId = this.getAttribute('data-dropdown');
                     const dropdown = document.getElementById(`${dropdownId}-dropdown`);
                     
-                    // Close all other dropdowns
                     document.querySelectorAll('.dropdown-content').forEach(content => {
                         if (content !== dropdown) {
                             content.classList.remove('active');
                         }
                     });
                     
-                    // Toggle current dropdown
                     dropdown.classList.toggle('active');
                     dropdownOverlay.classList.toggle('active');
                     
-                    // Prevent scrolling when dropdown is open
                     if (dropdown.classList.contains('active')) {
                         document.body.style.overflow = 'hidden';
                     } else {
@@ -1775,13 +1769,12 @@
                 });
             });
             
-            // Close dropdown when pressing ESC key
             document.addEventListener('keydown', function(e) {
                 if (e.key === 'Escape') {
                     closeAllDropdowns();
                 }
             });
-        });
+        ;
     </script>
 </body>
 </html>
