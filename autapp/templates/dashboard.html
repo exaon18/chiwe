@@ -3,23 +3,43 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chiwe - Crack the Code</title>
+    <title>Chiwe - Dashboard</title>
     <style>
         :root {
+            /* Pi Network colors */
+            --pi-primary: #ffc107;
+            --pi-gold: #ffd700;
+            --pi-gold-dark: #e0a800;
+            --pi-glow: rgba(255, 193, 7, 0.4);
+            
+            /* Chiwe colors */
             --primary: #2ed573;
             --primary-dark: #25a85c;
             --primary-glow: rgba(46, 213, 115, 0.4);
-            --background: #0f0f13;
-            --surface: #1a1a22;
-            --surface-dark: #14141a;
+            
+            /* Background colors */
+            --background: #0a0a10;
+            --background-alt: #0d0d14;
+            --surface: #14141c;
+            --surface-dark: #0f0f13;
+            --surface-hover: #1a1a24;
+            
+            /* Text colors */
             --text: #ffffff;
             --text-secondary: #a0aec0;
+            --text-tertiary: #6b7280;
+            
+            /* Status colors */
             --danger: #ff4757;
             --warning: #ffa502;
             --success: #2ed573;
+            
+            /* UI elements */
             --border-radius: 12px;
             --card-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
             --glow: 0 0 15px var(--primary-glow);
+            --pi-glow-effect: 0 0 20px var(--pi-glow);
+            --transition: 0.3s;
         }
 
         * {
@@ -27,19 +47,17 @@
             padding: 0;
             box-sizing: border-box;
             font-family: 'Segoe UI', 'Arial', sans-serif;
-            backdrop-filter: none !important;
-            -webkit-backdrop-filter: none !important;
         }
 
         body {
             background-color: var(--background);
             color: var(--text);
             min-height: 100vh;
-            line-height: 1.6;
             overflow-x: hidden;
+            line-height: 1.6;
             background-image: 
-                radial-gradient(circle at 25% 25%, rgba(46, 213, 115, 0.05) 0%, transparent 50%),
-                radial-gradient(circle at 75% 75%, rgba(46, 213, 115, 0.05) 0%, transparent 50%);
+                radial-gradient(circle at 25% 25%, rgba(255, 193, 7, 0.05) 0%, transparent 50%),
+                radial-gradient(circle at 75% 75%, rgba(46, 213, 115, 0.03) 0%, transparent 50%);
         }
 
         /* Animated background elements */
@@ -56,7 +74,7 @@
 
         .bg-element {
             position: absolute;
-            background: linear-gradient(45deg, var(--primary-glow), transparent);
+            background: linear-gradient(45deg, var(--pi-glow), var(--primary-glow));
             border-radius: 50%;
             filter: blur(40px);
             opacity: 0.1;
@@ -92,7 +110,7 @@
             50% { transform: translate(30px, -30px); }
         }
 
-        /* Shooting stars container - fixed position to avoid layout shifts */
+        /* Shooting stars */
         .stars-container {
             position: fixed;
             top: 0;
@@ -104,12 +122,11 @@
             overflow: hidden;
         }
 
-        /* Shooting stars */
         .shooting-star {
             position: absolute;
             width: 2px;
             height: 2px;
-            background-color: var(--primary);
+            background-color: var(--pi-primary);
             border-radius: 50%;
             animation: shootingStar 3s linear forwards;
             opacity: 0;
@@ -122,7 +139,7 @@
             left: 0;
             width: 100px;
             height: 1px;
-            background: linear-gradient(90deg, var(--primary), transparent);
+            background: linear-gradient(90deg, var(--pi-primary), transparent);
             transform: translateX(-100%);
         }
 
@@ -149,9 +166,10 @@
             top: 0;
             left: 0;
             right: 0;
-            background: rgba(15, 15, 19, 0.95);
+            background: rgba(10, 10, 16, 0.95);
+            backdrop-filter: blur(10px);
             z-index: 1000;
-            border-bottom: 1px solid rgba(46, 213, 115, 0.1);
+            border-bottom: 1px solid rgba(255, 193, 7, 0.2);
         }
 
         .header-content {
@@ -163,7 +181,26 @@
             margin: 0 auto;
         }
 
-        /* IMPROVED DESKTOP NAVIGATION */
+        /* Logo */
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+            background: linear-gradient(90deg, var(--pi-primary) 0%, var(--primary) 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .logo-icon {
+            font-size: 1.8rem;
+            filter: drop-shadow(0 0 10px var(--pi-glow));
+        }
+
+        /* Desktop Navigation */
         .desktop-nav {
             display: none;
         }
@@ -179,12 +216,11 @@
                 color: var(--text-secondary);
                 text-decoration: none;
                 font-weight: 500;
-                transition: all 0.3s ease;
+                transition: all var(--transition) ease;
                 position: relative;
                 padding: 0.5rem 0;
             }
 
-            /* FIXED: Desktop nav links hover/active states */
             .desktop-nav .nav-link::after {
                 content: '';
                 position: absolute;
@@ -192,46 +228,59 @@
                 left: 0;
                 width: 0;
                 height: 2px;
-                background-color: var(--primary);
-                transition: width 0.3s ease;
+                background: linear-gradient(90deg, var(--pi-primary), var(--primary));
+                transition: width var(--transition) ease;
             }
 
-            .desktop-nav .nav-link:hover {
-                color: var(--primary);
-            }
-
-            .desktop-nav .nav-link:hover::after {
-                width: 100%;
-            }
-
+            .desktop-nav .nav-link:hover,
             .desktop-nav .nav-link.active {
-                color: var(--primary);
+                color: var(--pi-primary);
             }
 
+            .desktop-nav .nav-link:hover::after,
             .desktop-nav .nav-link.active::after {
                 width: 100%;
             }
         }
 
-        /* RESTORED USER PROFILE STYLING */
+        /* ENHANCED USER PROFILE */
         .user-profile {
             display: flex;
             align-items: center;
-            gap: 0.75rem;
-            padding: 0.5rem;
+            gap: 1rem;
+            padding: 0.5rem 1rem;
+            background: rgba(20, 20, 28, 0.8);
+            border-radius: 50px;
+            border: 1px solid rgba(255, 193, 7, 0.3);
+            transition: all var(--transition) ease;
+        }
+
+        .user-profile:hover {
+            border-color: var(--pi-primary);
+            box-shadow: 0 0 20px var(--pi-glow);
         }
 
         .user-avatar {
-            width: 38px;
-            height: 38px;
+            width: 45px;
+            height: 45px;
             border-radius: 50%;
-            background: var(--surface);
+            background: linear-gradient(135deg, var(--pi-primary), var(--pi-gold));
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.2rem;
-            border: 2px solid var(--primary);
-            box-shadow: 0 0 10px rgba(46, 213, 115, 0.3);
+            font-size: 1.5rem;
+            border: 2px solid var(--pi-gold);
+            box-shadow: 0 0 15px var(--pi-glow);
+            animation: pulse-glow 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse-glow {
+            0%, 100% {
+                box-shadow: 0 0 15px var(--pi-glow);
+            }
+            50% {
+                box-shadow: 0 0 25px var(--pi-glow);
+            }
         }
 
         .user-details {
@@ -241,24 +290,52 @@
         }
 
         .username {
-            color: var(--primary);
-            font-weight: 600;
-            font-size: 0.9rem;
+            color: var(--text);
+            font-weight: 700;
+            font-size: 1rem;
+            letter-spacing: 0.3px;
+        }
+
+        .username a {
+            color: var(--text);
+            text-decoration: none;
+            transition: color var(--transition) ease;
+        }
+
+        .username a:hover {
+            color: var(--pi-primary);
         }
 
         .balance {
-            color: var(--text-secondary);
-            font-size: 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            color: var(--pi-primary);
+            font-size: 0.95rem;
+            font-weight: 700;
         }
 
-        /* COMPLETELY REDESIGNED NAVIGATION TOGGLE */
+        .pi-icon-small {
+            width: 18px;
+            height: 18px;
+            background: var(--pi-primary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+            font-weight: bold;
+            color: var(--background);
+        }
+
+        /* Navigation Toggle */
         .nav-toggle {
             display: flex;
             flex-direction: column;
             gap: 6px;
             background: transparent;
             border: none;
-            cursor: pointer !important;
+            cursor: pointer;
             padding: 5px;
             z-index: 9999;
             position: relative;
@@ -268,8 +345,9 @@
             display: block;
             width: 25px;
             height: 2px;
-            background-color: var(--primary);
-            transition: all 0.3s ease;
+            background: linear-gradient(90deg, var(--pi-primary), var(--primary));
+            transition: all var(--transition) ease;
+            border-radius: 2px;
         }
 
         .nav-toggle.active span:nth-child(1) {
@@ -284,7 +362,7 @@
             transform: translateY(-8px) rotate(-45deg);
         }
 
-        /* COMPLETELY REDESIGNED NAVIGATION MENU */
+        /* Navigation Menu */
         .nav-menu {
             position: fixed;
             top: 0;
@@ -298,18 +376,17 @@
             flex-direction: column;
             box-shadow: 5px 0 25px rgba(0, 0, 0, 0.3);
             overflow-y: auto;
-            transition: left 0.3s ease;
+            transition: left var(--transition) ease;
         }
 
         .nav-menu.active {
             left: 0;
         }
 
-        /* SIMPLIFIED NAVIGATION HEADER */
         .nav-header {
             padding: 2rem 1.5rem;
             background: var(--surface-dark);
-            border-bottom: 1px solid var(--primary);
+            border-bottom: 1px solid rgba(255, 193, 7, 0.2);
         }
 
         .user-profile-large {
@@ -319,33 +396,43 @@
         }
 
         .user-avatar-large {
-            width: 60px;
-            height: 60px;
+            width: 70px;
+            height: 70px;
             border-radius: 50%;
-            background: var(--surface);
+            background: linear-gradient(135deg, var(--pi-primary), var(--pi-gold));
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.8rem;
-            border: 3px solid var(--primary);
-            box-shadow: 0 0 15px rgba(46, 213, 115, 0.3);
+            font-size: 2.2rem;
+            border: 3px solid var(--pi-gold);
+            box-shadow: 0 0 20px var(--pi-glow);
         }
 
         .user-details-large {
             display: flex;
             flex-direction: column;
-            gap: 0.3rem;
+            gap: 0.5rem;
         }
 
         .user-details-large .username {
-            font-size: 1.1rem;
+            font-size: 1.3rem;
+            color: var(--text);
         }
 
         .user-details-large .balance {
-            font-size: 0.9rem;
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
         }
 
-        /* SIMPLIFIED NAVIGATION LINKS */
+        .user-details-large .pi-icon-small {
+            width: 22px;
+            height: 22px;
+            font-size: 0.8rem;
+        }
+
+        /* Navigation Links */
         .nav-links {
             padding: 1.5rem;
             display: flex;
@@ -353,7 +440,6 @@
             gap: 1rem;
         }
 
-        /* FIXED: Mobile nav links */
         .nav-menu .nav-link {
             display: flex;
             align-items: center;
@@ -362,26 +448,57 @@
             color: var(--text-secondary);
             text-decoration: none;
             border-radius: var(--border-radius);
-            transition: all 0.3s ease;
-            position: relative;
-            z-index: 1;
-            pointer-events: auto !important;
-            cursor: pointer !important;
+            transition: all var(--transition) ease;
             background: var(--surface-dark);
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
         }
 
-        .nav-menu .nav-link:hover, .nav-menu .nav-link.active {
-            background: var(--primary);
+        .nav-menu .nav-link::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 193, 7, 0.1), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .nav-menu .nav-link:hover::before {
+            left: 100%;
+        }
+
+        .nav-menu .nav-link:hover,
+        .nav-menu .nav-link.active {
+            background: linear-gradient(90deg, var(--pi-primary), var(--pi-gold));
             color: var(--background);
+            box-shadow: 0 4px 15px var(--pi-glow);
+        }
+
+        .nav-menu .nav-link.loading {
+            color: transparent;
+            pointer-events: none;
+        }
+
+        .nav-menu .nav-link.loading::after {
+            content: "";
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top-color: var(--text);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
         }
 
         .nav-icon {
             font-size: 1.2rem;
         }
 
-        /* SIMPLIFIED LOGOUT BUTTON */
+        /* Logout Button */
         .logout-btn {
-            margin-top: auto;
             margin: 1.5rem;
             display: flex;
             align-items: center;
@@ -390,22 +507,43 @@
             padding: 0.75rem;
             background: transparent;
             color: var(--danger);
-            border: 1px solid var(--danger);
+            border: 2px solid var(--danger);
             border-radius: var(--border-radius);
-            cursor: pointer !important;
-            transition: all 0.3s ease;
+            cursor: pointer;
+            transition: all var(--transition) ease;
             font-size: 0.95rem;
+            font-weight: 600;
             position: relative;
-            z-index: 1;
-            pointer-events: auto !important;
+            overflow: hidden;
         }
 
         .logout-btn:hover {
             background: var(--danger);
             color: var(--text);
+            box-shadow: 0 5px 15px rgba(255, 71, 87, 0.4);
         }
 
-        /* SIMPLIFIED OVERLAY */
+        .logout-btn.loading {
+            color: transparent;
+            pointer-events: none;
+        }
+
+        .logout-btn.loading::after {
+            content: "";
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top-color: var(--text);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Overlay */
         .nav-overlay {
             position: fixed;
             top: 0;
@@ -421,40 +559,29 @@
             display: block;
         }
 
-        /* SIMPLIFIED LOGO */
-        .logo {
-            font-size: 1.5rem;
-            font-weight: bold;
-            color: var(--primary);
-            text-decoration: none;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .logo-icon {
-            font-size: 1.8rem;
-        }
-
-        /* Main container */
+        /* Main Container */
         .container {
             max-width: 1400px;
             margin: 0 auto;
             padding: 7rem 1rem 2rem;
         }
 
-        /* Section styles */
+        /* Section Styles */
         .section {
             margin-bottom: 4rem;
         }
 
         .section-title {
             font-size: 2rem;
-            color: var(--primary);
+            background: linear-gradient(90deg, var(--pi-primary) 0%, var(--primary) 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
             margin-bottom: 2rem;
             text-align: center;
             position: relative;
             padding-bottom: 0.75rem;
+            font-weight: 700;
         }
 
         .section-title::after {
@@ -465,11 +592,11 @@
             transform: translateX(-50%);
             width: 60px;
             height: 3px;
-            background: var(--primary);
+            background: linear-gradient(90deg, var(--pi-primary), var(--primary));
             border-radius: 3px;
         }
 
-        /* Game grid */
+        /* Game Grid */
         .game-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
@@ -481,8 +608,8 @@
             border-radius: var(--border-radius);
             overflow: hidden;
             box-shadow: var(--card-shadow);
-            border: 1px solid rgba(46, 213, 115, 0.1);
-            transition: all 0.3s ease;
+            border: 1px solid rgba(255, 193, 7, 0.2);
+            transition: all var(--transition) ease;
             position: relative;
             cursor: pointer;
             height: 100%;
@@ -492,24 +619,22 @@
 
         .game-card:hover {
             transform: translateY(-10px);
-            box-shadow: var(--glow);
-            border-color: var(--primary);
+            box-shadow: 0 15px 40px rgba(255, 193, 7, 0.3);
+            border-color: var(--pi-primary);
         }
 
-        /* ENHANCED: Optimized game image container for better visual impact */
         .game-image-container {
             position: relative;
             width: 100%;
-            height: 280px; /* Increased from 200px for better image showcase */
+            height: 280px;
             overflow: hidden;
-            background: linear-gradient(135deg, rgba(46, 213, 115, 0.1), rgba(46, 213, 115, 0.05));
+            background: linear-gradient(135deg, rgba(255, 193, 7, 0.1), rgba(46, 213, 115, 0.05));
         }
 
         .game-image {
             width: 100%;
             height: 100%;
             object-fit: cover;
-            object-position: center;
             transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
             filter: brightness(0.95) contrast(1.05);
         }
@@ -519,7 +644,6 @@
             filter: brightness(1.1) contrast(1.1);
         }
 
-        /* ENHANCED: Image overlay for better text readability on badges */
         .game-image-overlay {
             position: absolute;
             top: 0;
@@ -534,11 +658,31 @@
                 rgba(0, 0, 0, 0.2) 100%
             );
             pointer-events: none;
-            transition: opacity 0.3s ease;
+            transition: opacity var(--transition) ease;
         }
 
         .game-card:hover .game-image-overlay {
             opacity: 0.7;
+        }
+
+        .game-badge {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: linear-gradient(135deg, var(--pi-primary), var(--pi-gold));
+            color: var(--background);
+            padding: 0.4rem 0.9rem;
+            border-radius: 25px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            box-shadow: 0 4px 15px var(--pi-glow);
+            z-index: 10;
+            transition: all var(--transition) ease;
+        }
+
+        .game-card:hover .game-badge {
+            transform: scale(1.05);
+            box-shadow: 0 6px 20px var(--pi-glow);
         }
 
         .game-content {
@@ -550,9 +694,12 @@
 
         .game-title {
             font-size: 1.5rem;
-            color: var(--primary);
+            background: linear-gradient(90deg, var(--pi-primary), var(--primary));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
             margin-bottom: 0.5rem;
-            font-weight: 600;
+            font-weight: 700;
         }
 
         .game-description {
@@ -567,7 +714,7 @@
             display: flex;
             justify-content: space-between;
             padding-top: 1rem;
-            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            border-top: 1px solid rgba(255, 193, 7, 0.1);
         }
 
         .game-stat {
@@ -577,8 +724,11 @@
         }
 
         .stat-value {
-            font-weight: 600;
-            color: var(--primary);
+            font-weight: 700;
+            background: linear-gradient(90deg, var(--pi-primary), var(--primary));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
             font-size: 1.1rem;
         }
 
@@ -587,50 +737,22 @@
             color: var(--text-secondary);
         }
 
-        /* ENHANCED: Improved badge positioning and styling */
-        .game-badge {
-            position: absolute;
-            top: 1rem;
-            right: 1rem;
-            background: rgba(46, 213, 115, 0.95);
-            color: var(--background);
-            padding: 0.4rem 0.9rem;
-            border-radius: 25px;
-            font-size: 0.8rem;
-            font-weight: 700;
-            box-shadow: 0 4px 15px rgba(46, 213, 115, 0.4);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            z-index: 10;
-            transition: all 0.3s ease;
-        }
-
-        .game-card:hover .game-badge {
-            transform: scale(1.05);
-            box-shadow: 0 6px 20px rgba(46, 213, 115, 0.6);
-        }
-
+        /* Play Button with Loading */
         .play-btn {
-            background: var(--primary);
+            background: linear-gradient(90deg, var(--pi-primary), var(--pi-gold));
             color: var(--background);
             border: none;
             padding: 0.75rem 0;
             border-radius: var(--border-radius);
             font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer !important;
-            transition: all 0.3s ease;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all var(--transition) ease;
             width: 100%;
             margin-top: 1rem;
             position: relative;
             overflow: hidden;
-            pointer-events: auto !important;
-        }
-
-        .play-btn:hover {
-            background: var(--primary-dark);
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(46, 213, 115, 0.3);
+            box-shadow: 0 4px 15px var(--pi-glow);
         }
 
         .play-btn::before {
@@ -644,13 +766,17 @@
             transition: all 0.6s ease;
         }
 
+        .play-btn:hover:not(:disabled) {
+            background: linear-gradient(90deg, var(--pi-gold), var(--pi-gold-dark));
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px var(--pi-glow);
+        }
+
         .play-btn:hover::before {
             left: 100%;
         }
 
-        /* Play button loading state */
         .play-btn.loading {
-            background: var(--primary-dark);
             color: transparent;
             pointer-events: none;
         }
@@ -660,69 +786,19 @@
             position: absolute;
             top: 50%;
             left: 50%;
-            width: 20px;
-            height: 20px;
-            margin: -10px 0 0 -10px;
-            border: 2px solid rgba(0, 0, 0, 0.2);
+            width: 24px;
+            height: 24px;
+            margin: -12px 0 0 -12px;
+            border: 3px solid rgba(10, 10, 16, 0.3);
             border-top-color: var(--background);
             border-radius: 50%;
             animation: spin 0.8s linear infinite;
         }
 
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
-        /* Welcome section */
-        .welcome-section {
-            text-align: center;
-            margin-bottom: 3rem;
-        }
-
-        .welcome-title {
-            font-size: 2.5rem;
-            color: var(--primary);
-            margin-bottom: 1rem;
-            text-shadow: 0 0 10px rgba(46, 213, 115, 0.3);
-        }
-
-        .welcome-subtitle {
-            color: var(--text-secondary);
-            font-size: 1.1rem;
-            max-width: 800px;
-            margin: 0 auto 2rem;
-        }
-
-        /* Stats grid */
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 1.5rem;
-            margin-bottom: 3rem;
-        }
-
-        .stat-card {
-            background: var(--surface);
-            border-radius: var(--border-radius);
-            padding: 1.5rem;
-            text-align: center;
-            border: 1px solid rgba(46, 213, 115, 0.1);
-            transition: all 0.3s ease;
-        }
-
-        .stat-card:hover {
-            transform: translateY(-5px);
-            box-shadow: var(--glow);
-            border-color: var(--primary);
-        }
-
-        .stat-card .stat-value {
-            font-size: 2rem;
-            margin-bottom: 0.5rem;
-        }
-
-        .stat-card .stat-label {
-            font-size: 0.9rem;
+        .play-btn:disabled {
+            background: var(--text-secondary);
+            cursor: not-allowed;
+            opacity: 0.6;
         }
 
         /* Modal */
@@ -732,14 +808,14 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(15, 15, 19, 0.8);
+            background: rgba(10, 10, 16, 0.9);
             z-index: 1500;
             display: flex;
             align-items: center;
             justify-content: center;
             opacity: 0;
             visibility: hidden;
-            transition: all 0.3s ease;
+            transition: all var(--transition) ease;
         }
 
         .modal.active {
@@ -754,8 +830,8 @@
             width: 90%;
             max-width: 400px;
             transform: scale(0.9);
-            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-            border: 1px solid rgba(46, 213, 115, 0.2);
+            transition: transform var(--transition) cubic-bezier(0.34, 1.56, 0.64, 1);
+            border: 1px solid rgba(255, 193, 7, 0.3);
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
         }
 
@@ -765,9 +841,13 @@
 
         .modal-title {
             font-size: 1.5rem;
-            color: var(--primary);
+            background: linear-gradient(90deg, var(--pi-primary), var(--primary));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
             margin-bottom: 1rem;
             text-align: center;
+            font-weight: 700;
         }
 
         .modal-text {
@@ -785,28 +865,29 @@
         .modal-btn {
             padding: 0.75rem 1.5rem;
             border-radius: var(--border-radius);
-            font-weight: 600;
-            cursor: pointer !important;
-            transition: all 0.3s ease;
-            pointer-events: auto !important;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all var(--transition) ease;
+            position: relative;
+            overflow: hidden;
         }
 
         .modal-btn-primary {
-            background: var(--primary);
+            background: linear-gradient(90deg, var(--pi-primary), var(--pi-gold));
             color: var(--background);
             border: none;
+            box-shadow: 0 4px 15px var(--pi-glow);
         }
 
         .modal-btn-primary:hover {
-            background: var(--primary-dark);
             transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(46, 213, 115, 0.3);
+            box-shadow: 0 6px 20px var(--pi-glow);
         }
 
         .modal-btn-secondary {
             background: transparent;
             color: var(--text);
-            border: 1px solid var(--text-secondary);
+            border: 2px solid var(--text-secondary);
         }
 
         .modal-btn-secondary:hover {
@@ -814,56 +895,51 @@
             transform: translateY(-2px);
         }
 
-        /* ENHANCED: Responsive optimizations for larger images */
-        @media (max-width: 768px) {
-            .header-content {
-                padding: 0.75rem 1rem;
-                position: relative;
-            }
+        .modal-btn.loading {
+            color: transparent;
+            pointer-events: none;
+        }
 
+        .modal-btn.loading::after {
+            content: "";
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 20px;
+            height: 20px;
+            margin: -10px 0 0 -10px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top-color: var(--text);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
             .nav-toggle {
                 display: flex;
-            }
-
-            .logo {
-                font-size: 1.3rem;
-            }
-
-            .user-details {
-                font-size: 0.85rem;
-            }
-
-            .username {
-                font-size: 0.85rem;
-            }
-
-            .balance {
-                font-size: 0.75rem;
-            }
-
-            .user-avatar {
-                width: 38px;
-                height: 38px;
-                font-size: 1.2rem;
-                border-width: 2px;
             }
 
             .desktop-nav {
                 display: none;
             }
 
+            .user-avatar {
+                width: 40px;
+                height: 40px;
+                font-size: 1.3rem;
+            }
+
+            .username {
+                font-size: 0.9rem;
+            }
+
+            .balance {
+                font-size: 0.85rem;
+            }
+
             .section-title {
                 font-size: 1.75rem;
-                margin-bottom: 1.5rem;
-            }
-
-            .welcome-title {
-                font-size: 1.75rem;
-            }
-
-            .welcome-subtitle {
-                font-size: 0.95rem;
-                padding: 0 0.5rem;
             }
 
             .container {
@@ -874,100 +950,48 @@
                 grid-template-columns: 1fr;
                 max-width: 400px;
                 margin: 0 auto;
-                gap: 1.5rem;
             }
 
-            /* ENHANCED: Mobile image optimization */
             .game-image-container {
-                height: 240px; /* Slightly smaller on mobile but still larger than original */
-            }
-
-            .stats-grid {
-                grid-template-columns: repeat(2, 1fr);
-                gap: 1rem;
-            }
-
-            .stat-card {
-                padding: 1rem;
-            }
-
-            .stat-card .stat-value {
-                font-size: 1.5rem;
-                margin-bottom: 0.5rem;
-            }
-
-            .stat-card .stat-label {
-                font-size: 0.8rem;
-            }
-
-            .game-stats {
-                flex-wrap: wrap;
-                gap: 0.5rem;
-                justify-content: space-around;
-            }
-
-            .game-stat {
-                min-width: 30%;
+                height: 240px;
             }
         }
 
         @media (max-width: 480px) {
-            .header-content {
-                padding: 0.5rem 0.75rem;
-            }
-
             .logo {
                 font-size: 1.3rem;
             }
 
             .user-avatar {
-                width: 32px;
-                height: 32px;
-                font-size: 1rem;
+                width: 35px;
+                height: 35px;
+                font-size: 1.1rem;
             }
 
-            .stats-grid {
-                grid-template-columns: 1fr;
+            .username {
+                font-size: 0.85rem;
             }
 
-            .welcome-title {
-                font-size: 1.5rem;
+            .balance {
+                font-size: 0.8rem;
             }
 
-            .welcome-subtitle {
-                font-size: 0.9rem;
+            .pi-icon-small {
+                width: 16px;
+                height: 16px;
+                font-size: 0.65rem;
             }
 
             .section-title {
                 font-size: 1.5rem;
             }
 
-            .game-title {
-                font-size: 1.3rem;
-            }
-
-            .game-content {
-                padding: 1.25rem;
-            }
-
-            .game-badge {
-                font-size: 0.7rem;
-                padding: 0.3rem 0.7rem;
-            }
-
-            /* ENHANCED: Small mobile image optimization */
             .game-image-container {
-                height: 220px; /* Optimized for small screens */
-            }
-
-            .modal-content {
-                padding: 1.5rem;
-                width: 95%;
+                height: 220px;
             }
 
             .modal-buttons {
                 flex-direction: column;
-                gap: 0.75rem;
             }
 
             .modal-btn {
@@ -975,64 +999,29 @@
             }
         }
 
-        /* ENHANCED: Large screen optimizations */
         @media (min-width: 1200px) {
             .game-grid {
                 grid-template-columns: repeat(3, 1fr);
             }
 
             .game-image-container {
-                height: 320px; /* Even larger on big screens for premium feel */
+                height: 320px;
             }
         }
-
-        /* CRITICAL FIX: Force clickability for all interactive elements */
-        .nav-menu, 
-        .nav-menu .nav-link, 
-        .nav-menu .logout-btn,
-        .nav-menu .user-profile-large,
-        .play-btn,
-        .modal-btn,
-        .nav-toggle {
-            pointer-events: auto !important;
-            cursor: pointer !important;
-        }
-
-        /* Ensure time elements are clickable */
-        .time-element,
-        .countdown-timer,
-        .timer-text,
-        .timer-circle {
-            pointer-events: auto !important;
-            position: relative;
-            z-index: 10;
-        }
     </style>
-      <link
-    rel="icon"
-    href="https://i.postimg.cc/FzgPtp2v/photo-2025-05-31-05-36-51.jpg"
-    type="image/jpeg"
-  />
-
-  <!-- 2) For older browsers, you can also include “shortcut icon” -->
-  <link
-    rel="shortcut icon"
-    href="https://i.postimg.cc/FzgPtp2v/photo-2025-05-31-05-36-51.jpg"
-    type="image/jpeg"
-  />
+    <link rel="icon" href="https://i.postimg.cc/FzgPtp2v/photo-2025-05-31-05-36-51.jpg" type="image/jpeg" />
+    <link rel="shortcut icon" href="https://i.postimg.cc/FzgPtp2v/photo-2025-05-31-05-36-51.jpg" type="image/jpeg" />
 </head>
 <body>
-    <!-- Background elements -->
     <div class="bg-elements">
         <div class="bg-element"></div>
         <div class="bg-element"></div>
         <div class="bg-element"></div>
     </div>
 
-    <!-- Dedicated container for shooting stars to prevent layout shifts -->
     <div class="stars-container" id="starsContainer"></div>
 
-    <!-- HEADER -->
+     HEADER 
     <header class="header">
         <div class="header-content">
             <button class="nav-toggle" id="navToggle" aria-label="Toggle Menu">
@@ -1042,11 +1031,10 @@
             </button>
             
             <a href="#" class="logo">
-                <span class="logo-icon">💰</span>
-                <span>chiwe</span>
+                <span class="logo-icon">π</span>
+                <span>Chiwe</span>
             </a>
             
-            <!-- Desktop Navigation - Added for PC version -->
             <nav class="desktop-nav">
                 <a href="{%url 'dashboard'%}" class="nav-link active">Home</a>
                 <a href="monitary/deposit" class="nav-link">Deposit</a>
@@ -1055,27 +1043,29 @@
             </nav>
             
             <div class="user-profile">
-                <div class="user-avatar">
-                    👑
-                </div>
+                <div class="user-avatar">👑</div>
                 <div class="user-details">
                     <span class="username"><a href="{%url 'profile'%}">{{user.username}}</a></span>
-                    <span class="balance">{{ballance}} pi</span>
+                    <span class="balance">
+                        <span class="pi-icon-small">π</span>
+                        <span>{{ballance}}</span>
+                    </span>
                 </div>
             </div>
         </div>
     </header>
 
-    <!-- NAVIGATION MENU -->
+     NAVIGATION MENU 
     <nav class="nav-menu" id="navMenu">
         <div class="nav-header">
             <div class="user-profile-large">
-                <div class="user-avatar-large">
-                    👑
-                </div>
+                <div class="user-avatar-large">👑</div>
                 <div class="user-details-large">
                     <span class="username">{{user.username}}</span>
-                    <span class="balance">Balance: {{ballance}} pi</span>
+                    <span class="balance">
+                        <span class="pi-icon-small">π</span>
+                        <span>{{ballance}}</span>
+                    </span>
                 </div>
             </div>
         </div>
@@ -1088,11 +1078,11 @@
                 <span class="nav-icon">💰</span>
                 Withdraw
             </a>
-            <a href="monitary/deposit"class="nav-link">
+            <a href="monitary/deposit" class="nav-link">
                 <span class="nav-icon">💶</span>
                 Deposit
             </a>
-            <a href="#" class="nav-link">
+            <a href="{%url 'leaderboard'%}" class="nav-link">
                 <span class="nav-icon">🏆</span>
                 Leaderboard
             </a>
@@ -1107,19 +1097,15 @@
         </button>
     </nav>
 
-    <!-- OVERLAY -->
     <div class="nav-overlay" id="navOverlay"></div>
-    {%load static %}
-    <!-- Main content -->
+
+     Main content 
     <main class="container">
-        <!-- Games section -->
+         Games section 
         <section class="section">
-            <h2 class="section-title">Available Games</h2>
+            <h2 class="section-title">Available Arenas</h2>
             <div class="game-grid">
-                <!-- Crack the Code game card -->
-                
-                {%load static%}
-                <!-- Bingo game card -->
+                 Bingo game card 
                 <div class="game-card" data-game="roolet">
                     <div class="game-image-container">
                         <img src="https://i.postimg.cc/Wb9yJtqs/photo-2025-05-29-13-08-56.jpg" 
@@ -1151,6 +1137,8 @@
                         <button class="play-btn" data-game="roolet">Play Now</button>
                     </div>
                 </div>
+
+                 Crack the Code game card 
                 <div class="game-card" data-game="ctc">
                     <div class="game-image-container">
                         <img src="https://i.postimg.cc/TY96NRys/ctc.jpg" 
@@ -1182,7 +1170,8 @@
                         <button class="play-btn" data-game="ctc">Play Now</button>
                     </div>
                 </div>
-                <!-- Coming soon game card -->
+
+                 Coming soon game card 
                 <div class="game-card">
                     <div class="game-image-container">
                         <img src="https://i.postimg.cc/JhPjZgZS/assets-task-01jwg3cwrmfg7a62708cg71bye-1748592194-img-3.webp" 
@@ -1211,43 +1200,14 @@
                                 <div class="stat-label">Max Win</div>
                             </div>
                         </div>
-                        <button class="play-btn" disabled style="background-color: var(--text-secondary); cursor: not-allowed;">Coming Soon</button>
+                        <button class="play-btn" disabled>Coming Soon</button>
                     </div>
                 </div>
             </div>
         </section>
-
-        <!-- Welcome section -->
-        <section class="welcome-section">
-            <h1 class="welcome-title">Welcome to Chiwe Gaming</h1>
-            <p class="welcome-subtitle">
-                Test your skills, challenge opponents, and win big in our collection of strategic games.
-                Whether you're a code breaker or a calculated risk-taker, your next win awaits.
-            </p>
-        </section>
-
-        <!-- Stats section -->
-        <section class="stats-grid">
-            <div class="stat-card">
-                <div class="stat-value">3K pi</div>
-                <div class="stat-label">Total Prizes Won</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-value">250+</div>
-                <div class="stat-label">Active Players</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-value">98%</div>
-                <div class="stat-label">Player Satisfaction</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-value">24/7</div>
-                <div class="stat-label">Live Support</div>
-            </div>
-        </section>
     </main>
 
-    <!-- Logout confirmation modal -->
+     Logout confirmation modal 
     <div class="modal" id="logoutModal">
         <div class="modal-content">
             <h3 class="modal-title">Confirm Logout</h3>
@@ -1260,13 +1220,12 @@
     </div>
 
     <script>
-        // Create shooting stars effect
+        // Create shooting stars
         function createShootingStar() {
             const starsContainer = document.getElementById('starsContainer');
             const star = document.createElement('div');
             star.classList.add('shooting-star');
             
-            // Random position
             const startX = Math.random() * window.innerWidth;
             const startY = Math.random() * window.innerHeight / 3;
             
@@ -1275,193 +1234,139 @@
             
             starsContainer.appendChild(star);
             
-            // Remove after animation completes
             setTimeout(() => {
                 star.remove();
             }, 3000);
         }
         
-        // Create shooting stars periodically
         setInterval(createShootingStar, 2000);
         
-        // SIMPLIFIED NAVIGATION TOGGLE
         document.addEventListener('DOMContentLoaded', function() {
-            // ENHANCED: Reset loading states more thoroughly
+            // Reset loading states
             function resetAllLoadingStates() {
-                document.querySelectorAll('.play-btn.loading').forEach(button => {
-                    button.classList.remove('loading');
-                    button.disabled = false;
-                    button.style.pointerEvents = 'auto';
-                    button.style.cursor = 'pointer';
+                document.querySelectorAll('.loading').forEach(el => {
+                    el.classList.remove('loading');
+                    if (el.tagName === 'BUTTON') {
+                        el.disabled = false;
+                    }
                 });
             }
 
-            // Reset on page load
             resetAllLoadingStates();
-
-            // Reset when page becomes visible (handles back navigation)
-            document.addEventListener('visibilitychange', function() {
-                if (!document.hidden) {
-                    resetAllLoadingStates();
-                }
+            document.addEventListener('visibilitychange', () => {
+                if (!document.hidden) resetAllLoadingStates();
             });
-
-            // Reset when window gains focus
             window.addEventListener('focus', resetAllLoadingStates);
 
+            // Navigation toggle
             const navToggle = document.getElementById('navToggle');
             const navMenu = document.getElementById('navMenu');
             const navOverlay = document.getElementById('navOverlay');
 
-            // Toggle menu function
             function toggleMenu() {
                 navMenu.classList.toggle('active');
                 navOverlay.classList.toggle('active');
                 navToggle.classList.toggle('active');
             }
 
-            // Toggle button click
-            navToggle.addEventListener('click', function(e) {
+            navToggle.addEventListener('click', (e) => {
                 e.stopPropagation();
                 toggleMenu();
             });
 
-            // Overlay click
-            navOverlay.addEventListener('click', function() {
-                toggleMenu();
-            });
+            navOverlay.addEventListener('click', toggleMenu);
 
-            // Prevent clicks inside menu from closing it
-            navMenu.addEventListener('click', function(e) {
-                e.stopPropagation();
-            });
-
-            // Individual link clicks
+            // Nav links with loading animation
             document.querySelectorAll('.nav-menu .nav-link').forEach(link => {
-                link.addEventListener('click', function() {
+                link.addEventListener('click', function(e) {
+                    if (!this.classList.contains('active')) {
+                        this.classList.add('loading');
+                    }
                     if (window.innerWidth < 769) {
                         toggleMenu();
                     }
                 });
             });
 
-            // Logout button click
-            document.getElementById('logoutBtn').addEventListener('click', function(e) {
-                e.stopPropagation();
-                toggleMenu();
-                document.getElementById('logoutModal').classList.add('active');
-            });
-            
-            // Modal buttons
+            // Logout button
+            const logoutBtn = document.getElementById('logoutBtn');
             const logoutModal = document.getElementById('logoutModal');
             const confirmLogoutBtn = document.getElementById('confirmLogoutBtn');
             const cancelLogoutBtn = document.getElementById('cancelLogoutBtn');
-            
+
+            logoutBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                logoutBtn.classList.add('loading');
+                setTimeout(() => {
+                    logoutBtn.classList.remove('loading');
+                    toggleMenu();
+                    logoutModal.classList.add('active');
+                }, 500);
+            });
+
             cancelLogoutBtn.addEventListener('click', () => {
                 logoutModal.classList.remove('active');
             });
-            
+
             confirmLogoutBtn.addEventListener('click', () => {
-                // Perform logout action
-                window.location.href = '/logout';
+                confirmLogoutBtn.classList.add('loading');
+                setTimeout(() => {
+                    window.location.href = '/logout';
+                }, 800);
             });
-            
-            // ENHANCED: Play Now button functionality with better loading management
-            const playButtons = document.querySelectorAll('.play-btn:not([disabled])');
-            
-            // Function to handle game loading with timeout protection
+
+            // Play buttons with loading
             function loadGame(gameType, button) {
-                // Determine game URL based on game type
                 let gameUrl = '';
                 if (gameType === 'ctc') {
                     gameUrl = '/games/ctc';
                 } else if (gameType === 'roolet') {
                     gameUrl = '/games/bingo';
                 } else {
-                    return; // Exit if invalid game type
+                    return;
                 }
-                
-                // Set a timeout to reset loading state if navigation fails
+
                 const loadingTimeout = setTimeout(() => {
                     button.classList.remove('loading');
                     button.disabled = false;
-                    button.style.pointerEvents = 'auto';
-                    button.style.cursor = 'pointer';
-                }, 3000); // Reset after 3 seconds if navigation doesn't complete
-                
-                // Store timeout ID for cleanup
-                button.dataset.loadingTimeout = loadingTimeout;
-                
-                // Redirect to the game page
+                }, 3000);
+
                 try {
                     window.location.href = gameUrl;
                 } catch (error) {
-                    // If navigation fails, reset the button immediately
                     clearTimeout(loadingTimeout);
                     button.classList.remove('loading');
                     button.disabled = false;
-                    button.style.pointerEvents = 'auto';
-                    button.style.cursor = 'pointer';
-                    console.error('Navigation failed:', error);
                 }
             }
 
-            // Add click event listeners to all play buttons
+            const playButtons = document.querySelectorAll('.play-btn:not([disabled])');
+            
             playButtons.forEach(button => {
                 button.addEventListener('click', function(e) {
-                    e.stopPropagation(); // Prevent card click from triggering
+                    e.stopPropagation();
                     
-                    // Prevent multiple clicks
-                    if (this.classList.contains('loading')) {
-                        return;
-                    }
+                    if (this.classList.contains('loading')) return;
                     
-                    // Add loading state to button
                     this.classList.add('loading');
                     this.disabled = true;
-                    this.style.pointerEvents = 'none';
                     
                     const gameType = this.getAttribute('data-game');
-                    
-                    // Load the game with enhanced error handling
                     loadGame(gameType, this);
                 });
             });
 
-            // Game card click handler - delegate to the Play Now button
+            // Game card clicks
             const gameCards = document.querySelectorAll('.game-card[data-game]');
-
             gameCards.forEach(card => {
                 card.addEventListener('click', function(e) {
-                    // Don't trigger if clicking on the button directly
                     if (e.target.classList.contains('play-btn') || e.target.closest('.play-btn')) {
                         return;
                     }
                     
-                    // Find and click the play button in this card
                     const playButton = this.querySelector('.play-btn:not([disabled])');
                     if (playButton && !playButton.classList.contains('loading')) {
                         playButton.click();
-                    }
-                });
-            });
-
-            // Force all interactive elements to be clickable
-            const allInteractiveElements = document.querySelectorAll('a, button, .nav-link, .logout-btn, .play-btn');
-            allInteractiveElements.forEach(el => {
-                el.style.pointerEvents = 'auto';
-                el.style.cursor = 'pointer';
-                el.addEventListener('click', function(e) {
-                    e.stopPropagation();
-                });
-            });
-
-            // ENHANCED: Handle page unload to clean up timeouts
-            window.addEventListener('beforeunload', function() {
-                document.querySelectorAll('.play-btn[data-loading-timeout]').forEach(button => {
-                    const timeoutId = button.dataset.loadingTimeout;
-                    if (timeoutId) {
-                        clearTimeout(parseInt(timeoutId));
                     }
                 });
             });
