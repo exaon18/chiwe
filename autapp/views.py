@@ -27,7 +27,7 @@ from .models import MyUser, Ballance, GameHistory, Maintainance, PiPayment
 
 # Pi API configuration
 PI_API_BASE = getattr(settings, 'PI_API_BASE', os.environ.get('PI_API_BASE', 'https://api.minepi.com/v2'))
-SERVER_API_KEY = getattr(settings, 'PI_SERVER_API_KEY', os.environ.get('PI_SERVER_API_KEY', ''))
+SERVER_API_KEY = "7vqrbckrr4fvplcmt5ox3uqyhfxlaiwwqde3jjvt3gn1oo9ni4yyn0utxlb6e9yk"
 
 # Optional directory to persist Pi logs
 LOG_DIR = getattr(settings, 'PI_LOG_DIR', None)
@@ -674,6 +674,7 @@ def admin_resolve_page(request):
     return render(request, 'admin_resolve.html')
 
 @require_POST
+@csrf_exempt
 def approve_payment(request):
     # Parse JSON body safely
     try:
@@ -700,29 +701,34 @@ def approve_payment(request):
     user_obj = None
     if not getattr(request, 'user', None) or not request.user.is_authenticated:
         access_token = data.get('accessToken') or data.get('access_token')
-        if not access_token:
-            print('approve_payment: unauthenticated request and no accessToken provided')
-            return JsonResponse({'success': False, 'detail': 'Authentication required'}, status=401)
-        # Verify client access token with Pi (/me) using Bearer token
-        try:
-            me_resp = requests.get(f"{PI_API_BASE}/me", headers={"Authorization": f"Bearer {access_token}"}, timeout=10)
-            if me_resp.status_code != 200:
-                print('approve_payment: PI /me verification failed', me_resp.status_code, me_resp.text[:200])
-                return JsonResponse({'success': False, 'detail': 'Invalid access token'}, status=401)
-            pi_user = me_resp.json()
-            pi_username = pi_user.get('username') or pi_user.get('uid')
-            if not pi_username:
-                return JsonResponse({'success': False, 'detail': 'Could not determine Pi username from token'}, status=401)
-            # Get or create a MyUser for this pi_username
-            user_defaults = {'first_name': pi_username, 'referalCode': username_to_id(pi_username)}
-            user_obj, created = MyUser.objects.get_or_create(username=pi_username, defaults=user_defaults)
-            if created:
-                user_obj.set_unusable_password()
-                user_obj.is_active = True
-                user_obj.save()
-        except Exception as e:
-            print('approve_payment: exception verifying access token', e)
-            return JsonResponse({'success': False, 'detail': 'Error verifying access token'}, status=500)
+        if access_token:
+            # Verify client access token with Pi (/me) using Bearer token and map to a user
+            try:
+                me_resp = requests.get(f"{PI_API_BASE}/me", headers={"Authorization": f"Bearer {access_token}"}, timeout=10)
+                if me_resp.status_code != 200:
+                    print('approve_payment: PI /me verification failed', me_resp.status_code, me_resp.text[:200])
+                    # Do not fail the whole request here; proceed without user mapping
+                    user_obj = None
+                else:
+                    pi_user = me_resp.json()
+                    pi_username = pi_user.get('username') or pi_user.get('uid')
+                    if pi_username:
+                        user_defaults = {'first_name': pi_username, 'referalCode': username_to_id(pi_username)}
+                        user_obj, created = MyUser.objects.get_or_create(username=pi_username, defaults=user_defaults)
+                        if created:
+                            user_obj.set_unusable_password()
+                            user_obj.is_active = True
+                            user_obj.save()
+                    else:
+                        user_obj = None
+            except Exception as e:
+                print('approve_payment: exception verifying access token', e)
+                # On verification error, proceed without user mapping rather than blocking approval
+                user_obj = None
+        else:
+            # Pi Browser frequently doesn't include cookies; allow creating/approving payments without user mapping.
+            print('approve_payment: unauthenticated request and no accessToken provided - proceeding without user mapping')
+            user_obj = None
     else:
         user_obj = request.user
     payment_id = data.get("paymentId")
