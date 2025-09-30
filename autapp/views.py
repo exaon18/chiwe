@@ -1,138 +1,150 @@
 import decimal
 from decimal import Decimal
 import os
-from django.contrib import messages
-from django.shortcuts import render,redirect
 import hashlib
 import time
-from .models import MyUser,Ballance,GameHistory,Maintainance,PiPayment
-from django.core.mail import send_mail
+import json
+import requests
+import tempfile
+
 from django.conf import settings
-from django.contrib.auth.decorators import login_required
-from django.core.mail import EmailMessage
-from django.template.loader import render_to_string
-from django.conf import settings
-from django.contrib.auth import login, authenticate,logout
-from django.http import FileResponse, Http404, JsonResponse
-from django.contrib.auth import login
-from django.shortcuts import render, get_object_or_404
-from django.views.decorators.http import require_POST
-import json, requests
 from django.middleware.csrf import get_token
+from django.core.mail import send_mail, EmailMessage
+from django.template.loader import render_to_string
+from django.http import FileResponse, Http404, JsonResponse
+from django.shortcuts import render, redirect, get_object_or_404
+from django.views.decorators.http import require_POST
 from django.views.decorators.csrf import csrf_exempt
 from django.core.validators import validate_email
 from django.core.exceptions import ValidationError
+from django.db import IntegrityError, transaction
+from django.contrib import messages
+from django.contrib.auth import login, authenticate, logout
+from django.contrib.auth.decorators import login_required
 from django.contrib.admin.views.decorators import staff_member_required
 
-# Pi API configuration - prefer settings, fallback to environment variables
-# Default to the official production API host. For sandbox/testing you can
-# override `PI_API_BASE` in Django settings or set the env var `PI_API_BASE`.
+from .models import MyUser, Ballance, GameHistory, Maintainance, PiPayment
+
+# Pi API configuration
 PI_API_BASE = getattr(settings, 'PI_API_BASE', os.environ.get('PI_API_BASE', 'https://api.minepi.com/v2'))
-# Hardcoded Server API Key (temporary for demo/hackathon)
-SERVER_API_KEY = '7vqrbckrr4fvplcmt5ox3uqyhfxlaiwwqde3jjvt3gn1oo9ni4yyn0utxlb6e9yk'
+SERVER_API_KEY = getattr(settings, 'PI_SERVER_API_KEY', os.environ.get('PI_SERVER_API_KEY', ''))
+
+# Optional directory to persist Pi logs
+LOG_DIR = getattr(settings, 'PI_LOG_DIR', None)
+if LOG_DIR:
+    try:
+        os.makedirs(LOG_DIR, exist_ok=True)
+    except Exception:
+        LOG_DIR = None
+
 
 def get_csrf_token(request):
-    """
-    View to provide a fresh CSRF token via AJAX.
-    This is useful for SPA applications or when cookies might be blocked.
-    """
-    csrf_token = get_token(request)
-    return JsonResponse({'csrf_token': csrf_token})
+    from django.middleware.csrf import get_token
+    return JsonResponse({'csrf_token': get_token(request)})
+
+
 def username_to_id(username):
     h = hashlib.sha256(username.encode()).hexdigest()
     return int(h[:16], 16) % 10**8
 
-def send_welcome_email(user, email,token,why):
+
+def ensure_ballance_tuple(user):
+    """Safely get_or_create a Ballance row and avoid race IntegrityError."""
+    try:
+        return Ballance.objects.get_or_create(user=user, defaults={'ballance': Decimal('0.00')})
+    except IntegrityError:
+        try:
+            existing = Ballance.objects.get(user=user)
+            return existing, False
+        except Ballance.DoesNotExist:
+            with transaction.atomic():
+                return Ballance.objects.get_or_create(user=user, defaults={'ballance': Decimal('0.00')})
+
+
+def send_welcome_email(user, email, token, why):
     subject = 'Welcome to Chiwe'
     from_email = settings.DEFAULT_FROM_EMAIL
     to_email = email
-    # Render the HTML template with context
-    if why=="signup":
-        html_content = render_to_string('otp.html', {'user': user,'token':token})
+    if why == 'signup':
+        html_content = render_to_string('otp.html', {'user': user, 'token': token})
     else:
-        html_content = render_to_string('forgot.html', {'user': user,'token':token})
-    # Create the email message
-    email = EmailMessage(subject, html_content, from_email, [to_email])
-    email.content_subtype = 'html'  # Set the content type to HTML
-    # Send the email
-    email.send()
+        html_content = render_to_string('forgot.html', {'user': user, 'token': token})
+    msg = EmailMessage(subject, html_content, from_email, [to_email])
+    msg.content_subtype = 'html'
+    msg.send()
+
 
 def generate_unique_number(username):
-    # Get the current timestamp
     timestamp = str(time.time())
-
-    # Combine the username and timestamp
     seed = username + timestamp
-
-    # Create a hash of the seed
     hash_object = hashlib.sha256(seed.encode())
-
-    # Convert the hash to an integer and get the last 6 digits
     unique_number = int(hash_object.hexdigest(), 16) % 1000000
-
-    # Ensure the number is 6 digits by padding with zeros if necessary
     return str(unique_number).zfill(6)
 
+
+def dump_log(name, data):
+    try:
+        if LOG_DIR:
+            path = os.path.join(LOG_DIR, f"{int(time.time())}-{name}.json")
+        else:
+            path = os.path.join(tempfile.gettempdir(), f"{int(time.time())}-{name}.json")
+        with open(path, 'w', encoding='utf-8') as f:
+            json.dump(data, f, indent=2, default=str)
+        print('Wrote log:', path)
+    except Exception as e:
+        print('Failed to write Pi log:', e)
+
+
 def index(request):
-    
-    return render(request,'index.html')
-def signup(request,ref):
+    return render(request, 'index.html')
+
+
+def signup(request, ref):
     if request.method == 'POST':
         username = request.POST['username'].upper()
         firstname = request.POST['first_name']
         email = request.POST['email']
         password = request.POST['password1']
         password2 = request.POST['password2']
-        referal=request.POST.get('referal', None)
-        rewarded=''
+        referal = request.POST.get('referal', None)
+        rewarded = ''
         try:
             validate_email(email)
-            print("Valid email")
         except ValidationError:
-            return JsonResponse({"success": False, "message":"Invalid email address."})
+            return JsonResponse({"success": False, "message": "Invalid email address."})
         if not username or not firstname or not email or not password or not password2:
-            return JsonResponse({"success": False, "message":"All fields are required."})
+            return JsonResponse({"success": False, "message": "All fields are required."})
         if len(username) < 4:
-            return JsonResponse({"success": False, "message":"Username must be at least 4 characters."})
-
-         
+            return JsonResponse({"success": False, "message": "Username must be at least 4 characters."})
         if password != password2:
-            return JsonResponse({"success": False, "message":"Passwords do not match."})
-            
+            return JsonResponse({"success": False, "message": "Passwords do not match."})
         if len(password) < 6:
-            return JsonResponse({"success": False, "message":"Password must be at least 6 characters."})
-       
-        
-                # Check for active user conflicts
-        invalid_chars = set(' @#$/&*><-_.!%^()+=[]{}|~`,;:\'"')
+            return JsonResponse({"success": False, "message": "Password must be at least 6 characters."})
+
+        invalid_chars = set(' @#$/&*><-_.!%^()+=[]{}|~`,;:\"\'')
         if any(char in username for char in invalid_chars) or not username:
-            return JsonResponse({"success": False, "message":"Username must not contain spaces or special characters."})
+            return JsonResponse({"success": False, "message": "Username must not contain spaces or special characters."})
 
         if MyUser.objects.filter(username=username, is_active=True).exists():
-            return JsonResponse({"success": False, "message":"Username already exists, try another one."})
+            return JsonResponse({"success": False, "message": "Username already exists, try another one."})
         if MyUser.objects.filter(email=email, is_active=True).exists():
-            return JsonResponse({"success": False, "message":"Email already exists, try another one."})
-        
-        # If inactive user exists, remove it
+            return JsonResponse({"success": False, "message": "Email already exists, try another one."})
+
         inactive_user = MyUser.objects.filter(username=username, is_active=False).first()
         if inactive_user:
             inactive_user.delete()
         inactive_email = MyUser.objects.filter(email=email, is_active=False).first()
         if inactive_email:
             inactive_email.delete()
-        if referal!= None and referal!="":
-            try:
-           
 
-                    
-                rewarded=MyUser.objects.get(referalCode=referal)
-                rewarded.referedCount+=1
+        if referal:
+            try:
+                rewarded = MyUser.objects.get(referalCode=referal)
+                rewarded.referedCount += 1
                 rewarded.save()
             except MyUser.DoesNotExist:
-                print(referal=="")
-                print("DNE")
-                return JsonResponse({"success": False, "message":"Invalid referal code."})
-       
+                return JsonResponse({"success": False, "message": "Invalid referal code."})
+
         token = generate_unique_number(username)
         user = MyUser.objects.create_user(
             username=username,
@@ -142,180 +154,104 @@ def signup(request,ref):
             token=token,
             referedBy=referal,
             referalCode=username_to_id(username)
-            
         )
-        
-        Ballance.objects.create(user=user, ballance=0.00)
-        user.is_active = False  # User needs to verify via email
+
+        # create balance row safely to avoid race conditions
+        ensure_ballance_tuple(user)
+        user.is_active = False
         user.save()
-        print("finished")
         try:
-            send_welcome_email(user, email, token,why="signup")
-            return JsonResponse({"success": True, "message":"OTP has been sent to your email, please check your inbox.",
-                                 "username":username})
+            send_welcome_email(user, email, token, why='signup')
+            return JsonResponse({"success": True, "message": "OTP has been sent to your email, please check your inbox.", "username": username})
         except Exception as e:
-            print(e)
-            
             user.delete()
-            return JsonResponse({"success": False, "message":"system is busy , please sign up again."})
-    if ref=="1":
+            return JsonResponse({"success": False, "message": "system is busy , please sign up again."})
+
+    if ref == "1":
         return render(request, 'signup.html')
-    else:
-        return render(request, 'signup.html',{'referal':ref})
+    return render(request, 'signup.html', {'referal': ref})
 
 
 @csrf_exempt
 def pi_auth(request):
-    if request.method != "POST":
+    if request.method != 'POST':
         return JsonResponse({"success": False, "error": "POST required"}, status=400)
 
-    try:
-        # Robustly parse incoming data (JSON body or form-encoded)
-        data = {}
-        if request.content_type and 'application/json' in request.content_type:
-            try:
-                body = request.body.decode('utf-8') if request.body else ''
-                data = json.loads(body) if body else {}
-            except Exception:
-                data = {}
-        else:
-            # fallback to form-encoded data
-            data = request.POST.dict() if hasattr(request, 'POST') else {}
+    data = {}
+    if request.content_type and 'application/json' in request.content_type:
+        try:
+            body = request.body.decode('utf-8') if request.body else ''
+            data = json.loads(body) if body else {}
+        except Exception:
+            data = {}
+    else:
+        data = request.POST.dict() if hasattr(request, 'POST') else {}
 
-        # Normalize possible payload shapes
-        access_token = (data.get('accessToken') or data.get('access_token') or data.get('token'))
-        username = None
-        if isinstance(data.get('user'), dict):
-            username = data['user'].get('username') or data['user'].get('uid')
-        username = username or data.get('username') or data.get('uid') or data.get('user')
+    access_token = data.get('accessToken') or data.get('access_token') or data.get('token')
+    username = None
+    if isinstance(data.get('user'), dict):
+        username = data['user'].get('username') or data['user'].get('uid')
+    username = username or data.get('username') or data.get('uid') or data.get('user')
 
-        if not username:
-            return JsonResponse({"success": False, "error": "Missing username in payload"}, status=400)
+    if not username:
+        return JsonResponse({"success": False, "error": "Missing username in payload"}, status=400)
 
-        # Step 1: Verify with Pi API using the client's access token
-        headers = {
-            "Authorization": f"Bearer {access_token}",
-            "Content-Type": "application/json"
-        }
-
-        response = requests.get(f"{PI_API_BASE}/me", headers=headers)
-
-
-        pi_data = None
-        # If we have an access token, verify it with Pi API
-        if access_token:
-            try:
-                if response.status_code != 200:
-                    print("pi error status", response.status_code, response.text)
-                    return JsonResponse({"success": False, "error": "Pi verification failed"}, status=401)
-                pi_data = response.json()
-            except Exception as e:
-                print('pi verification parse error', e)
-                return JsonResponse({"success": False, "error": "Pi verification parse error"}, status=500)
-
-            pi_username = pi_data.get("username")
-            if pi_username != username:
+    pi_data = None
+    if access_token:
+        try:
+            resp = requests.get(f"{PI_API_BASE}/me", headers={"Authorization": f"Bearer {access_token}"}, timeout=8)
+            if resp.status_code != 200:
+                return JsonResponse({"success": False, "error": "Pi verification failed"}, status=401)
+            pi_data = resp.json()
+            pi_username = pi_data.get('username') or pi_data.get('uid')
+            if pi_username and pi_username != username:
                 return JsonResponse({"success": False, "error": "Username mismatch"}, status=403)
+        except Exception as e:
+            print('pi_auth: exception verifying access token', e)
+            return JsonResponse({"success": False, "error": "Error verifying access token"}, status=500)
+    else:
+        if getattr(settings, 'DEBUG', False):
+            pi_data = data
         else:
-            # No access token provided. In production we should reject this.
-            # For local development (DEBUG=True) allow it for convenience.
-            if getattr(settings, 'DEBUG', False):
-                print('pi_auth: no access token provided, proceeding in DEBUG mode')
-                # treat incoming data as pi_data if it looks like one
-                pi_data = data
-            else:
-                return JsonResponse({"success": False, "error": "Missing access token"}, status=400)
+            return JsonResponse({"success": False, "error": "Missing access token"}, status=400)
 
-        # Step 2: Create or get Django user
-        # Create or get a user safely. Put creation-only fields in defaults.
-        user_defaults = {
-            'first_name': pi_data.get('username') if pi_data else username,
-            'referalCode': username_to_id(username),
-        }
-        user, created = MyUser.objects.get_or_create(username=username, defaults=user_defaults)
-        if created:
-            # Don't set a usable password here; mark account active and set unusable password
-            user.set_unusable_password()
-            user.is_active = True
-            user.save()
-        else:
-            user.is_active = True
-            user.save()
+    user_defaults = {
+        'first_name': (pi_data.get('username') if isinstance(pi_data, dict) else username),
+        'referalCode': username_to_id(username),
+    }
+    user, created = MyUser.objects.get_or_create(username=username, defaults=user_defaults)
+    if created:
+        user.set_unusable_password()
+    user.is_active = True
+    user.save()
 
-        Ballance.objects.get_or_create(user=user, ballance=0.00)
-        GameHistory.objects.get_or_create(user=user, defaults={
-            'TotalPlayed': 0, 'TotalWin': 0, 'Totaloss': 0, 'TotalEarning': 0.00
-        })
+    ensure_ballance_tuple(user)
+    GameHistory.objects.get_or_create(user=user, defaults={'TotalPlayed': 0, 'TotalWin': 0, 'Totaloss': 0, 'TotalEarning': 0.00})
 
-        # Log the user in. Since we may not have credentials, set backend and call login()
-        try:
-            user.backend = 'django.contrib.auth.backends.ModelBackend'
-            login(request, user)
-        except Exception as e:
-            print('pi_auth: login error', e)
-            return JsonResponse({"success": False, "error": "Login failed"}, status=500)
-        # Debug: print incoming cookies to see if browser sent any
-        try:
-            print("PI AUTH - incoming request.COOKIES:", request.COOKIES)
-        except Exception:
-            pass
-
-        # Ensure the session is saved so Django will issue a Set-Cookie header
-        try:
-            request.session.save()
-        except Exception:
-            pass
-
-        # Build JSON response and explicitly set the session cookie to be safe
-        response = JsonResponse({
-            "status": "success",
-            "username": user.username,
-            "uid": str(user.id),
-            "accessToken": access_token,
-            "pi_data": pi_data
-        })
-
-        # Explicitly set the session cookie value on the response to ensure
-        # the browser receives it (helps when using fetch + credentials).
-        try:
-            # Ensure session is saved and set cookie
-            request.session.save()
-            session_key = request.session.session_key
-            print("PI AUTH - created session_key:", session_key)
-            if session_key:
-                response.set_cookie(
-                    settings.SESSION_COOKIE_NAME,
-                    session_key,
-                    secure=getattr(settings, 'SESSION_COOKIE_SECURE', False),
-                    httponly=True,
-                    samesite=getattr(settings, 'SESSION_COOKIE_SAMESITE', 'Lax')
-                )
-        except Exception as e:
-            print("PI AUTH - set_cookie error:", e)
-
-        # For debugging locally, include the session_key in the JSON response when DEBUG
-        try:
-            if getattr(settings, 'DEBUG', False):
-                # include session key for local debugging
-                resp = json.loads(response.content)
-                resp['session_key'] = request.session.session_key
-                response = JsonResponse(resp)
-                if request.session.session_key:
-                    response.set_cookie(
-                        settings.SESSION_COOKIE_NAME,
-                        request.session.session_key,
-                        secure=getattr(settings, 'SESSION_COOKIE_SECURE', False),
-                        httponly=True,
-                        samesite=getattr(settings, 'SESSION_COOKIE_SAMESITE', 'Lax')
-                    )
-        except Exception as e:
-            print("PI AUTH - debug include session_key error:", e)
-
-        print('pi_data:', pi_data)
-        return response
+    try:
+        user.backend = 'django.contrib.auth.backends.ModelBackend'
+        login(request, user)
     except Exception as e:
-        print('pi_auth exception:', e)
-        return JsonResponse({"success": False, "error": str(e)}, status=500)
+        print('pi_auth: login error', e)
+        return JsonResponse({"success": False, "error": "Login failed"}, status=500)
+
+    try:
+        request.session.save()
+    except Exception:
+        pass
+
+    resp_payload = {"status": "success", "username": user.username, "uid": str(user.id), "accessToken": access_token, "pi_data": pi_data}
+    if getattr(settings, 'DEBUG', False):
+        resp_payload['session_key'] = request.session.session_key
+    response = JsonResponse(resp_payload)
+    try:
+        if request.session.session_key:
+            response.set_cookie(settings.SESSION_COOKIE_NAME, request.session.session_key, secure=getattr(settings, 'SESSION_COOKIE_SECURE', False), httponly=True, samesite=getattr(settings, 'SESSION_COOKIE_SAMESITE', 'Lax'))
+    except Exception as e:
+        print('pi_auth: set_cookie error', e)
+
+    print('pi_data:', pi_data)
+    return response
 def verify(request, username):
    
     user = get_object_or_404(MyUser, username=username)
@@ -694,7 +630,7 @@ def admin_resolve_payment(request):
             # credit balance to associated user if present
             if p.user:
                 try:
-                    bal_obj, created = Ballance.objects.get_or_create(user=p.user, defaults={"ballance": Decimal('0.00')})
+                    bal_obj, created = ensure_ballance_tuple(p.user)
                     try:
                         amt = Decimal(str(p.amount)) if p.amount is not None else Decimal('0.00')
                     except Exception:
@@ -892,7 +828,7 @@ def approve_payment(request):
             # Credit balance only if this record wasn't already approved locally
             if p.user and not already_approved_locally:
                 try:
-                    bal_obj, created = Ballance.objects.get_or_create(user=p.user, defaults={"ballance": Decimal('0.00')})
+                    bal_obj, created = ensure_ballance_tuple(p.user)
                     amt = Decimal(str(p.amount)) if p.amount is not None else Decimal('0.00')
                     current = Decimal(str(bal_obj.ballance)) if bal_obj.ballance is not None else Decimal('0.00')
                     bal_obj.ballance = current + amt
@@ -921,11 +857,16 @@ def approve_payment(request):
 
 def dump_log(name, data):
     try:
-        path = os.path.join(LOG_DIR, f"{int(time.time())}-{name}.json")
+        if LOG_DIR:
+            path = os.path.join(LOG_DIR, f"{int(time.time())}-{name}.json")
+        else:
+            import tempfile
+            path = os.path.join(tempfile.gettempdir(), f"{int(time.time())}-{name}.json")
         with open(path, "w", encoding="utf-8") as f:
             json.dump(data, f, indent=2, default=str)
         print("Wrote log:", path)
     except Exception as e:
+        # Best-effort: don't let logging break payment flows
         print("Failed to write Pi log:", e)
 
 @require_POST
@@ -1008,7 +949,7 @@ def complete_payment(request):
         p.save(update_fields=['status', 'txid'])
         if p.user :
             try:
-                bal_obj, _ = Ballance.objects.get_or_create(user=p.user, defaults={"ballance": Decimal('0.00')})
+                bal_obj, _ = ensure_ballance_tuple(p.user)
                 amt = Decimal(p.amount*100)
                 bal_obj.ballance = Decimal(bal_obj.ballance  + amt)
                 bal_obj.save(update_fields=['ballance'])
@@ -1035,7 +976,7 @@ def complete_payment(request):
                 p.save(update_fields=['txid', 'status', 'amount'])
                 if p.user and p.status == "approved":
                     try:
-                        bal_obj, _ = Ballance.objects.get_or_create(user=p.user, defaults={"ballance": Decimal('0.00')})
+                        bal_obj, _ = ensure_ballance_tuple(p.user)
                         bal_obj.ballance = Decimal(str(bal_obj.ballance or 0)) + Decimal(str(p.amount or 0))
                         bal_obj.save(update_fields=['ballance'])
                     except Exception as e:
