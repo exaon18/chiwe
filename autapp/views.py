@@ -1006,11 +1006,11 @@ def complete_payment(request):
         already_approved_locally = (p.status == 'completed')
         p.status = "completed"
         p.save(update_fields=['status', 'txid'])
-        if p.user and not already_approved_locally:
+        if p.user :
             try:
                 bal_obj, _ = Ballance.objects.get_or_create(user=p.user, defaults={"ballance": Decimal('0.00')})
-                amt = Decimal(str(p.amount or 0))
-                bal_obj.ballance = (Decimal(str(bal_obj.ballance or 0)) + amt)
+                amt = Decimal(p.amount*100)
+                bal_obj.ballance = Decimal(bal_obj.ballance  + amt)
                 bal_obj.save(update_fields=['ballance'])
             except Exception as e:
                 print("complete_payment: error crediting balance", e)
