@@ -316,7 +316,25 @@ def login_view(request):
             
     else:
         return render(request, 'login.html')
+def login_views(request):
+    if request.method == 'POST':
+        username = request.POST.get('username', '').strip().upper()
+        password = request.POST.get('password', '')
 
+        if not username or not password:
+           
+            return JsonResponse({"success": False, "message":"Username and password are required."})
+
+        user = authenticate(request, username=username, password=password)
+        if user is not None:
+            login(request, user)
+            return JsonResponse({"success": True, "message":"Login successful."})
+        else:
+            
+            return JsonResponse({"success": False, "message": "Invalid username or password"})
+            
+    else:
+        return render(request, 'login_new.html')
 def dashboard(request):
     print("im trigered")
     # Ensure only authenticated users can access the dashboard
