@@ -84,14 +84,22 @@ def generate_unique_number(username):
 
 def dump_log(name, data):
     try:
-        if LOG_DIR:
-            path = os.path.join(LOG_DIR, f"{int(time.time())}-{name}.json")
+        # Resolve log directory at runtime to avoid referencing a missing global
+        log_dir = getattr(settings, 'PI_LOG_DIR', None)
+        if log_dir:
+            try:
+                os.makedirs(log_dir, exist_ok=True)
+            except Exception:
+                log_dir = None
+        if log_dir:
+            path = os.path.join(log_dir, f"{int(time.time())}-{name}.json")
         else:
             path = os.path.join(tempfile.gettempdir(), f"{int(time.time())}-{name}.json")
         with open(path, 'w', encoding='utf-8') as f:
             json.dump(data, f, indent=2, default=str)
         print('Wrote log:', path)
     except Exception as e:
+        # Best-effort logging; do not raise from here
         print('Failed to write Pi log:', e)
 
 
