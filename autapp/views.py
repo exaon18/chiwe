@@ -257,6 +257,8 @@ def pi_auth(request):
             response.set_cookie(settings.SESSION_COOKIE_NAME, request.session.session_key, secure=getattr(settings, 'SESSION_COOKIE_SECURE', False), httponly=True, samesite=getattr(settings, 'SESSION_COOKIE_SAMESITE', 'Lax'))
     except Exception as e:
         print('pi_auth: set_cookie error', e)
+    # Return the response so Django gets an HttpResponse object
+    return response
 
     print('pi_data:', pi_data)
     return response
