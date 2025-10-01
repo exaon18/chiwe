@@ -7,22 +7,40 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
-            --primary: #2ed573;
-            --primary-dark: #25a85c;
+            /* Leaderboard color scheme: green primary with gold (pi) accents */
+            --primary: #2eD573; /* bright green */
+            --primary-dark: #25a65b;
             --primary-light: #7bed9f;
-            --primary-glow: rgba(46, 213, 115, 0.4);
-            --background: #0f0f13;
-            --surface: #1a1a22;
+            --pi-color: #ffc107; /* gold accent */
+            --pi-color-dark: #e0a800;
+            --pi-glow: rgba(255, 193, 7, 0.4);
+
+            --background: #0a0a0a;
+            --card-bg: #1a1a1a;
+            --card-border: #2b2b36;
+
+            /* map existing surface variables to the new card colors */
+            --surface: var(--card-bg);
             --surface-dark: #14141a;
             --surface-light: #222230;
+
             --text: #ffffff;
             --text-secondary: #a0aec0;
+
+            --gold: #ffd700;
+            --silver: #c0c0c0;
+            --bronze: #cd7f32;
+            --gradient-gold: linear-gradient(135deg, #ffd700, #ffed4e);
+            --gradient-silver: linear-gradient(135deg, #c0c0c0, #e8e8e8);
+            --gradient-bronze: linear-gradient(135deg, #cd7f32, #ff8c42);
+
             --danger: #ff4757;
             --warning: #ffa502;
-            --success: #2ed573;
+            --success: var(--primary);
+
             --border-radius: 12px;
             --card-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
-            --glow: 0 0 15px var(--primary-glow);
+            --glow: 0 0 15px var(--pi-glow);
         }
 
         * {
@@ -69,10 +87,10 @@
         .logo {
             font-size: 1.8rem;
             font-weight: bold;
-            color: var(--primary);
+            color: var(--pi-color);
             text-decoration: none;
             letter-spacing: 1px;
-            text-shadow: 0 0 10px rgba(46, 213, 115, 0.4);
+            text-shadow: 0 0 14px var(--pi-glow);
         }
 
         .nav-links {
@@ -143,7 +161,7 @@
             left: 0;
             width: 100%;
             height: 3px;
-            background: linear-gradient(90deg, var(--primary), var(--primary-light));
+            background: var(--gradient-gold);
         }
 
         .card-header {
@@ -182,14 +200,14 @@
             width: 120px;
             height: 120px;
             border-radius: 50%;
-            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-            color: var(--surface);
+            background: var(--gradient-gold);
+            color: var(--background);
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 3rem;
             box-shadow: var(--glow);
-            border: 3px solid rgba(255, 255, 255, 0.1);
+            border: 3px solid rgba(255, 255, 255, 0.06);
             position: relative;
             overflow: hidden;
         }
@@ -241,14 +259,14 @@
 
         .badge {
             background-color: var(--surface-dark);
-            color: var(--primary);
+            color: var(--pi-color);
             padding: 0.25rem 0.75rem;
             border-radius: 20px;
             font-size: 0.8rem;
             display: flex;
             align-items: center;
             gap: 0.25rem;
-            border: 1px solid rgba(46, 213, 115, 0.3);
+            border: 1px solid rgba(255, 193, 7, 0.15);
         }
 
         /* Button Styles */
@@ -274,7 +292,7 @@
         .btn-primary:hover {
             background: var(--primary-dark);
             transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(46, 213, 115, 0.3);
+            box-shadow: 0 5px 15px var(--pi-glow);
         }
 
         .btn-primary:active {
@@ -288,7 +306,7 @@
         }
 
         .btn-outline:hover {
-            background: rgba(46, 213, 115, 0.1);
+            background: rgba(255, 193, 7, 0.08);
             transform: translateY(-2px);
         }
 
@@ -317,9 +335,9 @@
         .stat-value {
             font-size: 2.5rem;
             font-weight: bold;
-            color: var(--primary);
+            color: var(--pi-color);
             margin-bottom: 0.5rem;
-            text-shadow: 0 0 10px rgba(46, 213, 115, 0.3);
+            text-shadow: 0 0 12px var(--pi-glow);
         }
 
         .stat-label {
@@ -383,14 +401,14 @@
         .achievement-icon {
             width: 60px;
             height: 60px;
-            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            background: linear-gradient(135deg, var(--pi-color), var(--primary));
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 1.8rem;
             color: var(--surface);
-            box-shadow: 0 0 10px rgba(46, 213, 115, 0.3);
+            box-shadow: 0 0 10px var(--pi-glow);
             flex-shrink: 0;
         }
 
@@ -468,9 +486,9 @@
         }
 
         .alert-success {
-            background: rgba(46, 213, 115, 0.1);
-            color: var(--primary);
-            border: 1px solid rgba(46, 213, 115, 0.3);
+            background: rgba(255, 193, 7, 0.06);
+            color: var(--pi-color);
+            border: 1px solid rgba(255, 193, 7, 0.12);
         }
 
         .alert-error {

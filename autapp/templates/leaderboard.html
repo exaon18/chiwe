@@ -414,15 +414,17 @@
         .leaderboard-item {
             background: var(--card-bg);
             border: 1px solid var(--card-border);
-            border-radius: 16px;
-            padding: 1.5rem;
+            border-radius: 10px;
+            padding: 0.5rem 0.6rem; /* much slimmer */
             display: flex;
             align-items: center;
-            gap: 1.5rem;
-            transition: all 0.3s ease;
+            gap: 0.65rem; /* reduced gap */
+            transition: all 0.15s ease;
             position: relative;
             overflow: hidden;
-            animation: slideInUp 0.6s ease-out both;
+            min-height: 44px; /* enforce compact row height */
+            line-height: 1;
+            animation: slideInUp 0.5s ease-out both;
         }
 
         .leaderboard-item:nth-child(1) { animation-delay: 1.1s; }
@@ -456,48 +458,60 @@
         }
 
         .rank-number {
-            font-size: 1.5rem;
+            font-size: 1.2rem;
             font-weight: 700;
             color: var(--pi-color);
-            min-width: 40px;
+            min-width: 36px;
             text-align: center;
         }
 
         .user-avatar {
-            width: 60px;
-            height: 60px;
+            width: 40px; /* slimmer avatar */
+            height: 40px;
             border-radius: 50%;
             background: linear-gradient(135deg, var(--pi-color), var(--primary));
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.5rem;
-            font-weight: bold;
+            font-size: 1rem;
+            font-weight: 700;
             color: var(--background);
             position: relative;
         }
 
         .user-info {
             flex: 1;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            min-width: 0;
         }
 
         .user-name {
-            font-size: 1.2rem;
+            font-size: 0.95rem;
             font-weight: 600;
             color: var(--text);
-            margin-bottom: 0.25rem;
+            margin: 0; /* remove bottom margin so height is smaller */
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         .user-title {
-            font-size: 0.9rem;
+            font-size: 0.75rem;
             color: var(--text-secondary);
+            opacity: 0.9;
+            margin-left: 0.25rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         .user-points {
             display: flex;
             align-items: center;
-            gap: 0.5rem;
-            font-size: 1.3rem;
+            gap: 0.4rem;
+            font-size: 1.05rem;
             font-weight: 700;
             color: var(--pi-color);
         }
@@ -534,36 +548,85 @@
                 font-size: 2.5rem;
             }
 
+            /* Make the first two hero stats horizontal and smaller on mobile,
+               hide the third ('Active Mining') to declutter. */
             .hero-stats {
-                flex-direction: column;
-                gap: 1rem;
+                flex-direction: row;
+                gap: 0.5rem;
                 align-items: center;
+                justify-content: center;
             }
 
+            .hero-stats .stat-item {
+                padding: 0.5rem 0.75rem;
+                min-width: 110px;
+                border-radius: 10px;
+            }
+
+            .hero-stats .stat-number {
+                font-size: 1.1rem;
+            }
+
+            .hero-stats .stat-label {
+                font-size: 0.75rem;
+            }
+
+            /* Hide the third statistic (Active Mining) on mobile */
+            .hero-stats .stat-item:nth-child(3) {
+                display: none;
+            }
+
+
+            /* Mobile podium as a three-column grid: left / center / right.
+               This ensures 1st is centered and elevated while 2nd/3rd sit
+               left and right without overlapping the center avatar. */
             .podium {
-                flex-direction: column;
+                display: grid;
+                /* give center column more min width so first place doesn't overlap
+                   the side avatars on narrow screens */
+                grid-template-columns: 1fr minmax(140px, 220px) 1fr;
+                align-items: end;
+                justify-items: center;
                 gap: 1rem;
+                height: auto;
+                margin-bottom: 1rem;
             }
 
             .podium-place {
-                order: unset !important;
+                position: relative;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                text-align: center;
+                transition: transform 0.25s ease;
+                padding: 0 4px;
+                justify-self: center;
             }
 
-            .leaderboard-item {
-                padding: 1rem;
-                gap: 1rem;
-            }
+            .podium-place.first { grid-column: 2; transform: translateY(-26px); z-index: 10; }
+            .podium-place.second { grid-column: 1; transform: translateY(0); z-index: 8; }
+            .podium-place.third { grid-column: 3; transform: translateY(0); z-index: 8; }
 
-            .user-avatar {
-                width: 50px;
-                height: 50px;
-                font-size: 1.2rem;
-            }
+            /* Avatar sizing on mobile */
+            .podium-avatar { width: 84px; height: 84px; font-size: 1.9rem; }
+            .podium-place.first .podium-avatar { width: 104px; height: 104px; }
+            .podium-place.second .podium-avatar { width: 86px; height: 86px; }
+            .podium-place.third .podium-avatar { width: 78px; height: 78px; }
 
-            .rank-number {
-                font-size: 1.2rem;
-                min-width: 30px;
-            }
+            .podium-crown { top: -10px; font-size: 1.6rem; }
+            .podium-rank { top: -8px; right: -8px; width: 26px; height: 26px; font-size: 0.85rem; }
+            .podium-name { font-size: 1rem; margin-top: 0.5rem; }
+            .podium-points { font-size: 1.05rem; margin-top: 0.25rem; }
+
+            /* Keep standard leaderboard items vertical below the podium */
+            .leaderboard-item { padding: 0.45rem 0.5rem; gap: 0.5rem; flex-direction: row; align-items: center; }
+            .user-avatar { width: 40px; height: 40px; font-size: 1rem; }
+            .rank-number { font-size: 1.0rem; min-width: 26px; }
+            .user-info { width: auto; }
+            .user-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 120px; }
+            .user-title { display: none; } /* hide subtitle on narrow screens to keep rows short */
+            .user-points { align-self: center; margin-top: 0; }
+            .points-change { font-size: 0.7rem; padding: 0.15rem 0.3rem; }
         }
 
         @media (max-width: 480px) {
@@ -581,6 +644,23 @@
                 width: 90px;
                 height: 90px;
             }
+        }
+
+        /* Extra small phones: tighten podium spacing and sizes (grid-based) */
+        @media (max-width: 420px) {
+            .podium {
+                grid-template-columns: 1fr minmax(120px, 180px) 1fr;
+                gap: 0.6rem;
+                margin-bottom: 0.8rem;
+            }
+
+            .podium-place.first { transform: translateY(-18px); }
+            .podium-place.second, .podium-place.third { transform: translateY(0); }
+
+            .podium-avatar { width: 72px; height: 72px; font-size: 1.6rem; }
+            .podium-place.first .podium-avatar { width: 88px; height: 88px; }
+            .podium-place.second .podium-avatar { width: 76px; height: 76px; }
+            .podium-place.third .podium-avatar { width: 72px; height: 72px; }
         }
     </style>
     <link rel="icon" href="https://i.postimg.cc/FzgPtp2v/photo-2025-05-31-05-36-51.jpg" type="image/jpeg" />
@@ -620,8 +700,7 @@
                 <div class="sparkle"></div>
             </h1>
             <p class="hero-subtitle">
-                Celebrating the most dedicated Pi Network pioneers in our community. 
-                These champions are leading the way in the Pi ecosystem revolution!
+                The Elite Pioneers of Chiwe! top 5 pioneers will be rewarded PI from the pool , earn chiwe points by playing games the more points the higher your rank 
             </p>
             
             <div class="hero-stats">
@@ -633,10 +712,7 @@
                     <span class="stat-number" id="total-points">0</span>
                     <div class="stat-label">Total Pi Points</div>
                 </div>
-                <div class="stat-item">
-                    <span class="stat-number">24/7</span>
-                    <div class="stat-label">Active Mining</div>
-                </div>
+                <!-- Active Mining stat intentionally removed for mobile layout -->
             </div>
         </section>
 
