@@ -740,7 +740,7 @@ class BingoConsumer(WebsocketConsumer):
         losser_history.TotalPlayed+=1
         losser_history.Totaloss+=1
         
-        points = {2: 7, 10: 20, 25: 45}.get(amount, 0)
+        points = {0:4,2: 7, 10: 20, 25: 45}.get(amount, 0)
         winner_obj.points += points
         loser_obj.points = max(0, loser_obj.points - points)
 
@@ -764,7 +764,7 @@ class BingoConsumer(WebsocketConsumer):
                 "type": "Game_Over",
                 "winner": winner,
                 "loser": loser,
-                "winningAmount": str(self.jackpot),
+                "winningAmount": str(points),
                 "betAmount":str(amount)
             }
         )
