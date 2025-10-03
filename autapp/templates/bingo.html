@@ -2008,13 +2008,10 @@
                     <div class="result-label">Winner:</div>
                     <div class="result-value" id="winnerName">Player 1</div>
                 </div>
+                
                 <div class="result-row">
-                    <div class="result-label">Bet Amount:</div>
-                    <div class="result-value" id="betAmount">25 pi</div>
-                </div>
-                <div class="result-row">
-                    <div class="result-label">Winning Amount:</div>
-                    <div class="result-value winning-amount" id="winningAmount">50 pi</div>
+                    <div class="result-label">Winning chiwe points:</div>
+                    <div class="result-value winning-amount" id="winningAmount">50 CP</div>
                 </div>
             </div>
             
@@ -3116,8 +3113,8 @@ function handleGameOver(message) {
         'Better luck next time!';
     
     document.getElementById('winnerName').textContent = message.winner;
-    document.getElementById('betAmount').textContent = `${betAmount} pi`;
-    document.getElementById('winningAmount').textContent = `${winningAmount} pi`;
+    
+    document.getElementById('winningAmount').textContent = `${winningAmount} chiwe points`;
     
     // Show confetti only for winner
     if (isWinner) {
