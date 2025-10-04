@@ -739,7 +739,11 @@
 
         class LeaderboardManager {
             constructor() {
-                this.data = leaderboardData || [];
+                // Ensure points are numeric and sort by points descending so the top pioneers show first
+                this.data = (leaderboardData || []).map(u => ({
+                    username: u.username,
+                    points: Number(u.points) || 0
+                })).sort((a, b) => b.points - a.points);
                 this.init();
             }
 
