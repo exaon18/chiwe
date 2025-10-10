@@ -693,6 +693,11 @@
             margin-bottom: 1.5rem;
         }
 
+        .popup-content p {
+            margin-bottom: 0.5rem;
+            line-height: 1.6;
+        }
+
         .popup-actions {
             display: flex;
             gap: 1rem;
@@ -1119,7 +1124,6 @@
             font-size: 1.2rem;
             color: var(--text);
         }
-        
 
         .match-message {
             font-size: 1.2rem;
@@ -1995,6 +1999,25 @@
         </div>
     </div>
 
+    <!-- No Match Found Popup -->
+    <div id="noMatchPopup" class="popup-overlay">
+        <div class="popup">
+            <h2 class="popup-title">No Match Found</h2>
+            <div class="popup-content">
+                <p>No match found right now.</p>
+                <p style="font-size: 0.9rem; color: var(--text-secondary); margin-top: 1rem;">
+                    ChiwePi searches for other players for 30 seconds. If you're testing this demo, 
+                    please open ChiwePi on a second device and join the same arena with the same pi, 
+                    the system will connect you to that account automatically.
+                </p>
+            </div>
+            <div class="popup-actions">
+                <button class="popup-btn popup-btn-primary" onclick="keepSearching()">Keep Searching</button>
+                <button class="popup-btn popup-btn-secondary" onclick="leaveSearch()">Leave</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Game Over Popup -->
     <div id="gameOverPopup">
         <div class="game-over-content">
@@ -2038,14 +2061,19 @@
         let myTurn = false;
         let currentPlayer = '';
         let opponent = '';
-        let completedLetters = 0; // Track how many BINGO letters are completed
-        let username = ''; // Store the user's username
+        let completedLetters = 0;
+        let username = '';
 
         // Timer variables
         let timerInterval = null;
         let currentTime = 0;
         let totalTime = 0;
         let isTimerActive = false;
+
+        // Search timeout variables
+        let searchTimeout = null;
+        let searchStartTime = null;
+        const SEARCH_TIMEOUT_DURATION = 30000; // 30 seconds
 
         // Timer functions
         function startTimer(time) {
@@ -2061,21 +2089,17 @@
             const timerDisplay = document.getElementById('timerDisplay');
             const timerProgress = document.getElementById('timerProgress');
             
-            // Show timer
             timerContainer.classList.add('active');
             timerContainer.classList.remove('warning', 'danger');
             
-            // Update display
             timerDisplay.textContent = currentTime;
             updateTimerProgress();
             
-            // Start countdown
             timerInterval = setInterval(() => {
                 currentTime--;
                 timerDisplay.textContent = currentTime;
                 updateTimerProgress();
                 
-                // Change timer appearance based on remaining time
                 if (currentTime <= 10 && currentTime > 5) {
                     timerContainer.classList.add('warning');
                     timerContainer.classList.remove('danger');
@@ -2084,7 +2108,6 @@
                     timerContainer.classList.remove('warning');
                 }
                 
-                // Timer finished
                 if (currentTime <= 0) {
                     stopTimer();
                     displayMessage('Time\'s up! Your turn has ended.');
@@ -2116,7 +2139,6 @@
             const percentage = ((totalTime - currentTime) / totalTime) * 360;
             timerProgress.style.background = `conic-gradient(var(--primary) ${percentage}deg, transparent ${percentage}deg)`;
             
-            // Update progress color based on timer state
             const timerContainer = document.getElementById('timerContainer');
             if (timerContainer.classList.contains('warning')) {
                 timerProgress.style.background = `conic-gradient(var(--warning) ${percentage}deg, transparent ${percentage}deg)`;
@@ -2125,1085 +2147,990 @@
             }
         }
 
-// Simulate dynamic stats for waiting page
-function updateWaitingStats() {
-    // Simulate random fluctuations in online players
-    const onlinePlayers = Math.floor(Math.random() * 10) + 20;
-    document.getElementById('onlinePlayers').textContent = onlinePlayers;
-    
-    // Simulate active games (roughly 1/3 of online players)
-    const activeGames = Math.floor(onlinePlayers / 3);
-    document.getElementById('activeGames').textContent = activeGames;
-    
-    // Simulate wait time based on player count (fewer players = longer wait)
-    const avgWaitTime = Math.max(5, Math.floor(30 - onlinePlayers/2));
-    document.getElementById('avgWaitTime').textContent = avgWaitTime + 's';
-}
-
-// Function to show loading spinner on buttons
-function showLoading(element) {
-    if (!element) return;
-    element.disabled = true;
-    const spinner = element.querySelector('.loading-spinner');
-    if (spinner) spinner.classList.add('active');
-}
-
-// Function to hide loading spinner on buttons
-function hideLoading(element) {
-    if (!element) return;
-    element.disabled = false;
-    const spinner = element.querySelector('.loading-spinner');
-    if (spinner) spinner.classList.remove('active');
-}
-
-// Function to update network indicator
-function updateNetworkIndicator(status) {
-    const networkText = document.getElementById('network-text');
-    const bars = document.querySelectorAll('.network-bar');
-    
-    switch(status) {
-        case 'Excellent':
-            networkBars = 4;
-            networkText.textContent = 'Excellent';
-            networkText.className = 'network-status network-excellent';
-            break;
-        case 'Good':
-            networkBars = 3;
-            networkText.textContent = 'Good';
-            networkText.className = 'network-status network-good';
-            break;
-        case 'Fair':
-            networkBars = 2;
-            networkText.textContent = 'Fair';
-            networkText.className = 'network-status network-fair';
-            break;
-        case 'Poor':
-            networkBars = 1;
-            networkText.textContent = 'Poor';
-            networkText.className = 'network-status network-poor';
-            break;
-        default:
-            networkBars = 0;
-            networkText.textContent = 'Offline';
-            networkText.className = 'network-status network-poor';
-    }
-    
-    bars.forEach((bar, index) => {
-        if (index < networkBars) {
-            bar.classList.add('active');
-        } else {
-            bar.classList.remove('active');
-        }
-    });
-}
-
-// Monitor network status
-function monitorNetwork() {
-    // Initial network check
-    checkNetworkStatus();
-    
-    // Check connection speed periodically
-    setInterval(checkNetworkStatus, 5000);
-    
-    // Also update based on navigator.onLine
-    window.addEventListener('online', () => {
-        if (networkBars === 0) updateNetworkIndicator('Fair');
-    });
-    
-    window.addEventListener('offline', () => {
-        updateNetworkIndicator('Offline');
-    });
-}
-
-// Function to check network status
-function checkNetworkStatus() {
-    const start = Date.now();
-    
-    
-}
-
-function displayMessage(message) {
-    const messageDisplay = document.getElementById('messageDisplay');
-    messageDisplay.textContent = message;
-    messageDisplay.style.display = 'block';
-    setTimeout(() => {
-        messageDisplay.style.display = 'none';
-    }, 4000);
-}
-
-// Initialize the bingo board
-function initBingoBoard() {
-    const bingoBoard = document.getElementById('bingoBoard');
-    bingoBoard.innerHTML = '';
-    boardCells = [];
-    
-    // Create 5x5 grid
-    for (let i = 0; i < 25; i++) {
-        const cell = document.createElement('div');
-        cell.className = 'bingo-cell';
-        cell.dataset.index = i;
-        
-        // Add event listeners for drag and drop
-        cell.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            if (!cell.classList.contains('filled')) {
-                cell.classList.add('drag-over');
+        // Search timeout functions
+        function startSearchTimer() {
+            if (searchTimeout) {
+                clearTimeout(searchTimeout);
             }
-        });
-        
-        cell.addEventListener('dragleave', () => {
-            cell.classList.remove('drag-over');
-        });
-        
-        cell.addEventListener('drop', (e) => {
-            e.preventDefault();
-            cell.classList.remove('drag-over');
             
-            const number = e.dataTransfer.getData('text/plain');
-            if (!cell.classList.contains('filled')) {
-                placeNumber(cell, number);
-            } else {
-                // Shake effect for invalid drop
-                cell.classList.add('shake');
-                setTimeout(() => cell.classList.remove('shake'), 500);
-            }
-        });
-        
-        // Click to remove number
-        cell.addEventListener('click', () => {
-            if (cell.classList.contains('filled')) {
-                const number = parseInt(cell.textContent);
-                cell.textContent = '';
-                cell.classList.remove('filled');
-                usedNumbers.delete(number);
-                
-                // Update number pool
-                const numberItem = document.querySelector(`.number-item[data-number="${number}"]`);
-                if (numberItem) {
-                    numberItem.classList.remove('used');
-                    numberItem.draggable = true;
+            searchStartTime = Date.now();
+            
+            searchTimeout = setTimeout(() => {
+                if (isSearching) {
+                    showNoMatchPopup();
                 }
+            }, SEARCH_TIMEOUT_DURATION);
+        }
+
+        function stopSearchTimer() {
+            if (searchTimeout) {
+                clearTimeout(searchTimeout);
+                searchTimeout = null;
+            }
+            searchStartTime = null;
+        }
+
+        function showNoMatchPopup() {
+            if (isSearching) {
+                const noMatchPopup = document.getElementById('noMatchPopup');
+                noMatchPopup.classList.add('active');
+                noMatchPopup.style.display = 'flex';
+            }
+        }
+
+        function keepSearching() {
+            const noMatchPopup = document.getElementById('noMatchPopup');
+            noMatchPopup.classList.remove('active');
+            noMatchPopup.style.display = 'none';
+            
+            startSearchTimer();
+            displayMessage('Continuing search for opponent...');
+        }
+
+        function leaveSearch() {
+            const noMatchPopup = document.getElementById('noMatchPopup');
+            noMatchPopup.classList.remove('active');
+            noMatchPopup.style.display = 'none';
+            
+            confirmLeaveSearch();
+        }
+
+        // Simulate dynamic stats for waiting page
+        function updateWaitingStats() {
+            const onlinePlayers = Math.floor(Math.random() * 10) + 20;
+            document.getElementById('onlinePlayers').textContent = onlinePlayers;
+            
+            const activeGames = Math.floor(onlinePlayers / 3);
+            document.getElementById('activeGames').textContent = activeGames;
+            
+            const avgWaitTime = Math.max(5, Math.floor(30 - onlinePlayers/2));
+            document.getElementById('avgWaitTime').textContent = avgWaitTime + 's';
+        }
+
+        function showLoading(element) {
+            if (!element) return;
+            element.disabled = true;
+            const spinner = element.querySelector('.loading-spinner');
+            if (spinner) spinner.classList.add('active');
+        }
+
+        function hideLoading(element) {
+            if (!element) return;
+            element.disabled = false;
+            const spinner = element.querySelector('.loading-spinner');
+            if (spinner) spinner.classList.remove('active');
+        }
+
+        function updateNetworkIndicator(status) {
+            const networkText = document.getElementById('network-text');
+            const bars = document.querySelectorAll('.network-bar');
+            
+            switch(status) {
+                case 'Excellent':
+                    networkBars = 4;
+                    networkText.textContent = 'Excellent';
+                    networkText.className = 'network-status network-excellent';
+                    break;
+                case 'Good':
+                    networkBars = 3;
+                    networkText.textContent = 'Good';
+                    networkText.className = 'network-status network-good';
+                    break;
+                case 'Fair':
+                    networkBars = 2;
+                    networkText.textContent = 'Fair';
+                    networkText.className = 'network-status network-fair';
+                    break;
+                case 'Poor':
+                    networkBars = 1;
+                    networkText.textContent = 'Poor';
+                    networkText.className = 'network-status network-poor';
+                    break;
+                default:
+                    networkBars = 0;
+                    networkText.textContent = 'Offline';
+                    networkText.className = 'network-status network-poor';
+            }
+            
+            bars.forEach((bar, index) => {
+                if (index < networkBars) {
+                    bar.classList.add('active');
+                } else {
+                    bar.classList.remove('active');
+                }
+            });
+        }
+
+        function monitorNetwork() {
+            checkNetworkStatus();
+            setInterval(checkNetworkStatus, 5000);
+            
+            window.addEventListener('online', () => {
+                if (networkBars === 0) updateNetworkIndicator('Fair');
+            });
+            
+            window.addEventListener('offline', () => {
+                updateNetworkIndicator('Offline');
+            });
+        }
+
+        function checkNetworkStatus() {
+            const start = Date.now();
+        }
+
+        function displayMessage(message) {
+            const messageDisplay = document.getElementById('messageDisplay');
+            messageDisplay.textContent = message;
+            messageDisplay.style.display = 'block';
+            setTimeout(() => {
+                messageDisplay.style.display = 'none';
+            }, 4000);
+        }
+
+        function initBingoBoard() {
+            const bingoBoard = document.getElementById('bingoBoard');
+            bingoBoard.innerHTML = '';
+            boardCells = [];
+            
+            for (let i = 0; i < 25; i++) {
+                const cell = document.createElement('div');
+                cell.className = 'bingo-cell';
+                cell.dataset.index = i;
                 
-                updateBoardProgress();
+                cell.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    if (!cell.classList.contains('filled')) {
+                        cell.classList.add('drag-over');
+                    }
+                });
+                
+                cell.addEventListener('dragleave', () => {
+                    cell.classList.remove('drag-over');
+                });
+                
+                cell.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    cell.classList.remove('drag-over');
+                    
+                    const number = e.dataTransfer.getData('text/plain');
+                    if (!cell.classList.contains('filled')) {
+                        placeNumber(cell, number);
+                    } else {
+                        cell.classList.add('shake');
+                        setTimeout(() => cell.classList.remove('shake'), 500);
+                    }
+                });
+                
+                cell.addEventListener('click', () => {
+                    if (cell.classList.contains('filled')) {
+                        const number = parseInt(cell.textContent);
+                        cell.textContent = '';
+                        cell.classList.remove('filled');
+                        usedNumbers.delete(number);
+                        
+                        const numberItem = document.querySelector(`.number-item[data-number="${number}"]`);
+                        if (numberItem) {
+                            numberItem.classList.remove('used');
+                            numberItem.draggable = true;
+                        }
+                        
+                        updateBoardProgress();
+                    }
+                });
+                
+                bingoBoard.appendChild(cell);
+                boardCells.push(cell);
+            }
+        }
+
+        function initNumberPool() {
+            const numberPool = document.getElementById('numberPool');
+            numberPool.innerHTML = '';
+            usedNumbers.clear();
+            
+            for (let i = 1; i <= 25; i++) {
+                const numberItem = document.createElement('div');
+                numberItem.className = 'number-item';
+                numberItem.textContent = i;
+                numberItem.dataset.number = i;
+                numberItem.draggable = true;
+                
+                numberItem.addEventListener('dragstart', (e) => {
+                    if (numberItem.classList.contains('used')) {
+                        e.preventDefault();
+                        return;
+                    }
+                    
+                    e.dataTransfer.setData('text/plain', i.toString());
+                    numberItem.classList.add('dragging');
+                    
+                    const img = new Image();
+                    img.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
+                    e.dataTransfer.setDragImage(img, 0, 0);
+                });
+                
+                numberItem.addEventListener('dragend', () => {
+                    numberItem.classList.remove('dragging');
+                });
+                
+                numberItem.addEventListener('click', () => {
+                    if (!numberItem.classList.contains('used')) {
+                        const availableCell = boardCells.find(cell => !cell.classList.contains('filled'));
+                        if (availableCell) {
+                            placeNumber(availableCell, i.toString());
+                        } else {
+                            numberItem.classList.add('shake');
+                            setTimeout(() => numberItem.classList.remove('shake'), 500);
+                        }
+                    }
+                });
+                
+                numberPool.appendChild(numberItem);
+            }
+        }
+
+        function placeNumber(cell, number) {
+            const num = parseInt(number);
+            
+            usedNumbers.add(num);
+            
+            cell.textContent = number;
+            cell.classList.add('filled');
+            cell.classList.add('highlight');
+            setTimeout(() => cell.classList.remove('highlight'), 500);
+            
+            const numberItem = document.querySelector(`.number-item[data-number="${num}"]`);
+            if (numberItem) {
+                numberItem.classList.add('used');
+                numberItem.draggable = false;
+            }
+            
+            updateBoardProgress();
+        }
+
+        function updateBoardProgress() {
+            const filledCells = document.querySelectorAll('.bingo-cell.filled').length;
+            const progressBar = document.getElementById('boardProgress');
+            const completionText = document.getElementById('completionText');
+            const joinGameBtn = document.getElementById('joinGameBtn');
+            
+            const progressPercentage = (filledCells / 25) * 100;
+            progressBar.style.width = `${progressPercentage}%`;
+            completionText.textContent = `${filledCells}/25`;
+            
+            if (filledCells === 25) {
+                joinGameBtn.disabled = false;
+            } else {
+                joinGameBtn.disabled = true;
+            }
+        }
+
+        function randomizeBoard() {
+            clearBoard();
+            
+            const numbers = Array.from({length: 25}, (_, i) => i + 1);
+            
+            for (let i = numbers.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [numbers[i], numbers[j]] = [numbers[j], numbers[i]];
+            }
+            
+            boardCells.forEach((cell, index) => {
+                placeNumber(cell, numbers[index].toString());
+            });
+        }
+
+        function clearBoard() {
+            boardCells.forEach(cell => {
+                if (cell.classList.contains('filled')) {
+                    const number = parseInt(cell.textContent);
+                    cell.textContent = '';
+                    cell.classList.remove('filled');
+                    usedNumbers.delete(number);
+                }
+            });
+            
+            document.querySelectorAll('.number-item').forEach(item => {
+                item.classList.remove('used');
+                item.draggable = true;
+            });
+            
+            updateBoardProgress();
+        }
+
+        function getBoardNumbers() {
+            return boardCells.map(cell => {
+                return cell.textContent ? parseInt(cell.textContent) : 0;
+            });
+        }
+
+        function initGameBoard(boardNumbers) {
+            const gameBingoBoard = document.getElementById('gameBingoBoard');
+            gameBingoBoard.innerHTML = '';
+            gameBoard = [];
+            
+            for (let i = 0; i < 25; i++) {
+                const cell = document.createElement('div');
+                cell.className = 'game-cell';
+                cell.dataset.index = i;
+                cell.textContent = boardNumbers[i];
+                
+                cell.addEventListener('click', () => {
+                    if (myTurn && !calledNumbers.includes(parseInt(cell.textContent))) {
+                        gameBoard.forEach(c => c.classList.remove('selected-to-call'));
+                        
+                        cell.classList.add('selected-to-call');
+                        selectedNumber = parseInt(cell.textContent);
+                        
+                        document.getElementById('callBtn').disabled = false;
+                        
+                        displayMessage(`Number ${selectedNumber} selected. Click "Call Number" to announce it.`);
+                    } else if (calledNumbers.includes(parseInt(cell.textContent))) {
+                        if (cell.classList.contains('marked')) {
+                            cell.classList.remove('marked');
+                        } else {
+                            cell.classList.add('marked');
+                            checkForWin();
+                        }
+                    } else {
+                        cell.classList.add('shake');
+                        setTimeout(() => cell.classList.remove('shake'), 500);
+                        
+                        if (myTurn) {
+                            displayMessage('Select a number that hasn\'t been called yet.');
+                        } else {
+                            displayMessage('Wait for your turn to call a number.');
+                        }
+                    }
+                });
+                
+                gameBingoBoard.appendChild(cell);
+                gameBoard.push(cell);
+            }
+            
+            updateBingoLetters(0);
+        }
+
+        function updateBingoLetters(completed) {
+            completedLetters = completed;
+            const letters = document.querySelectorAll('.bingo-letter');
+            
+            letters.forEach((letter, index) => {
+                if (index < completed) {
+                    letter.style.opacity = '1';
+                    letter.style.textShadow = '0 0 15px rgba(46, 213, 115, 0.8)';
+                    letter.style.transform = 'scale(1.1)';
+                } else {
+                    letter.style.opacity = '0.4';
+                    letter.style.textShadow = 'none';
+                    letter.style.transform = 'scale(1)';
+                }
+            });
+            
+            const bingoBtn = document.getElementById('bingoBtn');
+            bingoBtn.disabled = completed < 5;
+            
+            if (completed === 5) {
+                displayMessage('You can now claim BINGO! Click the BINGO button!');
+            }
+        }
+
+        function updateCalledNumbers(number, isLatest = false) {
+            const calledNumbersList = document.getElementById('calledNumbersList');
+            
+            document.querySelectorAll('.called-number.latest').forEach(item => {
+                item.classList.remove('latest');
+            });
+            
+            const numberItem = document.createElement('div');
+            numberItem.className = 'called-number';
+            if (isLatest) {
+                numberItem.classList.add('latest');
+            }
+            numberItem.textContent = number;
+            calledNumbersList.appendChild(numberItem);
+            
+            gameBoard.forEach(cell => {
+                if (parseInt(cell.textContent) === number) {
+                    cell.classList.add('called');
+                    setTimeout(() => {
+                        cell.classList.add('marked');
+                        checkForWin();
+                    }, 1000);
+                }
+            });
+        }
+
+        function checkForWin() {
+            const markedCells = gameBoard.filter(cell => cell.classList.contains('marked'));
+            
+            if (markedCells.length < 5) return false;
+            
+            let winFound = false;
+            
+            for (let row = 0; row < 5; row++) {
+                let rowComplete = true;
+                for (let col = 0; col < 5; col++) {
+                    const index = row * 5 + col;
+                    if (!gameBoard[index].classList.contains('marked')) {
+                        rowComplete = false;
+                        break;
+                    }
+                }
+                if (rowComplete) {
+                    highlightWinningCells(row * 5, row * 5 + 1, row * 5 + 2, row * 5 + 3, row * 5 + 4);
+                    winFound = true;
+                }
+            }
+            
+            for (let col = 0; col < 5; col++) {
+                let colComplete = true;
+                for (let row = 0; row < 5; row++) {
+                    const index = row * 5 + col;
+                    if (!gameBoard[index].classList.contains('marked')) {
+                        colComplete = false;
+                        break;
+                    }
+                }
+                if (colComplete) {
+                    highlightWinningCells(col, col + 5, col + 10, col + 15, col + 20);
+                    winFound = true;
+                }
+            }
+            
+            let diag1Complete = true;
+            let diag2Complete = true;
+            
+            for (let i = 0; i < 5; i++) {
+                if (!gameBoard[i * 5 + i].classList.contains('marked')) {
+                    diag1Complete = false;
+                }
+                if (!gameBoard[i * 5 + (4 - i)].classList.contains('marked')) {
+                    diag2Complete = false;
+                }
+            }
+            
+            if (diag1Complete) {
+                highlightWinningCells(0, 6, 12, 18, 24);
+                winFound = true;
+            }
+            
+            if (diag2Complete) {
+                highlightWinningCells(4, 8, 12, 16, 20);
+                winFound = true;
+            }
+            
+            return winFound;
+        }
+
+        function highlightWinningCells(...indices) {
+            indices.forEach(index => {
+                gameBoard[index].classList.add('winning');
+            });
+        }
+
+        function createConfetti() {
+            const container = document.querySelector('.game-over-content');
+            const colors = ['#2ed573', '#7bed9f', '#f1c40f', '#e67e22', '#e74c3c', '#9b59b6'];
+            
+            for (let i = 0; i < 100; i++) {
+                const confetti = document.createElement('div');
+                confetti.className = 'confetti';
+                confetti.style.left = Math.random() * 100 + '%';
+                confetti.style.width = Math.random() * 10 + 5 + 'px';
+                confetti.style.height = Math.random() * 10 + 5 + 'px';
+                confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                confetti.style.borderRadius = Math.random() > 0.5 ? '50%' : '0';
+                confetti.style.transform = `rotate(${Math.random() * 360}deg)`;
+                confetti.style.animationDuration = Math.random() * 3 + 2 + 's';
+                confetti.style.animationDelay = Math.random() * 5 + 's';
+                
+                container.appendChild(confetti);
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            history.pushState(null, null, location.href);
+
+            window.onpopstate = (event) => {
+                history.pushState(null, null, location.href);
+                handleBackButton();
+            };
+
+            window.onbeforeunload = (e) => {
+                if (isSearching) {
+                    e.preventDefault();
+                    e.returnValue = '';
+                    showLeaveWarning();
+                    return '';
+                }
+            };
+            
+            monitorNetwork();
+            
+            updateWaitingStats();
+            setInterval(updateWaitingStats, 5000);
+            
+            document.getElementById('joinButton').disabled = true;
+            
+            initBingoBoard();
+            initNumberPool();
+            
+            document.getElementById('randomizeBtn').addEventListener('click', randomizeBoard);
+            document.getElementById('clearBoardBtn').addEventListener('click', clearBoard);
+            document.getElementById('joinGameBtn').addEventListener('click', startBingoGame);
+            
+            document.getElementById('callBtn').addEventListener('click', callNumber);
+            document.getElementById('bingoBtn').addEventListener('click', claimBingo);
+            
+            document.getElementById('bingoBtn').disabled = true;
+        });
+
+        function handleBackButton() {
+            if (isSearching) {
+                showLeaveWarning();
+            }
+        }
+
+        function showLeaveWarning() {
+            const warningElement = document.getElementById('searchLeaveWarning');
+            warningElement.style.display = 'flex';
+        }
+
+        function cancelLeave() {
+            document.getElementById('searchLeaveWarning').style.display = 'none';
+        }
+
+        function confirmLeaveSearch() {
+            attemptingToLeave = true;
+            
+            if (gameSocket) {
+                gameSocket.close();
+            }
+            
+            stopSearchTimer();
+            resetTimer();
+            
+            isSearching = false;
+            window.location.href = '/dashboard';
+        }
+
+        function selectAmount(amount) {
+            selectedAmount = amount;
+            
+            const buttons = document.querySelectorAll('.money-option');
+            buttons.forEach(button => {
+                button.classList.remove('selected');
+                hideLoading(button);
+                
+                if (parseInt(button.getAttribute('data-amount')) === amount) {
+                    button.classList.add('selected');
+                    showLoading(button);
+                }
+            });
+            
+            document.getElementById('amountInput').value = amount;
+            document.getElementById('selectedAmount').textContent = amount;
+            
+            const selectedAmountContainer = document.getElementById('selectedAmountContainer');
+            selectedAmountContainer.classList.add('highlight');
+            
+            document.getElementById('joinButton').disabled = false;
+            
+            setTimeout(() => {
+                buttons.forEach(button => {
+                    if (parseInt(button.getAttribute('data-amount')) === amount) {
+                        hideLoading(button);
+                    }
+                });
+                
+                setTimeout(() => {
+                    selectedAmountContainer.classList.remove('highlight');
+                }, 500);
+            }, 500);
+        }
+
+        document.getElementById('joinForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const form = e.target;
+            const formData = new FormData(form);
+            
+            const submitButton = form.querySelector('button');
+            showLoading(submitButton);
+
+            try {
+                const response = await fetch(form.action, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-CSRFToken': formData.get('csrfmiddlewaretoken')
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.indexOf('application/json') !== -1) {
+                    const data = await response.json();
+                    console.log(data);
+                    handleJoinResponse(data);
+                } else {
+                    const text = await response.text();
+                    console.log('Non-JSON response:', text);
+                    displayMessage('Unexpected server response. Please try again.');
+                    hideLoading(submitButton);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                displayMessage('An error occurred. Please try again later.');
+                hideLoading(submitButton);
             }
         });
-        
-        bingoBoard.appendChild(cell);
-        boardCells.push(cell);
-    }
-}
 
-// Initialize the number pool
-function initNumberPool() {
-    const numberPool = document.getElementById('numberPool');
-    numberPool.innerHTML = '';
-    usedNumbers.clear();
-    
-    // Create numbers 1-25
-    for (let i = 1; i <= 25; i++) {
-        const numberItem = document.createElement('div');
-        numberItem.className = 'number-item';
-        numberItem.textContent = i;
-        numberItem.dataset.number = i;
-        numberItem.draggable = true;
-        
-        // Add drag event listeners
-        numberItem.addEventListener('dragstart', (e) => {
-            if (numberItem.classList.contains('used')) {
-                e.preventDefault();
+        function handleJoinResponse(data) {
+            const submitButton = document.querySelector('#joinForm button');
+            console.log(data)
+            
+            if (!data.proceed) {
+                hideLoading(submitButton);
+                displayMessage(data.message || 'Unable to join the game. Please try again.');
                 return;
             }
             
-            e.dataTransfer.setData('text/plain', i.toString());
-            numberItem.classList.add('dragging');
+            currentBetAmount = data.amount;
             
-            // For mobile: hide the drag image
-            const img = new Image();
-            img.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
-            e.dataTransfer.setDragImage(img, 0, 0);
-        });
-        
-        numberItem.addEventListener('dragend', () => {
-            numberItem.classList.remove('dragging');
-        });
-        
-        // Click to place in first available cell
-        numberItem.addEventListener('click', () => {
-            if (!numberItem.classList.contains('used')) {
-                const availableCell = boardCells.find(cell => !cell.classList.contains('filled'));
-                if (availableCell) {
-                    placeNumber(availableCell, i.toString());
-                } else {
-                    // Shake effect if board is full
-                    numberItem.classList.add('shake');
-                    setTimeout(() => numberItem.classList.remove('shake'), 500);
-                }
-            }
-        });
-        
-        numberPool.appendChild(numberItem);
-    }
-}
-
-// Place a number on the board
-function placeNumber(cell, number) {
-    const num = parseInt(number);
-    
-    // Mark the number as used
-    usedNumbers.add(num);
-    
-    // Update the cell
-    cell.textContent = number;
-    cell.classList.add('filled');
-    cell.classList.add('highlight');
-    setTimeout(() => cell.classList.remove('highlight'), 500);
-    
-    // Update the number pool
-    const numberItem = document.querySelector(`.number-item[data-number="${num}"]`);
-    if (numberItem) {
-        numberItem.classList.add('used');
-        numberItem.draggable = false;
-    }
-    
-    updateBoardProgress();
-}
-
-// Update board progress
-function updateBoardProgress() {
-    const filledCells = document.querySelectorAll('.bingo-cell.filled').length;
-    const progressBar = document.getElementById('boardProgress');
-    const completionText = document.getElementById('completionText');
-    const joinGameBtn = document.getElementById('joinGameBtn');
-    
-    const progressPercentage = (filledCells / 25) * 100;
-    progressBar.style.width = `${progressPercentage}%`;
-    completionText.textContent = `${filledCells}/25`;
-    
-    // Enable/disable join button
-    if (filledCells === 25) {
-        joinGameBtn.disabled = false;
-    } else {
-        joinGameBtn.disabled = true;
-    }
-}
-
-// Randomize the board
-function randomizeBoard() {
-    // Clear the board first
-    clearBoard();
-    
-    // Generate random numbers 1-25
-    const numbers = Array.from({length: 25}, (_, i) => i + 1);
-    
-    // Shuffle the array
-    for (let i = numbers.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [numbers[i], numbers[j]] = [numbers[j], numbers[i]];
-    }
-    
-    // Place numbers on the board
-    boardCells.forEach((cell, index) => {
-        placeNumber(cell, numbers[index].toString());
-    });
-}
-
-// Clear the board
-function clearBoard() {
-    boardCells.forEach(cell => {
-        if (cell.classList.contains('filled')) {
-            const number = parseInt(cell.textContent);
-            cell.textContent = '';
-            cell.classList.remove('filled');
-            usedNumbers.delete(number);
-        }
-    });
-    
-    // Reset number pool
-    document.querySelectorAll('.number-item').forEach(item => {
-        item.classList.remove('used');
-        item.draggable = true;
-    });
-    
-    updateBoardProgress();
-}
-
-// Get board numbers as an array
-function getBoardNumbers() {
-    return boardCells.map(cell => {
-        return cell.textContent ? parseInt(cell.textContent) : 0;
-    });
-}
-
-// Initialize the game board
-function initGameBoard(boardNumbers) {
-    const gameBingoBoard = document.getElementById('gameBingoBoard');
-    gameBingoBoard.innerHTML = '';
-    gameBoard = [];
-    
-    // Create 5x5 grid with the provided numbers
-    for (let i = 0; i < 25; i++) {
-        const cell = document.createElement('div');
-        cell.className = 'game-cell';
-        cell.dataset.index = i;
-        cell.textContent = boardNumbers[i];
-        
-        // Add click event to mark/unmark numbers or select for calling
-        cell.addEventListener('click', () => {
-            // If it's my turn, select this number to call
-            if (myTurn && !calledNumbers.includes(parseInt(cell.textContent))) {
-                // Clear previous selection
-                gameBoard.forEach(c => c.classList.remove('selected-to-call'));
-                
-                // Select this number
-                cell.classList.add('selected-to-call');
-                selectedNumber = parseInt(cell.textContent);
-                
-                // Enable call button
-                document.getElementById('callBtn').disabled = false;
-                
-                displayMessage(`Number ${selectedNumber} selected. Click "Call Number" to announce it.`);
-            } else if (calledNumbers.includes(parseInt(cell.textContent))) {
-                // Toggle marked state for called numbers
-                if (cell.classList.contains('marked')) {
-                    cell.classList.remove('marked');
-                } else {
-                    cell.classList.add('marked');
-                    checkForWin();
-                }
+            if (data.type === "Assembly") {
+                document.getElementById('gameSetup').style.display = 'none';
+                document.getElementById('boardAssembly').style.display = 'block';
+                hideLoading(submitButton);
+                displayMessage('Create your Bingo board to join the game!');
             } else {
-                // Shake effect for invalid selection
-                cell.classList.add('shake');
-                setTimeout(() => cell.classList.remove('shake'), 500);
-                
-                if (myTurn) {
-                    displayMessage('Select a number that hasn\'t been called yet.');
-                } else {
-                    displayMessage('Wait for your turn to call a number.');
-                }
+                document.getElementById('gameSetup').style.display = 'none';
+                document.getElementById('gameStatus').style.display = 'block';
+                isSearching = true;
+                hideLoading(submitButton);
             }
-        });
-        
-        gameBingoBoard.appendChild(cell);
-        gameBoard.push(cell);
-    }
-    
-    // Initialize BINGO letters as inactive
-    updateBingoLetters(0);
-}
-
-// Update BINGO letters based on completion status
-function updateBingoLetters(completed) {
-    completedLetters = completed;
-    const letters = document.querySelectorAll('.bingo-letter');
-    
-    // Reset all letters to inactive state
-    letters.forEach((letter, index) => {
-        if (index < completed) {
-            // Active state
-            letter.style.opacity = '1';
-            letter.style.textShadow = '0 0 15px rgba(46, 213, 115, 0.8)';
-            letter.style.transform = 'scale(1.1)';
-        } else {
-            // Inactive state
-            letter.style.opacity = '0.4';
-            letter.style.textShadow = 'none';
-            letter.style.transform = 'scale(1)';
         }
-    });
-    
-    // Enable BINGO button only when all letters are completed
-    const bingoBtn = document.getElementById('bingoBtn');
-    bingoBtn.disabled = completed < 5;
-    
-    if (completed === 5) {
-        displayMessage('You can now claim BINGO! Click the BINGO button!');
-    }
-}
 
-// Update called numbers display
-function updateCalledNumbers(number, isLatest = false) {
-    const calledNumbersList = document.getElementById('calledNumbersList');
-    
-    // Remove 'latest' class from all numbers
-    document.querySelectorAll('.called-number.latest').forEach(item => {
-        item.classList.remove('latest');
-    });
-    
-    // Add the new number
-    const numberItem = document.createElement('div');
-    numberItem.className = 'called-number';
-    if (isLatest) {
-        numberItem.classList.add('latest');
-    }
-    numberItem.textContent = number;
-    calledNumbersList.appendChild(numberItem);
-    
-    // Highlight the number on the board if it exists
-    gameBoard.forEach(cell => {
-        if (parseInt(cell.textContent) === number) {
-            cell.classList.add('called');
-            // Auto-mark the number after a short delay
-            setTimeout(() => {
-                cell.classList.add('marked');
-                checkForWin();
+        function startBingoGame() {
+            const boardNumbers = getBoardNumbers();
+            
+            if (boardNumbers.length !== 25 || boardNumbers.some(num => num === 0)) {
+                displayMessage('Please fill all cells in your board');
+                return;
+            }
+            
+            const joinButton = document.getElementById('joinGameBtn');
+            showLoading(joinButton);
+            
+            if (gameSocket && (gameSocket.readyState === WebSocket.OPEN || gameSocket.readyState === WebSocket.CONNECTING)) {
+                gameSocket.close();
+                isSearching = false;
+                displayMessage('Game search cancelled');
+                document.getElementById('gameStatus').style.display = 'none';
+                document.getElementById('boardAssembly').style.display = 'block';
+                hideLoading(joinButton);
+                return;
+            }
+            
+            document.getElementById('boardAssembly').style.display = 'none';
+            document.getElementById('gameStatus').style.display = 'block';
+            
+            isSearching = true;
+            
+            initWebSocket(currentBetAmount, boardNumbers);
+            
+            hideLoading(joinButton);
+        }
+
+        function initWebSocket(amount, boardNumbers = null) {
+            let boardQuery = "";
+            if (boardNumbers) {
+                boardQuery = `&board=${encodeURIComponent(boardNumbers.join(","))}`;
+            }
+
+            const socketUrl = `https://chiwegames.com/wss/bingo/${amount}/?${boardQuery}`;
+
+            gameSocket = new WebSocket(socketUrl);
+
+            gameSocket.onopen = () => {
+                console.log('WebSocket connection established');
+                updateNetworkIndicator('Good');
+                displayMessage('Connected to game server. Waiting for opponent...');
+                startSearchTimer();
+            };
+
+            gameSocket.onmessage = (event) => {
+                console.log('WebSocket message:', event.data);
+                handleWebSocketMessage(event.data);
+            };
+
+            gameSocket.onerror = (error) => {
+                console.error('WebSocket error:', error);
+                document.getElementById('gameStatus').textContent = 'Error connecting to the game server. Please refresh the game.';
+                isSearching = false;
+                updateNetworkIndicator('Poor');
+                stopSearchTimer();
+            };
+
+            gameSocket.onclose = () => {
+                console.log('WebSocket connection closed');
+                if (isSearching) {
+                    displayMessage('Connection to game server lost. Please try again.');
+                    document.getElementById('gameStatus').style.display = 'none';
+                    document.getElementById('boardAssembly').style.display = 'block';
+                }
+                isSearching = false;
+                updateNetworkIndicator('Offline');
+                
+                stopSearchTimer();
+                resetTimer();
+            };
+        }
+
+        function handleWebSocketMessage(data) {
+            try {
+                const message = JSON.parse(data);
+                console.log('Received message:', message);
+                
+                switch (message.type) {
+                    case 'myusername':
+                        username = message.username;
+                        console.log('Username set:', username);
+                        break;
+                    case 'timer':
+                        handleTimerMessage(message);
+                        break;
+                    case 'send.board':
+                        handleBoardMessage(message);
+                        break;
+                    case 'start_game':
+                        handleGameStartMessage(message);
+                        break;
+                    case 'turns':
+                        handleTurnChange(message);
+                        break;
+                    case 'result':
+                        handleResultMessage(message);
+                        break;
+                    case 'Game_Over':
+                        handleGameOver(message);
+                        break;
+                    case 'move_timeout':
+                        handleTurnChange(message);
+                        break;
+                    default:
+                        console.log('Unknown message type:', message.type);
+                }
+            } catch (error) {
+                console.error('Error parsing WebSocket message:', error);
+                console.error('Raw message:', data);
+            }
+        }
+
+        function handleTimerMessage(message) {
+            console.log('Timer message received:', message);
+            
+            if (message.time && message.time > 0) {
+                startTimer(message.time);
+            } else {
+                stopTimer();
+            }
+        }
+
+        function handleResultMessage(message) {
+            console.log('Result message received:', message);
+            
+            if (message.called) {
+                calledNumbers.push(message.called);
+                updateCalledNumbers(message.called, true);
+                displayMessage(`Number called: ${message.called}`);
+                
+                resetTimer();
+            }
+            
+            if (message.completed !== undefined) {
+                updateBingoLetters(message.completed);
+            }
+        }
+
+        function handleTurnChange(message) {
+            console.log('Turn change message received:', message);
+            
+            myTurn = message.myturn;
+            
+            selectedNumber = null;
+            
+            gameBoard.forEach(cell => cell.classList.remove('selected-to-call'));
+            
+            const callBtn = document.getElementById('callBtn');
+            callBtn.disabled = true;
+            
+            const currentPlayerCard = document.querySelector('.game-info .player-info-card:first-child');
+            const opponentCard = document.querySelector('.game-info .player-info-card:last-child');
+            
+            currentPlayerCard.style.border = '1px solid rgba(46, 213, 115, 0.2)';
+            opponentCard.style.border = '1px solid rgba(46, 213, 115, 0.2)';
+            currentPlayerCard.style.boxShadow = '';
+            opponentCard.style.boxShadow = '';
+            
+            if (myTurn) {
+                displayMessage('Your turn! Select a number from your board to call.');
+                
+                currentPlayerCard.style.border = '2px solid var(--primary)';
+                currentPlayerCard.style.boxShadow = '0 0 15px rgba(46, 213, 115, 0.5)';
+            } else {
+                displayMessage(`Waiting for ${opponent} to call a number...`);
+                
+                opponentCard.style.border = '2px solid var(--primary)';
+                opponentCard.style.boxShadow = '0 0 15px rgba(46, 213, 115, 0.5)';
+                
+                stopTimer();
+            }
+        }
+
+        function handleBoardMessage(message) {
+            document.getElementById('gameStatus').style.display = 'none';
+            
+            initGameBoard(message.board);
+            
+            if (message.start) {
+                document.getElementById('gameBoard').style.display = 'block';
+            }
+        }
+
+        function handleGameStartMessage(message) {
+            stopSearchTimer();
+            
+            currentPlayer = message.player_1;
+            opponent = message.player_2;
+            
+            document.getElementById('player1Name').textContent = message.player_1;
+            document.getElementById('player2Name').textContent = message.player_2;
+            document.getElementById('player1Amount').textContent = `${message.amount} pi`;
+            document.getElementById('player2Amount').textContent = `${message.amount} pi`;
+            
+            document.getElementById('gameStatus').style.display = 'none';
+            document.getElementById('boardAssembly').style.display = 'none';
+            document.getElementById('playerMatching').style.display = 'block';
+            
+            let countdown = 5;
+            const countdownElement = document.getElementById('countdown');
+            
+            const countdownInterval = setInterval(() => {
+                countdown--;
+                countdownElement.textContent = countdown;
+                
+                if (countdown <= 0) {
+                    clearInterval(countdownInterval);
+                    
+                    document.getElementById('playerMatching').style.display = 'none';
+                    document.getElementById('gameBoard').style.display = 'block';
+                    
+                    document.getElementById('currentPlayerName').textContent = message.player_1;
+                    document.getElementById('opponentName').textContent = message.player_2;
+                    document.getElementById('currentPlayerAmount').textContent = `${message.amount} pi`;
+                    document.getElementById('opponentAmount').textContent = `${message.amount} pi`;
+                }
             }, 1000);
         }
-    });
-}
 
-// Check for winning patterns
-function checkForWin() {
-    const markedCells = gameBoard.filter(cell => cell.classList.contains('marked'));
-    
-    if (markedCells.length < 5) return false; // Need at least 5 marked cells
-    
-    let winFound = false;
-    
-    // Check rows
-    for (let row = 0; row < 5; row++) {
-        let rowComplete = true;
-        for (let col = 0; col < 5; col++) {
-            const index = row * 5 + col;
-            if (!gameBoard[index].classList.contains('marked')) {
-                rowComplete = false;
-                break;
-            }
-        }
-        if (rowComplete) {
-            highlightWinningCells(row * 5, row * 5 + 1, row * 5 + 2, row * 5 + 3, row * 5 + 4);
-            winFound = true;
-        }
-    }
-    
-    // Check columns
-    for (let col = 0; col < 5; col++) {
-        let colComplete = true;
-        for (let row = 0; row < 5; row++) {
-            const index = row * 5 + col;
-            if (!gameBoard[index].classList.contains('marked')) {
-                colComplete = false;
-                break;
-            }
-        }
-        if (colComplete) {
-            highlightWinningCells(col, col + 5, col + 10, col + 15, col + 20);
-            winFound = true;
-        }
-    }
-    
-    // Check diagonals
-    let diag1Complete = true;
-    let diag2Complete = true;
-    
-    for (let i = 0; i < 5; i++) {
-        if (!gameBoard[i * 5 + i].classList.contains('marked')) {
-            diag1Complete = false;
-        }
-        if (!gameBoard[i * 5 + (4 - i)].classList.contains('marked')) {
-            diag2Complete = false;
-        }
-    }
-    
-    if (diag1Complete) {
-        highlightWinningCells(0, 6, 12, 18, 24);
-        winFound = true;
-    }
-    
-    if (diag2Complete) {
-        highlightWinningCells(4, 8, 12, 16, 20);
-        winFound = true;
-    }
-    
-    return winFound;
-}
-
-// Highlight winning cells
-function highlightWinningCells(...indices) {
-    indices.forEach(index => {
-        gameBoard[index].classList.add('winning');
-    });
-}
-
-// Create confetti effect for winner
-function createConfetti() {
-    const container = document.querySelector('.game-over-content');
-    const colors = ['#2ed573', '#7bed9f', '#f1c40f', '#e67e22', '#e74c3c', '#9b59b6'];
-    
-    for (let i = 0; i < 100; i++) {
-        const confetti = document.createElement('div');
-        confetti.className = 'confetti';
-        confetti.style.left = Math.random() * 100 + '%';
-        confetti.style.width = Math.random() * 10 + 5 + 'px';
-        confetti.style.height = Math.random() * 10 + 5 + 'px';
-        confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
-        confetti.style.borderRadius = Math.random() > 0.5 ? '50%' : '0';
-        confetti.style.transform = `rotate(${Math.random() * 360}deg)`;
-        confetti.style.animationDuration = Math.random() * 3 + 2 + 's';
-        confetti.style.animationDelay = Math.random() * 5 + 's';
-        
-        container.appendChild(confetti);
-    }
-}
-
-document.addEventListener('DOMContentLoaded', () => {
-    history.pushState(null, null, location.href);
-
-    window.onpopstate = (event) => {
-        history.pushState(null, null, location.href);
-        handleBackButton();
-    };
-
-    window.onbeforeunload = (e) => {
-        if (isSearching) {
-            e.preventDefault();
-            e.returnValue = '';
-            showLeaveWarning();
-            return '';
-        }
-    };
-    
-    // Initialize network monitoring
-    monitorNetwork();
-    
-    // Initialize waiting page stats
-    updateWaitingStats();
-    setInterval(updateWaitingStats, 5000);
-    
-    // Disable join button initially
-    document.getElementById('joinButton').disabled = true;
-    
-    // Initialize bingo board and number pool
-    initBingoBoard();
-    initNumberPool();
-    
-    // Add event listeners for board actions
-    document.getElementById('randomizeBtn').addEventListener('click', randomizeBoard);
-    document.getElementById('clearBoardBtn').addEventListener('click', clearBoard);
-    document.getElementById('joinGameBtn').addEventListener('click', startBingoGame);
-    
-    // Add event listeners for game actions
-    document.getElementById('callBtn').addEventListener('click', callNumber);
-    document.getElementById('bingoBtn').addEventListener('click', claimBingo);
-    
-    // Disable BINGO button initially
-    document.getElementById('bingoBtn').disabled = true;
-});
-
-function handleBackButton() {
-    if (isSearching) {
-        showLeaveWarning();
-    }
-}
-
-function showLeaveWarning() {
-    const warningElement = document.getElementById('searchLeaveWarning');
-    warningElement.style.display = 'flex';
-}
-
-function cancelLeave() {
-    document.getElementById('searchLeaveWarning').style.display = 'none';
-}
-
-function confirmLeaveSearch() {
-    attemptingToLeave = true;
-    
-    // Close WebSocket connection if it exists
-    if (gameSocket) {
-        gameSocket.close();
-    }
-    
-    // Stop timer if active
-    resetTimer();
-    
-    isSearching = false;
-    window.location.href = '/dashboard';
-}
-
-function selectAmount(amount) {
-    selectedAmount = amount;
-    
-    // Show loading on the selected button
-    const buttons = document.querySelectorAll('.money-option');
-    buttons.forEach(button => {
-        // Clear all selections first
-        button.classList.remove('selected');
-        hideLoading(button);
-        
-        // Apply selection and loading to the clicked button
-        if (parseInt(button.getAttribute('data-amount')) === amount) {
-            button.classList.add('selected');
-            showLoading(button);
-        }
-    });
-    
-    // Update the selected amount display
-    document.getElementById('amountInput').value = amount;
-    document.getElementById('selectedAmount').textContent = amount;
-    
-    // Highlight the selected amount container
-    const selectedAmountContainer = document.getElementById('selectedAmountContainer');
-    selectedAmountContainer.classList.add('highlight');
-    
-    // Enable the join button
-    document.getElementById('joinButton').disabled = false;
-    
-    // Hide loading after a short delay to show the selection effect
-    setTimeout(() => {
-        buttons.forEach(button => {
-            if (parseInt(button.getAttribute('data-amount')) === amount) {
-                hideLoading(button);
-            }
-        });
-        
-        // Remove highlight after animation
-        setTimeout(() => {
-            selectedAmountContainer.classList.remove('highlight');
-        }, 500);
-    }, 500);
-}
-
-document.getElementById('joinForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    
-    
-    
-    const form = e.target;
-    const formData = new FormData(form);
-    
-    // Show loading on submit button
-    const submitButton = form.querySelector('button');
-    showLoading(submitButton);
-
-    try {
-        const response = await fetch(form.action, {
-            method: 'POST',
-            body: formData,
-            headers: {
-                'X-CSRFToken': formData.get('csrfmiddlewaretoken')
-            }
-        });
-
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        const contentType = response.headers.get('content-type');
-        if (contentType && contentType.indexOf('application/json') !== -1) {
-            const data = await response.json();
-            console.log(data);
-            handleJoinResponse(data);
-        } else {
-            const text = await response.text();
-            console.log('Non-JSON response:', text);
-            displayMessage('Unexpected server response. Please try again.');
-            hideLoading(submitButton);
-        }
-    } catch (error) {
-        console.error('Error:', error);
-        displayMessage('An error occurred. Please try again later.');
-        hideLoading(submitButton);
-    }
-});
-
-function handleJoinResponse(data) {
-    const submitButton = document.querySelector('#joinForm button');
-    console.log(data)
-    
-    if (!data.proceed) {
-        hideLoading(submitButton);
-        displayMessage(data.message || 'Unable to join the game. Please try again.');
-        return;
-    }
-    
-    // Store the current bet amount
-    currentBetAmount = data.amount;
-    
-    // Check if we need to show the board assembly
-    if (data.type === "Assembly") {
-        document.getElementById('gameSetup').style.display = 'none';
-        document.getElementById('boardAssembly').style.display = 'block';
-        hideLoading(submitButton);
-        displayMessage('Create your Bingo board to join the game!');
-    } else {
-        // Legacy behavior - direct to waiting page
-        document.getElementById('gameSetup').style.display = 'none';
-        document.getElementById('gameStatus').style.display = 'block';
-        isSearching = true;
-        // Don't initialize WebSocket here anymore
-        hideLoading(submitButton);
-    }
-}
-
-function startBingoGame() {
-    // Get the board numbers
-    const boardNumbers = getBoardNumbers();
-    
-    // Validate the board
-    if (boardNumbers.length !== 25 || boardNumbers.some(num => num === 0)) {
-        displayMessage('Please fill all cells in your board');
-        return;
-    }
-    
-    // Show loading on join button
-    const joinButton = document.getElementById('joinGameBtn');
-    showLoading(joinButton);
-    
-    // Check if we already have an active WebSocket connection
-    if (gameSocket && (gameSocket.readyState === WebSocket.OPEN || gameSocket.readyState === WebSocket.CONNECTING)) {
-        // Close the existing connection if the button is clicked again
-        gameSocket.close();
-        isSearching = false;
-        displayMessage('Game search cancelled');
-        document.getElementById('gameStatus').style.display = 'none';
-        document.getElementById('boardAssembly').style.display = 'block';
-        hideLoading(joinButton);
-        return;
-    }
-    
-    // Show waiting page
-    document.getElementById('boardAssembly').style.display = 'none';
-    document.getElementById('gameStatus').style.display = 'block';
-    
-    // Set searching flag
-    isSearching = true;
-    
-    // Initialize WebSocket with board data
-    initWebSocket(currentBetAmount, boardNumbers);
-    
-    hideLoading(joinButton);
-}
-
-function initWebSocket(amount, boardNumbers = null) {
-    // Encode board numbers into a query parameter
-    let boardQuery = "";
-    if (boardNumbers) {
-        boardQuery = `&board=${encodeURIComponent(boardNumbers.join(","))}`;
-    }
-
-    // Construct the WebSocket URL with the board parameter
-    const socketUrl = `https://chiwegames.com/wss/bingo/${amount}/?${boardQuery}`;
-
-    // Create WebSocket connection
-    gameSocket = new WebSocket(socketUrl);
-
-    gameSocket.onopen = () => {
-        console.log('WebSocket connection established');
-        updateNetworkIndicator('Good');
-        displayMessage('Connected to game server. Waiting for opponent...');
-    };
-
-    gameSocket.onmessage = (event) => {
-        console.log('WebSocket message:', event.data);
-        handleWebSocketMessage(event.data);
-    };
-
-    gameSocket.onerror = (error) => {
-        console.error('WebSocket error:', error);
-        document.getElementById('gameStatus').textContent = 'Error connecting to the game server. Please refresh the game.';
-        isSearching = false;
-        updateNetworkIndicator('Poor');
-    };
-
-    gameSocket.onclose = () => {
-        console.log('WebSocket connection closed');
-        if (isSearching) {
-            displayMessage('Connection to game server lost. Please try again.');
-            document.getElementById('gameStatus').style.display = 'none';
-            document.getElementById('boardAssembly').style.display = 'block';
-        }
-        isSearching = false;
-        updateNetworkIndicator('Offline');
-        
-        // Stop timer when connection is lost
-        resetTimer();
-    };
-}
-
-function handleWebSocketMessage(data) {
-    try {
-        const message = JSON.parse(data);
-        console.log('Received message:', message);
-        
-        switch (message.type) {
-            case 'myusername':
-                // Store the username when received
-                username = message.username;
-                console.log('Username set:', username);
-                break;
-            case 'timer':
-                // Handle timer message
-                handleTimerMessage(message);
-                break;
-            case 'send.board':
-                handleBoardMessage(message);
-                break;
-            case 'start_game':
-                handleGameStartMessage(message);
-                break;
-            case 'turns':
-                handleTurnChange(message);
-                break;
-            case 'result':
-                handleResultMessage(message);
-                break;
-            case 'Game_Over':
-                handleGameOver(message);
-                break;
-            case 'move_timeout':
-                handleTurnChange(message);
-                break;
-            default:
-                console.log('Unknown message type:', message.type);
-        }
-    } catch (error) {
-        console.error('Error parsing WebSocket message:', error);
-        console.error('Raw message:', data);
-    }
-}
-
-// Handle timer message from backend
-function handleTimerMessage(message) {
-    console.log('Timer message received:', message);
-    
-    if (message.time && message.time > 0) {
-        startTimer(message.time);
-    } else {
-        stopTimer();
-    }
-}
-
-// Handle result message from backend
-function handleResultMessage(message) {
-    console.log('Result message received:', message);
-    
-    // Add the called number to the list
-    if (message.called) {
-        calledNumbers.push(message.called);
-        updateCalledNumbers(message.called, true);
-        displayMessage(`Number called: ${message.called}`);
-        
-        // Reset timer when a move is made
-        resetTimer();
-    }
-    
-    // Update BINGO letters completion
-    if (message.completed !== undefined) {
-        updateBingoLetters(message.completed);
-    }
-}
-
-function handleTurnChange(message) {
-    console.log('Turn change message received:', message);
-    
-    // The backend sends {"type": "turns", "myturn": true/false}
-    // where myturn is true if it's the player's turn
-    myTurn = message.myturn;
-    
-    // Reset selected number
-    selectedNumber = null;
-    
-    // Clear any previous selections
-    gameBoard.forEach(cell => cell.classList.remove('selected-to-call'));
-    
-    // Update UI based on turn
-    const callBtn = document.getElementById('callBtn');
-    callBtn.disabled = true; // Disable until player selects a number
-    
-    // Add visual indicators for whose turn it is
-    const currentPlayerCard = document.querySelector('.game-info .player-info-card:first-child');
-    const opponentCard = document.querySelector('.game-info .player-info-card:last-child');
-    
-    // Reset styles
-    currentPlayerCard.style.border = '1px solid rgba(46, 213, 115, 0.2)';
-    opponentCard.style.border = '1px solid rgba(46, 213, 115, 0.2)';
-    currentPlayerCard.style.boxShadow = '';
-    opponentCard.style.boxShadow = '';
-    
-    if (myTurn) {
-        // It's my turn
-        displayMessage('Your turn! Select a number from your board to call.');
-        
-        // Highlight current player's card
-        currentPlayerCard.style.border = '2px solid var(--primary)';
-        currentPlayerCard.style.boxShadow = '0 0 15px rgba(46, 213, 115, 0.5)';
-    } else {
-        // It's opponent's turn
-        displayMessage(`Waiting for ${opponent} to call a number...`);
-        
-        // Highlight opponent's card
-        opponentCard.style.border = '2px solid var(--primary)';
-        opponentCard.style.boxShadow = '0 0 15px rgba(46, 213, 115, 0.5)';
-        
-        // Stop timer when it's not my turn
-        stopTimer();
-    }
-}
-
-function handleBoardMessage(message) {
-    // Hide waiting page
-    document.getElementById('gameStatus').style.display = 'none';
-    
-    // Initialize game board with received board
-    initGameBoard(message.board);
-    
-    if (message.start) {
-        // Game is starting immediately
-        document.getElementById('gameBoard').style.display = 'block';
-    }
-}
-
-function handleGameStartMessage(message) {
-    // Set player information
-    currentPlayer = message.player_1;
-    opponent = message.player_2;
-    
-    // Update player matching screen
-    document.getElementById('player1Name').textContent = message.player_1;
-    document.getElementById('player2Name').textContent = message.player_2;
-    document.getElementById('player1Amount').textContent = `${message.amount} pi`;
-    document.getElementById('player2Amount').textContent = `${message.amount} pi`;
-    
-    // Show player matching screen
-    document.getElementById('gameStatus').style.display = 'none';
-    document.getElementById('boardAssembly').style.display = 'none';
-    document.getElementById('playerMatching').style.display = 'block';
-    
-    // Start countdown
-    let countdown = 5;
-    const countdownElement = document.getElementById('countdown');
-    
-    const countdownInterval = setInterval(() => {
-        countdown--;
-        countdownElement.textContent = countdown;
-        
-        if (countdown <= 0) {
-            clearInterval(countdownInterval);
+        function handleGameOver(message) {
+            console.log('Game over message received:', message);
             
-            // Hide player matching screen and show game board
-            document.getElementById('playerMatching').style.display = 'none';
-            document.getElementById('gameBoard').style.display = 'block';
+            resetTimer();
             
-            // Update player info in game board
-            document.getElementById('currentPlayerName').textContent = message.player_1;
-            document.getElementById('opponentName').textContent = message.player_2;
-            document.getElementById('currentPlayerAmount').textContent = `${message.amount} pi`;
-            document.getElementById('opponentAmount').textContent = `${message.amount} pi`;
+            const winningAmount = parseInt(message.winningAmount);
+            const betAmount = parseInt(message.betAmount);
+            
+            const isWinner = username === message.winner;
+            
+            document.getElementById('gameOverTitle').textContent = isWinner ? 'You Won!' : 'You Lost!';
+            document.getElementById('gameOverTitle').className = isWinner ? 'game-over-title winner-title' : 'game-over-title loser-title';
+            document.getElementById('gameOverSubtitle').textContent = isWinner ? 
+                'Congratulations on your victory!' : 
+                'Better luck next time!';
+            
+            document.getElementById('winnerName').textContent = message.winner;
+            
+            document.getElementById('winningAmount').textContent = `${winningAmount} chiwe points`;
+            
+            if (isWinner) {
+                setTimeout(createConfetti, 500);
+            }
+            
+            document.getElementById('gameOverPopup').style.display = 'flex';
+            
+            document.getElementById('callBtn').disabled = true;
+            document.getElementById('bingoBtn').disabled = true;
         }
-    }, 1000);
-}
 
-function handleGameOver(message) {
-    console.log('Game over message received:', message);
-    
-    // Stop timer when game is over
-    resetTimer();
-    
-    // Parse the winning amount to a number for display
-    const winningAmount = parseInt(message.winningAmount);
-    const betAmount = parseInt(message.betAmount);
-    
-    // Determine if the current player is the winner by comparing username
-    const isWinner = username === message.winner;
-    
-    // Update game over popup content based on whether user is winner or loser
-    document.getElementById('gameOverTitle').textContent = isWinner ? 'You Won!' : 'You Lost!';
-    document.getElementById('gameOverTitle').className = isWinner ? 'game-over-title winner-title' : 'game-over-title loser-title';
-    document.getElementById('gameOverSubtitle').textContent = isWinner ? 
-        'Congratulations on your victory!' : 
-        'Better luck next time!';
-    
-    document.getElementById('winnerName').textContent = message.winner;
-    
-    document.getElementById('winningAmount').textContent = `${winningAmount} chiwe points`;
-    
-    // Show confetti only for winner
-    if (isWinner) {
-        setTimeout(createConfetti, 500);
-    }
-    
-    // Show the game over popup
-    document.getElementById('gameOverPopup').style.display = 'flex';
-    
-    // Disable game buttons
-    document.getElementById('callBtn').disabled = true;
-    document.getElementById('bingoBtn').disabled = true;
-}
+        function callNumber() {
+            if (!myTurn) {
+                displayMessage('It\'s not your turn to call a number!');
+                return;
+            }
+            
+            if (!selectedNumber) {
+                displayMessage('Please select a number from your board first!');
+                return;
+            }
+            
+            const callBtn = document.getElementById('callBtn');
+            showLoading(callBtn);
+            
+            if (gameSocket && gameSocket.readyState === WebSocket.OPEN) {
+                gameSocket.send(JSON.stringify({
+                    type: 'call',
+                    number: selectedNumber
+                }));
+                
+                callBtn.disabled = true;
+                
+                gameBoard.forEach(cell => cell.classList.remove('selected-to-call'));
+                selectedNumber = null;
+                
+                resetTimer();
+                
+                setTimeout(() => {
+                    hideLoading(callBtn);
+                }, 500);
+            } else {
+                displayMessage('Connection lost. Please refresh the game.');
+                hideLoading(callBtn);
+            }
+        }
 
-function callNumber() {
-    if (!myTurn) {
-        displayMessage('It\'s not your turn to call a number!');
-        return;
-    }
-    
-    if (!selectedNumber) {
-        displayMessage('Please select a number from your board first!');
-        return;
-    }
-    
-    // Show loading on call button
-    const callBtn = document.getElementById('callBtn');
-    showLoading(callBtn);
-    
-    // Send the selected number to the server
-    if (gameSocket && gameSocket.readyState === WebSocket.OPEN) {
-        gameSocket.send(JSON.stringify({
-            type: 'call',
-            number: selectedNumber
-        }));
-        
-        // Disable call button until next turn
-        callBtn.disabled = true;
-        
-        // Clear selection
-        gameBoard.forEach(cell => cell.classList.remove('selected-to-call'));
-        selectedNumber = null;
-        
-        // Reset timer when player makes a move
-        resetTimer();
-        
-        // Hide loading after a short delay
-        setTimeout(() => {
-            hideLoading(callBtn);
-        }, 500);
-    } else {
-        displayMessage('Connection lost. Please refresh the game.');
-        hideLoading(callBtn);
-    }
-}
-
-function claimBingo() {
-    // Only allow claiming BINGO when all letters are completed
-    if (completedLetters < 5) {
-        displayMessage('You can\'t claim BINGO yet!');
-        return;
-    }
-    
-    // Show loading on BINGO button
-    const bingoBtn = document.getElementById('bingoBtn');
-    showLoading(bingoBtn);
-    
-    // Send BINGO claim to the server
-    if (gameSocket && gameSocket.readyState === WebSocket.OPEN) {
-        gameSocket.send(JSON.stringify({
-            type: 'bingo',
-            bingo: true
-        }));
-        
-        // Disable BINGO button
-        bingoBtn.disabled = true;
-        
-        // Reset timer when player claims bingo
-        resetTimer();
-        
-        // Hide loading after a short delay
-        setTimeout(() => {
-            hideLoading(bingoBtn);
-        }, 500);
-    } else {
-        displayMessage('Connection lost. Please refresh the game.');
-        hideLoading(bingoBtn);
-    }
-}
+        function claimBingo() {
+            if (completedLetters < 5) {
+                displayMessage('You can\'t claim BINGO yet!');
+                return;
+            }
+            
+            const bingoBtn = document.getElementById('bingoBtn');
+            showLoading(bingoBtn);
+            
+            if (gameSocket && gameSocket.readyState === WebSocket.OPEN) {
+                gameSocket.send(JSON.stringify({
+                    type: 'bingo',
+                    bingo: true
+                }));
+                
+                bingoBtn.disabled = true;
+                
+                resetTimer();
+                
+                setTimeout(() => {
+                    hideLoading(bingoBtn);
+                }, 500);
+            } else {
+                displayMessage('Connection lost. Please refresh the game.');
+                hideLoading(bingoBtn);
+            }
+        }
     </script>
 </body>
 </html>
