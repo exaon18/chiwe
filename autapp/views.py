@@ -408,7 +408,8 @@ def profile(request):
     return render(request, 'profile.html', {'user': request.user, 'stat': Game_Stat,'ballance':ballance})
 @login_required
 def leaderboard(request):
-    users=MyUser.objects.all().order_by('points')[:10]
+    # Show top pioneers by highest points first
+    users = MyUser.objects.all().order_by('-points')[:10]
     return render(request, 'leaderboard.html', {'users': users})
 @login_required
 def logout_view(request):
