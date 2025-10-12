@@ -125,8 +125,10 @@ else:
     CSRF_COOKIE_SECURE = True
     SESSION_COOKIE_SAMESITE = "None"
     SESSION_COOKIE_SECURE = True
-    # If you want the session cookie to be valid for specific domains, set here
-    SESSION_COOKIE_DOMAIN = ".ngrok-free.app"
+    # If you want the session cookie to be valid for a specific domain in production,
+    # set the environment variable SESSION_COOKIE_DOMAIN (for example: ".ngrok-free.app").
+    # Leave unset (None) for localhost / local testing so cookies aren't blocked by a mismatched domain.
+    SESSION_COOKIE_DOMAIN = os.environ.get('SESSION_COOKIE_DOMAIN') or None
 
 # Ensure Django trusts the forwarded proto header (ngrok sets it)
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
