@@ -68,6 +68,7 @@ CSRF_TRUSTED_ORIGINS = [
     'https://chiwe.onrender.com',
     'https://exaon.tech',
     'https://chiwegames.com',
+    'https://www.chiwegames.com',
     'https://sandbox.minepi.com',
 ]
 
