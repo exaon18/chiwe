@@ -31,6 +31,7 @@ urlpatterns = [
     path('resend-otp-signup/<str:username>', views.resend_otp_signup, name='resend_otp'),
     path('recovery/resend-otp-fp/', views.resend_otp_token_fp, name='resend_otp_fp'),
     path('pi-auth/', views.pi_auth, name='pi_auth'),
+    path('pi-auth-debug/', views.pi_auth_debug, name='pi_auth_debug'),
     path('session-debug/', views.session_debug, name='session_debug'),
     path('api/pi-payments/approve-debug', views.approve_debug, name='api_pi_approve_debug'),
     path('validation-key.txt', views.validate_key, name='validate_key'),

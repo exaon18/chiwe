@@ -6,6 +6,7 @@ import time
 import json
 import requests
 import tempfile
+import logging
 
 from django.conf import settings
 from django.middleware.csrf import get_token
@@ -24,6 +25,8 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.admin.views.decorators import staff_member_required
 
 from .models import MyUser, Ballance, GameHistory, Maintainance, PiPayment
+
+logger = logging.getLogger(__name__)
 
 # Pi API configuration
 PI_API_BASE = getattr(settings, 'PI_API_BASE', os.environ.get('PI_API_BASE', 'https://api.minepi.com/v2'))
@@ -101,6 +104,44 @@ def dump_log(name, data):
     except Exception as e:
         # Best-effort logging; do not raise from here
         print('Failed to write Pi log:', e)
+
+
+@csrf_exempt
+def pi_auth_debug(request):
+    """Debug endpoint: echo headers, cookies and parsed JSON body for diagnosis.
+    Only available when Django DEBUG=True. This endpoint is intentionally verbose
+    and should NOT be enabled in production when DEBUG=False.
+    """
+    from django.conf import settings as dj_settings
+    if not getattr(dj_settings, 'DEBUG', False):
+        return JsonResponse({'error': 'Not available'}, status=404)
+
+    info = {
+        'path': request.path,
+        'method': request.method,
+        'headers': {k: v for k, v in request.headers.items()},
+        'cookies': request.COOKIES,
+        'session_key': getattr(request.session, 'session_key', None),
+        'remote_addr': request.META.get('REMOTE_ADDR'),
+        'content_type': request.content_type,
+    }
+    try:
+        body = request.body.decode('utf-8') if request.body else ''
+        info['body_len'] = len(body)
+        if body:
+            try:
+                info['body_json'] = json.loads(body)
+            except Exception:
+                info['body_preview'] = body[:2000]
+    except Exception as e:
+        info['body_error'] = str(e)
+
+    try:
+        dump_log('pi_auth_debug_incoming', info)
+    except Exception:
+        pass
+    logger.info('pi_auth_debug: %s', {k: info.get(k) for k in ('path','method','session_key','remote_addr')})
+    return JsonResponse({'ok': True, 'info': info})
 
 
 def index(request):
@@ -184,6 +225,39 @@ def signup(request, ref):
 def pi_auth(request):
     if request.method != 'POST':
         return JsonResponse({"success": False, "error": "POST required"}, status=400)
+
+    # Log incoming request context early so we can see what the server receives when
+    # deployed on a new host. This helps diagnose missing cookies / CSRF / session issues.
+    try:
+        info = {
+            'path': request.path,
+            'method': request.method,
+            'headers_preview': {k: v for k, v in list(request.headers.items())[:20]},
+            'cookies': request.COOKIES,
+            'session_key': getattr(request.session, 'session_key', None),
+            'remote_addr': request.META.get('REMOTE_ADDR'),
+            'content_type': request.content_type,
+        }
+        # Try to read body safely (may be large or binary)
+        try:
+            body = request.body.decode('utf-8') if request.body else ''
+            info['body_len'] = len(body)
+            # only include JSON preview
+            if body:
+                try:
+                    info['body_json_preview'] = json.loads(body)
+                except Exception:
+                    info['body_preview'] = body[:1000]
+        except Exception as e:
+            info['body_error'] = str(e)
+        # Persist debug info using dump_log (writes to temp or configured PI_LOG_DIR)
+        try:
+            dump_log('pi_auth_incoming', info)
+        except Exception:
+            pass
+        logger.info('pi_auth incoming: %s', {k: info.get(k) for k in ('path','method','headers_preview','cookies','session_key')})
+    except Exception as e:
+        logger.exception('error logging incoming pi_auth request: %s', e)
 
     data = {}
     if request.content_type and 'application/json' in request.content_type:
