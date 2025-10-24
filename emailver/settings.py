@@ -28,7 +28,7 @@ DEBUG = True
 ALLOWED_HOSTS = [
     '*',
     'chiwegames.com',
-    'chiwe.onrender.com',
+    'chiwe-1.onrender.com',
     'exaon.tech',
     '127.0.0.1',
     'localhost',

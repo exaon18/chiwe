@@ -486,6 +486,9 @@ def resend_otp_signup(request, userobj):
                 })
         otp = generate_unique_number(user.username)
         user.token = otp
+                    # Temporarily exempt pi_auth from CSRF to help debug cross-site cookie/CSRF issues
+                    # This should only be used as a short-term test; restore CSRF protection after
+                    # verifying whether CSRF/cookie settings are the cause of the login reload loop.
         user.last_otp_sent = now
         user.save()
         send_welcome_email(user=user, email=user.email, token=otp, why="signup")
