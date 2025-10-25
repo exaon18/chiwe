@@ -28,7 +28,7 @@ DEBUG = True
 ALLOWED_HOSTS = [
     '*',
     'chiwegames.com',
-    'chiwe-1.onrender.com',
+    'chiwe-hkyn.onrender.com',
     'exaon.tech',
     '127.0.0.1',
     'localhost',
@@ -64,6 +64,7 @@ CHANNEL_LAYERS = {
     }
 }
 CSRF_TRUSTED_ORIGINS = [
+    'chiwe-hkyn.onrender.com',
     'https://8193a66d4544.ngrok-free.app',
     'https://chiwe.onrender.com',
     'https://exaon.tech',
