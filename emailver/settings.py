@@ -35,7 +35,7 @@ ALLOWED_HOSTS = [
     '8193a66d4544.ngrok-free.app',
 ]
 
-DATABASE_URL="postgresql://chiwedb2_user:38QtqtT5KsPAoFZSa4UVLAdrQxRCGyda@dpg-d3l40gali9vc73ejor0g-a/chiwedb2"
+DATABASE_URL="postgresql://chiwedb2_user:38QtqtT5KsPAoFZSa4UVLAdrQxRCGyda@dpg-d3l40gali9vc73ejor0g-a.oregon-postgres.render.com/chiwedb2"
 # Application definition
 CORS_ALLOW_CREDENTIALS = True
 
