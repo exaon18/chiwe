@@ -35,7 +35,7 @@ ALLOWED_HOSTS = [
     '8193a66d4544.ngrok-free.app',
 ]
 
-DATABASE_URL="postgresql://chiwelast_user:rOfcQOYtVJdKuY8AwUcDlJX9B2tYBLhu@dpg-d48tuiumcj7s73e6bt70-a.oregon-postgres.render.com/chiwelast"
+DATABASE_URL="postgresql://chiwedbl_user:S5VoL6VUXwDsDLGLApvLH5z2yXtsh5RN@dpg-d4snc97pm1nc73c77b10-a/chiwedbl"
 # Application definition
 CORS_ALLOW_CREDENTIALS = True
 
@@ -64,7 +64,7 @@ CHANNEL_LAYERS = {
     }
 }
 CSRF_TRUSTED_ORIGINS = [
-    'chiwe-hkyn.onrender.com',
+    'https://chiwe-hkyn.onrender.com',
     'https://8193a66d4544.ngrok-free.app',
     'https://chiwe.onrender.com',
     'https://exaon.tech',
