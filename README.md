@@ -31,5 +31,5 @@ Chiwe utilizes an **Asynchronous Architecture**:
 ## 🚀 Quick Setup
 1. **Clone the repository:**
 ```bash
-   git clone [https://github.com/yourusername/chiwe.git](https://github.com/yourusername/chiwe.git)
+   git clone [https://github.com/exaon18/chiwe.git](https://github.com/exaon18/chiwe.git)
    cd chiwe
